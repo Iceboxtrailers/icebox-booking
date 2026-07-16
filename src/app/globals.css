@@ -1,0 +1,49 @@
+@import "tailwindcss";
+
+:root {
+  --background: #f4f6f7;
+  --foreground: #1b2733;
+  /* IceBox brand palette (from the official charte graphique PDF) */
+  --color-navy: #005f9b; /* PANTONE 107-7 C */
+  --color-cta: #009dde; /* PANTONE 112-7 C */
+  --color-cta-hover: #005f9b; /* PANTONE 107-7 C, reused as the CTA pressed state */
+  --color-tint-40: #9bceef; /* PANTONE 112-7 C 40% */
+  --color-tint-60: #67bbe9; /* PANTONE 112-7 C 60% */
+  --color-muted: #5f6b75;
+  --color-border: #c7d0d6;
+  --color-border-light: #dee4e7;
+  --color-success: #4c9a6a;
+  --color-warn-bg: #faeeda;
+  --color-warn-text: #854f0b;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-navy: var(--color-navy);
+  --color-cta: var(--color-cta);
+  --color-cta-hover: var(--color-cta-hover);
+  --color-tint-40: var(--color-tint-40);
+  --color-tint-60: var(--color-tint-60);
+  --color-muted: var(--color-muted);
+  --color-border: var(--color-border);
+  --color-border-light: var(--color-border-light);
+  --color-success: var(--color-success);
+  --color-warn-bg: var(--color-warn-bg);
+  --color-warn-text: var(--color-warn-text);
+  --font-sans: var(--font-inter);
+  --font-heading: var(--font-bungee);
+  --font-mono: var(--font-jetbrains-mono);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), system-ui, sans-serif;
+}
+
+/* Tailwind only auto-generates font-family utilities for sans/serif/mono,
+   so the brand display font needs its own explicit utility. */
+@utility font-heading {
+  font-family: var(--font-heading), system-ui, sans-serif;
+}

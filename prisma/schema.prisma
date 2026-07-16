@@ -1,0 +1,121 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// Status/type fields are plain String rather than Prisma enum (left this way
+// after the earlier SQLite-only phase; Postgres enums would work fine too but
+// aren't needed). Valid values are enforced in src/lib/constants.ts and
+// validated with zod in src/lib/validation.ts.
+
+model Client {
+  id                 String   @id @default(cuid())
+  firstName          String
+  lastName           String
+  email              String   @unique
+  phone              String
+  passwordHash       String
+  createdAt          DateTime @default(now())
+  verificationStatus String   @default("pending") // pending | verified | rejected
+  internalNote       String?
+  status             String   @default("active") // active | suspended | blacklisted
+
+  reservations Reservation[]
+  documents    Document[]
+
+  @@map("clients")
+}
+
+model Trailer {
+  id        String   @id @default(cuid())
+  name      String // physical unit label, e.g. "R510-01"
+  model     String // catalogue key: R510 | R612 | C510 | C612
+  size      String // 5x10 | 6x12
+  type      String // refrigerated | frozen
+  plate     String?
+  dailyRate Int // cents
+  status    String   @default("available") // available | maintenance | retired
+  createdAt DateTime @default(now())
+
+  reservations Reservation[]
+
+  @@map("trailers")
+}
+
+model Reservation {
+  id             String    @id @default(cuid())
+  clientId       String
+  trailerId      String?
+  pickupDate     DateTime?
+  returnDate     DateTime?
+  dateRangeType  String    @default("fixed") // fixed | flexible
+  flexWindowDays Int       @default(0)
+  status         String    @default("pending") // pending | confirmed | in_progress | completed | cancelled
+  totalAmount    Int       @default(0) // cents
+  depositAmount  Int       @default(0) // cents
+  depositStatus  String    @default("none") // none | authorized | captured | released
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  client   Client    @relation(fields: [clientId], references: [id])
+  trailer  Trailer?  @relation(fields: [trailerId], references: [id])
+  contract Contract?
+  payments Payment[]
+
+  @@index([trailerId, pickupDate, returnDate])
+  @@map("reservations")
+}
+
+model Contract {
+  id                     String    @id @default(cuid())
+  reservationId          String    @unique
+  pdfUrl                 String?
+  signatureStatus        String    @default("pending") // pending | signed
+  signedAt               DateTime?
+  signerIp               String?
+  signerName             String?
+  signatureProvider      String    @default("stub") // stub | dropboxsign | docusign
+  signatureTransactionId String?
+  signatureImageUrl      String?
+  createdAt              DateTime  @default(now())
+
+  reservation Reservation @relation(fields: [reservationId], references: [id])
+
+  @@map("contracts")
+}
+
+model Payment {
+  id            String   @id @default(cuid())
+  reservationId String
+  provider      String   @default("stub") // stub | stripe
+  transactionId String?
+  type          String // deposit | rental | refund
+  amount        Int // cents
+  status        String // pending | authorized | captured | released | failed | refunded
+  createdAt     DateTime @default(now())
+
+  reservation Reservation @relation(fields: [reservationId], references: [id])
+
+  @@map("payments")
+}
+
+model Document {
+  id                 String   @id @default(cuid())
+  clientId           String
+  type               String // license | insurance
+  encryptedFileUrl   String
+  uploadedAt         DateTime @default(now())
+  verificationStatus String   @default("pending") // pending | verified | rejected
+  consentAt          DateTime // Loi 25: explicit consent timestamp, captured same request
+
+  client Client @relation(fields: [clientId], references: [id])
+
+  @@map("documents")
+}
