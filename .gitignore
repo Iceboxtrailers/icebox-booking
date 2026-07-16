@@ -48,3 +48,6 @@ next-env.d.ts
 /dev.db-shm
 /dev.db-wal
 /uploads
+
+.vercel
+.env*
