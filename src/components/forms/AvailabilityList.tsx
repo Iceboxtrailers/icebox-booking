@@ -2,10 +2,10 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { CheckCircle2, Truck } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { fmt } from "@/lib/dates";
-import { TRAILER_TYPE_LABEL_FR, type TrailerType } from "@/lib/constants";
 import type { AvailabilityCandidate } from "@/lib/availability";
 
 export function AvailabilityList({
@@ -73,20 +73,29 @@ export function AvailabilityList({
             <Truck size={22} className="text-navy" />
             <div className="flex-1">
               <div className="text-sm font-medium">
-                {TRAILER_TYPE_LABEL_FR[c.type as TrailerType] ?? c.type} {c.size}{" "}
-                <span className="text-xs font-normal text-muted">({c.tempRange})</span>
+                Remorque {c.size} <span className="text-xs font-normal text-muted">({c.tempRangeLabel})</span>
               </div>
               <div className="text-xs text-muted">
                 {fmt(c.windowStart)} → {fmt(c.windowEnd)} · {c.nights} jour(s)
               </div>
             </div>
-            <div className="font-mono font-medium">{(c.dailyRateCents / 100).toFixed(2)} $/jour</div>
+            <div className="font-mono font-medium">{(c.totalCents / 100).toFixed(2)} $</div>
             {chosen && <CheckCircle2 size={18} className="text-navy" />}
           </div>
         );
       })}
 
       {error && <div className="mb-3 text-[13px] text-red-600">{error}</div>}
+
+      <div className="mb-4 text-[11px] text-muted">
+        Prix avant taxes. Des frais de transport (livraison et récupération) et, pour les demandes de
+        dernière minute, des frais d&apos;urgence peuvent s&apos;appliquer en sus — voir les détails sur la
+        page{" "}
+        <Link href="/#tarification" className="text-navy underline">
+          tarification
+        </Link>
+        .
+      </div>
 
       <div className="mt-4 flex justify-between">
         <Button type="button" onClick={() => router.back()}>

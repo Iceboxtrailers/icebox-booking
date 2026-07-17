@@ -7,14 +7,6 @@ export type VerificationStatus = (typeof VERIFICATION_STATUS)[number];
 export const TRAILER_STATUS = ["available", "maintenance", "retired"] as const;
 export type TrailerStatus = (typeof TRAILER_STATUS)[number];
 
-export const TRAILER_TYPE = ["refrigerated", "frozen"] as const;
-export type TrailerType = (typeof TRAILER_TYPE)[number];
-
-export const TRAILER_TYPE_LABEL_FR: Record<TrailerType, string> = {
-  refrigerated: "Réfrigérée",
-  frozen: "Congelée",
-};
-
 export const TRAILER_SIZE = ["5x10", "6x12"] as const;
 export type TrailerSize = (typeof TRAILER_SIZE)[number];
 

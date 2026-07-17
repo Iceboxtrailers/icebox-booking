@@ -25,11 +25,9 @@ export class StubSignatureProvider implements SignatureProvider {
     const paragraph = buildContractText({
       firstName: reservation.client.firstName,
       lastName: reservation.client.lastName,
-      trailerType: reservation.trailer.type,
       trailerSize: reservation.trailer.size,
       start,
       end,
-      dailyRateCents: reservation.trailer.dailyRate,
       totalCents: reservation.totalAmount,
     });
 

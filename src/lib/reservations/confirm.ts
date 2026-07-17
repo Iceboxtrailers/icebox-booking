@@ -50,8 +50,6 @@ export async function confirmReservation(reservationId: string, clientId: string
 
   const { subject, html } = confirmationEmail({
     firstName: confirmed.client.firstName,
-    trailerModel: confirmed.trailer!.model,
-    trailerType: confirmed.trailer!.type,
     trailerSize: confirmed.trailer!.size,
     start,
     end,

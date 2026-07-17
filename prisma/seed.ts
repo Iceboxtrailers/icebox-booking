@@ -11,17 +11,14 @@ const prisma = new PrismaClient({ adapter });
 
 async function main() {
   for (const item of CATALOGUE) {
-    const name = `${item.model}-01`;
+    const name = `${item.size}-01`;
     const existing = await prisma.trailer.findFirst({ where: { name } });
     if (existing) continue;
 
     await prisma.trailer.create({
       data: {
         name,
-        model: item.model,
-        type: item.type,
         size: item.size,
-        dailyRate: item.dailyRateCents,
         status: "available",
       },
     });

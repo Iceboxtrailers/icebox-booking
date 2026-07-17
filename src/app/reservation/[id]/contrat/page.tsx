@@ -26,11 +26,9 @@ export default async function ContratPage({ params }: { params: Promise<{ id: st
   const contractText = buildContractText({
     firstName: reservation.client.firstName,
     lastName: reservation.client.lastName,
-    trailerType: reservation.trailer.type,
     trailerSize: reservation.trailer.size,
     start,
     end,
-    dailyRateCents: reservation.trailer.dailyRate,
     totalCents: reservation.totalAmount,
   });
 

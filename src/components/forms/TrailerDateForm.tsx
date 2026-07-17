@@ -7,12 +7,9 @@ import { Field } from "@/components/ui/Field";
 import { Input } from "@/components/ui/Input";
 import { addDays, fmt } from "@/lib/dates";
 import { FLEX_WINDOW_DAYS } from "@/lib/constants";
-import type { DateRangeType, TrailerSize, TrailerType } from "@/lib/constants";
+import { catalogueFor } from "@/lib/catalogue";
+import type { DateRangeType, TrailerSize } from "@/lib/constants";
 
-const TYPE_OPTIONS: { value: TrailerType; label: string }[] = [
-  { value: "refrigerated", label: "Réfrigérée" },
-  { value: "frozen", label: "Congelée" },
-];
 const SIZE_OPTIONS: TrailerSize[] = ["5x10", "6x12"];
 
 export function TrailerDateForm({
@@ -20,10 +17,9 @@ export function TrailerDateForm({
   initial,
 }: {
   reservationId: string;
-  initial: { type: TrailerType; size: TrailerSize; dateRangeType: DateRangeType; start: string; end: string };
+  initial: { size: TrailerSize; dateRangeType: DateRangeType; start: string; end: string };
 }) {
   const router = useRouter();
-  const [type, setType] = useState<TrailerType>(initial.type);
   const [size, setSize] = useState<TrailerSize>(initial.size);
   const [dateRangeType, setDateRangeType] = useState<DateRangeType>(initial.dateRangeType);
   const [start, setStart] = useState(initial.start);
@@ -32,6 +28,7 @@ export function TrailerDateForm({
   const [submitting, setSubmitting] = useState(false);
 
   const canSubmit = Boolean(start && end);
+  const meta = catalogueFor(size);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -57,7 +54,7 @@ export function TrailerDateForm({
         setError(data.error ?? "Impossible d'enregistrer");
         return;
       }
-      const qs = new URLSearchParams({ type, size }).toString();
+      const qs = new URLSearchParams({ size }).toString();
       router.push(`/reservation/${reservationId}/disponibilites?${qs}`);
     } finally {
       setSubmitting(false);
@@ -66,24 +63,8 @@ export function TrailerDateForm({
 
   return (
     <form onSubmit={handleSubmit}>
-      <span className="mb-1 block text-[11px] uppercase tracking-wide text-muted">Type de remorque</span>
-      <div className="mb-3.5 flex gap-2">
-        {TYPE_OPTIONS.map((opt) => (
-          <button
-            type="button"
-            key={opt.value}
-            onClick={() => setType(opt.value)}
-            className={`rounded-md border px-4 py-2.5 text-[13px] ${
-              type === opt.value ? "border-navy bg-[#E4EEF4]" : "border-border bg-white"
-            }`}
-          >
-            {opt.label}
-          </button>
-        ))}
-      </div>
-
-      <span className="mb-1 block text-[11px] uppercase tracking-wide text-muted">Format</span>
-      <div className="mb-3.5 flex gap-2">
+      <span className="mb-1 block text-[11px] uppercase tracking-wide text-muted">Format de remorque</span>
+      <div className="mb-1.5 flex gap-2">
         {SIZE_OPTIONS.map((s) => (
           <button
             type="button"
@@ -97,6 +78,11 @@ export function TrailerDateForm({
           </button>
         ))}
       </div>
+      {meta && (
+        <div className="mb-3.5 text-[12px] text-muted">
+          Plage de température : {meta.tempRangeLabel} · {meta.description}
+        </div>
+      )}
 
       <span className="mb-1 block text-[11px] uppercase tracking-wide text-muted">Type de plage</span>
       <div className="mb-3.5 flex gap-2">

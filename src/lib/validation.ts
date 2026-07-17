@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { DATE_RANGE_TYPE, TRAILER_SIZE, TRAILER_TYPE } from "@/lib/constants";
+import { DATE_RANGE_TYPE, TRAILER_SIZE } from "@/lib/constants";
 
 const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Date invalide");
 
@@ -18,7 +18,6 @@ export const loginSchema = z.object({
 
 export const trailerDatesSchema = z
   .object({
-    type: z.enum(TRAILER_TYPE),
     size: z.enum(TRAILER_SIZE),
     dateRangeType: z.enum(DATE_RANGE_TYPE),
     start: isoDate,
@@ -44,4 +43,12 @@ export const documentUploadSchema = z.object({
 
 export const signContractSchema = z.object({
   signerName: z.string().trim().min(1, "Nom du signataire requis"),
+});
+
+export const contactSchema = z.object({
+  topic: z.string().trim().min(1),
+  name: z.string().trim().min(1, "Nom requis"),
+  email: z.string().trim().email("Courriel invalide"),
+  phone: z.string().trim().optional(),
+  message: z.string().trim().min(1, "Message requis"),
 });

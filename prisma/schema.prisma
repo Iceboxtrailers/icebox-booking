@@ -35,12 +35,9 @@ model Client {
 
 model Trailer {
   id        String   @id @default(cuid())
-  name      String // physical unit label, e.g. "R510-01"
-  model     String // catalogue key: R510 | R612 | C510 | C612
-  size      String // 5x10 | 6x12
-  type      String // refrigerated | frozen
+  name      String // physical unit label, e.g. "5x10-01"
+  size      String // 5x10 | 6x12 — the only variant; pricing lives in src/lib/pricing.ts
   plate     String?
-  dailyRate Int // cents
   status    String   @default("available") // available | maintenance | retired
   createdAt DateTime @default(now())
 

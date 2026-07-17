@@ -32,7 +32,6 @@ export default async function ConfirmationPage({ params }: { params: Promise<{ i
       <ConfirmationSummary
         firstName={reservation.client.firstName}
         lastName={reservation.client.lastName}
-        trailerType={reservation.trailer.type}
         trailerSize={reservation.trailer.size}
         start={reservation.pickupDate.toISOString().slice(0, 10)}
         end={reservation.returnDate.toISOString().slice(0, 10)}

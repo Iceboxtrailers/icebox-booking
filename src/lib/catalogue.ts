@@ -1,54 +1,33 @@
-import type { TrailerSize, TrailerType } from "@/lib/constants";
+import type { TrailerSize } from "@/lib/constants";
 
-export type CatalogueModel = {
-  model: string;
-  type: TrailerType;
+export type CatalogueEntry = {
   size: TrailerSize;
-  tempRange: string;
-  dailyRateCents: number;
+  tempRangeLabel: string;
+  interiorDimensions: string;
+  approxWeightLb: number;
   description: string;
 };
 
-// Mirrors the CATALOGUE constant from the original prototype (prototype-site-location.jsx).
-export const CATALOGUE: CatalogueModel[] = [
+// From "Offre de service Icebox 2026.pdf". Only 2 physical sizes exist — each
+// is a single adjustable-temperature trailer, not separate refrigerated/frozen
+// SKUs (that was placeholder data from the original prototype).
+export const CATALOGUE: CatalogueEntry[] = [
   {
-    model: "R510",
-    type: "refrigerated",
     size: "5x10",
-    tempRange: "-2°C à +4°C",
-    dailyRateCents: 9500,
-    description: "Idéale pour événements, traiteurs, petits volumes.",
+    tempRangeLabel: "2°C à +15°C",
+    interiorDimensions: "52\" L x 116\" P x 74\" H",
+    approxWeightLb: 1800,
+    description: "Idéale pour petits volumes, événements, traiteurs, chasseurs, commerces.",
   },
   {
-    model: "R612",
-    type: "refrigerated",
     size: "6x12",
-    tempRange: "-2°C à +4°C",
-    dailyRateCents: 13000,
-    description: "Grand volume réfrigéré, quais et commerces.",
-  },
-  {
-    model: "C510",
-    type: "frozen",
-    size: "5x10",
-    tempRange: "-18°C à -22°C",
-    dailyRateCents: 11500,
-    description: "Congélation profonde, format compact.",
-  },
-  {
-    model: "C612",
-    type: "frozen",
-    size: "6x12",
-    tempRange: "-18°C à -22°C",
-    dailyRateCents: 15000,
-    description: "Congélation profonde, grand volume.",
+    tempRangeLabel: "-18°C à +15°C",
+    interiorDimensions: "64\" L x 136\" P x 78\" H",
+    approxWeightLb: 2400,
+    description: "Grands volumes, événements, industries, distribution.",
   },
 ];
 
-export function findCatalogueModel(model: string) {
-  return CATALOGUE.find((c) => c.model === model);
-}
-
-export function catalogueFor(type: TrailerType, size: TrailerSize) {
-  return CATALOGUE.filter((c) => c.type === type && c.size === size);
+export function catalogueFor(size: TrailerSize) {
+  return CATALOGUE.find((c) => c.size === size);
 }

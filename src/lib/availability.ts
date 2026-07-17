@@ -1,18 +1,15 @@
 import { prisma } from "@/lib/prisma";
 import { addDays, nights } from "@/lib/dates";
 import { computeTotalCents } from "@/lib/pricing";
-import { catalogueFor, findCatalogueModel } from "@/lib/catalogue";
-import type { DateRangeType, TrailerSize, TrailerType } from "@/lib/constants";
+import { catalogueFor } from "@/lib/catalogue";
+import type { DateRangeType, TrailerSize } from "@/lib/constants";
 
 export type AvailabilityWindow = { start: string; end: string; offsetDays: number };
 
 export type AvailabilityCandidate = {
   trailerId: string;
-  model: string;
-  type: TrailerType;
   size: TrailerSize;
-  tempRange: string;
-  dailyRateCents: number;
+  tempRangeLabel: string;
   windowStart: string;
   windowEnd: string;
   nights: number;
@@ -57,7 +54,6 @@ async function hasConflict(
 }
 
 export async function searchAvailability(input: {
-  type: TrailerType;
   size: TrailerSize;
   dateRangeType: DateRangeType;
   start: string;
@@ -65,12 +61,11 @@ export async function searchAvailability(input: {
   flexWindowDays: number;
   excludeReservationId?: string;
 }): Promise<AvailabilityCandidate[]> {
-  const models = catalogueFor(input.type, input.size);
-  if (models.length === 0) return [];
+  const meta = catalogueFor(input.size);
+  if (!meta) return [];
 
   const trailers = await prisma.trailer.findMany({
     where: {
-      type: input.type,
       size: input.size,
       status: "available",
     },
@@ -80,22 +75,18 @@ export async function searchAvailability(input: {
   const candidates: AvailabilityCandidate[] = [];
 
   for (const trailer of trailers) {
-    const meta = findCatalogueModel(trailer.model);
     for (const w of windows) {
       const conflicting = await hasConflict(trailer.id, w.start, w.end, input.excludeReservationId);
       if (conflicting) continue;
 
       candidates.push({
         trailerId: trailer.id,
-        model: trailer.model,
-        type: input.type,
         size: input.size,
-        tempRange: meta?.tempRange ?? "",
-        dailyRateCents: trailer.dailyRate,
+        tempRangeLabel: meta.tempRangeLabel,
         windowStart: w.start,
         windowEnd: w.end,
         nights: nights(w.start, w.end),
-        totalCents: computeTotalCents(trailer.dailyRate, w.start, w.end),
+        totalCents: computeTotalCents(input.size, w.start, w.end),
       });
     }
   }
