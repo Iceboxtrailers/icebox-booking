@@ -29,6 +29,10 @@ model Client {
   marketingOptIn       Boolean   @default(false)
   resetTokenHash       String?
   resetTokenExpiresAt  DateTime?
+  billingAddress       String?
+  billingCity          String?
+  billingProvince      String?
+  billingPostalCode    String?
 
   reservations Reservation[]
   documents    Document[]

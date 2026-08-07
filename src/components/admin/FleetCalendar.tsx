@@ -33,7 +33,7 @@ export function FleetCalendar({ calendar }: { calendar: MonthCalendar }) {
   const nextMonth = month === 12 ? 1 : month + 1;
   const nextYear = month === 12 ? year + 1 : year;
 
-  const trailers = rows.map((r) => ({ id: r.trailerId, name: r.trailerName, size: r.size }));
+  const trailers = rows.map((r, i) => ({ id: r.trailerId, number: i + 1, name: r.trailerName, size: r.size }));
 
   function openBlankCreate() {
     const today = new Date().toISOString().slice(0, 10);
@@ -87,7 +87,7 @@ export function FleetCalendar({ calendar }: { calendar: MonthCalendar }) {
             </tr>
           </thead>
           <tbody>
-            {rows.map((row) => {
+            {rows.map((row, rowIndex) => {
               const cells = [];
               let day = 1;
               while (day <= daysInMonth) {
@@ -127,7 +127,7 @@ export function FleetCalendar({ calendar }: { calendar: MonthCalendar }) {
               return (
                 <tr key={row.trailerId}>
                   <td className="sticky left-0 z-10 whitespace-nowrap bg-white px-2 py-1.5 font-medium">
-                    {row.trailerName}
+                    {rowIndex + 1} — {row.trailerName}
                   </td>
                   {cells}
                 </tr>

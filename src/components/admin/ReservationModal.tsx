@@ -14,7 +14,7 @@ type ModalState =
   | { mode: "edit"; reservationId: string }
   | { mode: "create"; trailerId: string; pickupDate: string };
 
-type TrailerOption = { id: string; name: string; size: string };
+type TrailerOption = { id: string; number: number; name: string; size: string };
 type ClientOption = { id: string; firstName: string; lastName: string; email: string; phone: string };
 
 const STATUS_LABEL_FR: Record<string, string> = {
@@ -61,7 +61,16 @@ export function ReservationModal({
   const [clientQuery, setClientQuery] = useState("");
   const [clientResults, setClientResults] = useState<ClientOption[]>([]);
   const [selectedClient, setSelectedClient] = useState<ClientOption | null>(null);
-  const [newClient, setNewClient] = useState({ firstName: "", lastName: "", email: "", phone: "" });
+  const [newClient, setNewClient] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    billingAddress: "",
+    billingCity: "",
+    billingProvince: "Québec",
+    billingPostalCode: "",
+  });
 
   useEffect(() => {
     if (state.mode !== "edit") return;
@@ -278,6 +287,28 @@ export function ReservationModal({
                       value={newClient.phone}
                       onChange={(e) => setNewClient((c) => ({ ...c, phone: e.target.value }))}
                     />
+                    <Input
+                      placeholder="Adresse (facturation)"
+                      className="col-span-2"
+                      value={newClient.billingAddress}
+                      onChange={(e) => setNewClient((c) => ({ ...c, billingAddress: e.target.value }))}
+                    />
+                    <Input
+                      placeholder="Ville"
+                      value={newClient.billingCity}
+                      onChange={(e) => setNewClient((c) => ({ ...c, billingCity: e.target.value }))}
+                    />
+                    <Input
+                      placeholder="Province"
+                      value={newClient.billingProvince}
+                      onChange={(e) => setNewClient((c) => ({ ...c, billingProvince: e.target.value }))}
+                    />
+                    <Input
+                      placeholder="Code postal"
+                      className="col-span-2"
+                      value={newClient.billingPostalCode}
+                      onChange={(e) => setNewClient((c) => ({ ...c, billingPostalCode: e.target.value }))}
+                    />
                   </div>
                 )}
               </div>
@@ -298,7 +329,7 @@ export function ReservationModal({
                 </option>
                 {trailers.map((t) => (
                   <option key={t.id} value={t.id}>
-                    {t.name} ({t.size})
+                    {t.number} — {t.name} ({t.size})
                   </option>
                 ))}
               </select>

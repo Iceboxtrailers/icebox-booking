@@ -83,6 +83,10 @@ export const adminClientCreateSchema = z.object({
   lastName: z.string().trim().min(1, "Nom requis"),
   email: z.string().trim().email("Courriel invalide"),
   phone: z.string().trim().min(7, "Téléphone invalide"),
+  billingAddress: z.string().trim().optional(),
+  billingCity: z.string().trim().optional(),
+  billingProvince: z.string().trim().optional(),
+  billingPostalCode: z.string().trim().optional(),
 });
 
 export const contactSchema = z.object({
