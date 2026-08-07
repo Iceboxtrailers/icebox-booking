@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { Plus } from "lucide-react";
+import { Button } from "@/components/ui/Button";
 import type { MonthCalendar } from "@/lib/admin/calendar";
 import { ReservationModal } from "@/components/admin/ReservationModal";
 
@@ -33,6 +35,11 @@ export function FleetCalendar({ calendar }: { calendar: MonthCalendar }) {
 
   const trailers = rows.map((r) => ({ id: r.trailerId, name: r.trailerName, size: r.size }));
 
+  function openBlankCreate() {
+    const today = new Date().toISOString().slice(0, 10);
+    setModal({ mode: "create", trailerId: trailers[0]?.id ?? "", pickupDate: today });
+  }
+
   return (
     <div>
       <div className="mb-3 flex items-center justify-between">
@@ -40,6 +47,9 @@ export function FleetCalendar({ calendar }: { calendar: MonthCalendar }) {
           {MONTH_LABELS_FR[month - 1]} {year}
         </div>
         <div className="flex gap-2">
+          <Button type="button" variant="cta" onClick={openBlankCreate}>
+            <Plus size={14} /> Réservation
+          </Button>
           <Link
             href={`/dashboard?year=${prevYear}&month=${prevMonth}`}
             className="rounded-md border border-border px-3 py-1.5 text-[13px] hover:bg-[#EDF2F4]"
