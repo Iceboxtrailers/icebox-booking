@@ -81,6 +81,17 @@ export function DocumentUpload({ reservationId }: { reservationId: string }) {
 
       {error && <div className="mt-3 text-[13px] text-red-600">{error}</div>}
 
+      <div className="mt-2 text-[12px] text-muted">
+        Vous préférez le faire en succursale ?{" "}
+        <button
+          type="button"
+          onClick={() => router.push(`/reservation/${reservationId}/contrat`)}
+          className="text-navy underline"
+        >
+          Passer cette étape
+        </button>
+      </div>
+
       <div className="mt-4 flex justify-between">
         <Button type="button" onClick={() => router.back()}>
           Précédent

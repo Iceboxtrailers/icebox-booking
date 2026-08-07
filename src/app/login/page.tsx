@@ -49,6 +49,11 @@ function LoginForm() {
           <Field label="Mot de passe">
             <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
           </Field>
+          <div className="mb-3 text-right text-[12px]">
+            <a href="/mot-de-passe-oublie" className="text-navy underline">
+              Mot de passe oublié ?
+            </a>
+          </div>
           {error && <div className="mb-3 text-[13px] text-red-600">{error}</div>}
           <Button type="submit" variant="cta" disabled={submitting} className="w-full justify-center">
             {submitting ? "Connexion..." : "Se connecter"}

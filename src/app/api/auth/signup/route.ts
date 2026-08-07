@@ -23,6 +23,7 @@ export async function POST(request: Request) {
       email: parsed.data.email,
       phone: parsed.data.phone,
       passwordHash,
+      marketingOptIn: parsed.data.marketingOptIn ?? false,
     },
   });
 

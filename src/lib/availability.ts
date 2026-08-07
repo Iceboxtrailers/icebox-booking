@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { addDays, nights } from "@/lib/dates";
 import { computeTotalCents } from "@/lib/pricing";
 import { catalogueFor } from "@/lib/catalogue";
+import { TRAILER_SIZE } from "@/lib/constants";
 import type { DateRangeType, TrailerSize } from "@/lib/constants";
 
 export type AvailabilityWindow = { start: string; end: string; offsetDays: number };
@@ -54,40 +55,40 @@ async function hasConflict(
 }
 
 export async function searchAvailability(input: {
-  size: TrailerSize;
+  size?: TrailerSize;
   dateRangeType: DateRangeType;
   start: string;
   end: string;
   flexWindowDays: number;
   excludeReservationId?: string;
 }): Promise<AvailabilityCandidate[]> {
-  const meta = catalogueFor(input.size);
-  if (!meta) return [];
-
-  const trailers = await prisma.trailer.findMany({
-    where: {
-      size: input.size,
-      status: "available",
-    },
-  });
-
+  const sizes = input.size ? [input.size] : TRAILER_SIZE;
   const windows = buildWindows(input.dateRangeType, input.start, input.end, input.flexWindowDays);
   const candidates: AvailabilityCandidate[] = [];
 
-  for (const trailer of trailers) {
-    for (const w of windows) {
-      const conflicting = await hasConflict(trailer.id, w.start, w.end, input.excludeReservationId);
-      if (conflicting) continue;
+  for (const size of sizes) {
+    const meta = catalogueFor(size);
+    if (!meta) continue;
 
-      candidates.push({
-        trailerId: trailer.id,
-        size: input.size,
-        tempRangeLabel: meta.tempRangeLabel,
-        windowStart: w.start,
-        windowEnd: w.end,
-        nights: nights(w.start, w.end),
-        totalCents: computeTotalCents(input.size, w.start, w.end),
-      });
+    const trailers = await prisma.trailer.findMany({
+      where: { size, status: "available" },
+    });
+
+    for (const trailer of trailers) {
+      for (const w of windows) {
+        const conflicting = await hasConflict(trailer.id, w.start, w.end, input.excludeReservationId);
+        if (conflicting) continue;
+
+        candidates.push({
+          trailerId: trailer.id,
+          size,
+          tempRangeLabel: meta.tempRangeLabel,
+          windowStart: w.start,
+          windowEnd: w.end,
+          nights: nights(w.start, w.end),
+          totalCents: computeTotalCents(size, w.start, w.end),
+        });
+      }
     }
   }
 

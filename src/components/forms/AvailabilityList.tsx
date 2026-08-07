@@ -54,9 +54,11 @@ export function AvailabilityList({
       </div>
 
       {candidates.length === 0 && (
-        <div className="text-[13px] text-muted">
-          Aucune disponibilité trouvée pour ces dates. Revenez à l&apos;étape précédente pour ajuster votre
-          demande.
+        <div className="mb-3.5 rounded-lg border border-border-light bg-[#FAFBFB] p-3.5 text-[13px] text-foreground">
+          Aucune disponibilité trouvée pour ces dates. Communiquez directement avec IceBox pour vérifier les
+          options : <a href="mailto:info@iceboxtrailers.ca" className="text-navy underline">info@iceboxtrailers.ca</a>{" "}
+          ou par téléphone au <a href="tel:+15818892093" className="text-navy underline">581 889-2093</a>. Vous
+          pouvez aussi revenir à l&apos;étape précédente pour ajuster vos dates.
         </div>
       )}
 

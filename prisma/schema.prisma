@@ -16,16 +16,19 @@ datasource db {
 // validated with zod in src/lib/validation.ts.
 
 model Client {
-  id                 String   @id @default(cuid())
-  firstName          String
-  lastName           String
-  email              String   @unique
-  phone              String
-  passwordHash       String
-  createdAt          DateTime @default(now())
-  verificationStatus String   @default("pending") // pending | verified | rejected
-  internalNote       String?
-  status             String   @default("active") // active | suspended | blacklisted
+  id                   String    @id @default(cuid())
+  firstName            String
+  lastName             String
+  email                String    @unique
+  phone                String
+  passwordHash         String
+  createdAt            DateTime  @default(now())
+  verificationStatus   String    @default("pending") // pending | verified | rejected
+  internalNote         String?
+  status               String    @default("active") // active | suspended | blacklisted
+  marketingOptIn       Boolean   @default(false)
+  resetTokenHash       String?
+  resetTokenExpiresAt  DateTime?
 
   reservations Reservation[]
   documents    Document[]

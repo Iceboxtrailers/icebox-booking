@@ -7,20 +7,16 @@ import { Field } from "@/components/ui/Field";
 import { Input } from "@/components/ui/Input";
 import { addDays, fmt } from "@/lib/dates";
 import { FLEX_WINDOW_DAYS } from "@/lib/constants";
-import { catalogueFor } from "@/lib/catalogue";
-import type { DateRangeType, TrailerSize } from "@/lib/constants";
-
-const SIZE_OPTIONS: TrailerSize[] = ["5x10", "6x12"];
+import type { DateRangeType } from "@/lib/constants";
 
 export function TrailerDateForm({
   reservationId,
   initial,
 }: {
   reservationId: string;
-  initial: { size: TrailerSize; dateRangeType: DateRangeType; start: string; end: string };
+  initial: { dateRangeType: DateRangeType; start: string; end: string };
 }) {
   const router = useRouter();
-  const [size, setSize] = useState<TrailerSize>(initial.size);
   const [dateRangeType, setDateRangeType] = useState<DateRangeType>(initial.dateRangeType);
   const [start, setStart] = useState(initial.start);
   const [end, setEnd] = useState(initial.end);
@@ -28,7 +24,6 @@ export function TrailerDateForm({
   const [submitting, setSubmitting] = useState(false);
 
   const canSubmit = Boolean(start && end);
-  const meta = catalogueFor(size);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -54,8 +49,7 @@ export function TrailerDateForm({
         setError(data.error ?? "Impossible d'enregistrer");
         return;
       }
-      const qs = new URLSearchParams({ size }).toString();
-      router.push(`/reservation/${reservationId}/disponibilites?${qs}`);
+      router.push(`/reservation/${reservationId}/disponibilites`);
     } finally {
       setSubmitting(false);
     }
@@ -63,27 +57,6 @@ export function TrailerDateForm({
 
   return (
     <form onSubmit={handleSubmit}>
-      <span className="mb-1 block text-[11px] uppercase tracking-wide text-muted">Format de remorque</span>
-      <div className="mb-1.5 flex gap-2">
-        {SIZE_OPTIONS.map((s) => (
-          <button
-            type="button"
-            key={s}
-            onClick={() => setSize(s)}
-            className={`rounded-md border px-4 py-2.5 text-[13px] ${
-              size === s ? "border-navy bg-[#E4EEF4]" : "border-border bg-white"
-            }`}
-          >
-            {s}
-          </button>
-        ))}
-      </div>
-      {meta && (
-        <div className="mb-3.5 text-[12px] text-muted">
-          Plage de température : {meta.tempRangeLabel} · {meta.description}
-        </div>
-      )}
-
       <span className="mb-1 block text-[11px] uppercase tracking-wide text-muted">Type de plage</span>
       <div className="mb-3.5 flex gap-2">
         <button

@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { DATE_RANGE_TYPE, TRAILER_SIZE } from "@/lib/constants";
 
 const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Date invalide");
 
@@ -9,6 +8,7 @@ export const signupSchema = z.object({
   email: z.string().trim().email("Courriel invalide"),
   phone: z.string().trim().min(7, "Téléphone invalide"),
   password: z.string().min(8, "Le mot de passe doit contenir au moins 8 caractères"),
+  marketingOptIn: z.boolean().optional(),
 });
 
 export const loginSchema = z.object({
@@ -16,19 +16,24 @@ export const loginSchema = z.object({
   password: z.string().min(1, "Mot de passe requis"),
 });
 
-export const trailerDatesSchema = z
-  .object({
-    size: z.enum(TRAILER_SIZE),
-    dateRangeType: z.enum(DATE_RANGE_TYPE),
-    start: isoDate,
-    end: isoDate,
-  })
-  .refine((v) => v.end > v.start, {
-    message: "La date de retour doit être après la date de ramassage",
-    path: ["end"],
-  });
+export const forgotPasswordSchema = z.object({
+  email: z.string().trim().email("Courriel invalide"),
+});
 
-export const availabilityRequestSchema = trailerDatesSchema;
+export const resetPasswordSchema = z.object({
+  token: z.string().min(1),
+  password: z.string().min(8, "Le mot de passe doit contenir au moins 8 caractères"),
+});
+
+export const updateAccountSchema = z.object({
+  email: z.string().trim().email("Courriel invalide"),
+  phone: z.string().trim().min(7, "Téléphone invalide"),
+});
+
+export const changePasswordSchema = z.object({
+  currentPassword: z.string().min(1, "Mot de passe actuel requis"),
+  newPassword: z.string().min(8, "Le mot de passe doit contenir au moins 8 caractères"),
+});
 
 export const selectTrailerSchema = z.object({
   trailerId: z.string().min(1),

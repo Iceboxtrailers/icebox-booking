@@ -22,3 +22,17 @@ export function confirmationEmail(p: {
   `;
   return { subject, html };
 }
+
+export function passwordResetEmail(p: { firstName: string; resetUrl: string }) {
+  const subject = "Réinitialisation de votre mot de passe — IceBox";
+  const html = `
+    <div style="font-family: sans-serif; color: #1B2733;">
+      <h2>Réinitialisation de mot de passe</h2>
+      <p>Bonjour ${p.firstName},</p>
+      <p>Cliquez sur le lien ci-dessous pour choisir un nouveau mot de passe. Ce lien expire dans 1 heure.</p>
+      <p><a href="${p.resetUrl}">Réinitialiser mon mot de passe</a></p>
+      <p>Si vous n'avez pas demandé cette réinitialisation, ignorez ce courriel.</p>
+    </div>
+  `;
+  return { subject, html };
+}

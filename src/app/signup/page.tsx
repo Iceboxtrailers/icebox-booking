@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/Button";
 export default function SignupPage() {
   const router = useRouter();
   const [form, setForm] = useState({ firstName: "", lastName: "", email: "", phone: "", password: "" });
+  const [marketingOptIn, setMarketingOptIn] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -26,7 +27,7 @@ export default function SignupPage() {
       const res = await fetch("/api/auth/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ ...form, marketingOptIn }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -89,6 +90,16 @@ export default function SignupPage() {
               minLength={8}
             />
           </Field>
+          <label className="mb-4 flex items-start gap-2 text-[12px] text-muted">
+            <input
+              type="checkbox"
+              checked={marketingOptIn}
+              onChange={(e) => setMarketingOptIn(e.target.checked)}
+              className="mt-0.5"
+            />
+            J&apos;accepte de recevoir des courriels promotionnels d&apos;IceBox concernant les offres et
+            nouveautés.
+          </label>
           {error && <div className="mb-3 text-[13px] text-red-600">{error}</div>}
           <Button type="submit" variant="cta" disabled={submitting} className="w-full justify-center">
             {submitting ? "Création..." : "Créer mon compte"}

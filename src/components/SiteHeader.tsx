@@ -36,13 +36,19 @@ export function SiteHeader() {
             Devenir concessionnaire
           </Link>
           {session ? (
-            <button
-              onClick={() => signOut({ callbackUrl: "/" })}
-              className="flex items-center gap-1.5 text-[13px] font-medium text-foreground hover:text-navy"
-            >
-              <LogOut size={16} />
-              Déconnexion
-            </button>
+            <>
+              <Link href="/compte" className="flex items-center gap-1.5 text-[13px] font-medium text-foreground hover:text-navy">
+                <User size={16} />
+                Mon compte
+              </Link>
+              <button
+                onClick={() => signOut({ callbackUrl: "/" })}
+                className="flex items-center gap-1.5 text-[13px] font-medium text-foreground hover:text-navy"
+              >
+                <LogOut size={16} />
+                Déconnexion
+              </button>
+            </>
           ) : (
             <Link href="/login" className="flex items-center gap-1.5 text-[13px] font-medium text-foreground hover:text-navy">
               <User size={16} />
