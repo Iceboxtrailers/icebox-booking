@@ -36,6 +36,17 @@ model Client {
   @@map("clients")
 }
 
+// Internal staff login for /dashboard — deliberately separate from Client,
+// no shared table or session identity between the two.
+model AdminUser {
+  id           String   @id @default(cuid())
+  username     String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+
+  @@map("admin_users")
+}
+
 model Trailer {
   id        String   @id @default(cuid())
   name      String // physical unit label, e.g. "5x10-01"

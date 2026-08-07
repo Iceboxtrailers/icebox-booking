@@ -11,13 +11,22 @@ export const authConfig = {
   },
   providers: [],
   callbacks: {
-    jwt: async ({ token, user }) => {
-      if (user?.id) token.clientId = user.id;
+    // account.provider tells apart the two Credentials providers (client vs
+    // admin) at sign-in time, so a JWT only ever carries one identity.
+    jwt: async ({ token, user, account }) => {
+      if (user?.id && account?.provider === "admin-credentials") {
+        token.adminId = user.id;
+      } else if (user?.id) {
+        token.clientId = user.id;
+      }
       return token;
     },
     session: async ({ session, token }) => {
       if (token.clientId && typeof token.clientId === "string") {
         session.clientId = token.clientId;
+      }
+      if (token.adminId && typeof token.adminId === "string") {
+        session.adminId = token.adminId;
       }
       return session;
     },

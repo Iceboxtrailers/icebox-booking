@@ -7,7 +7,16 @@ import { authConfig } from "@/lib/auth.config";
 const { auth } = NextAuth(authConfig);
 
 export default auth((req) => {
-  if (!req.auth) {
+  if (req.nextUrl.pathname.startsWith("/dashboard")) {
+    if (!req.auth?.adminId) {
+      const loginUrl = new URL("/admin/login", req.nextUrl.origin);
+      loginUrl.searchParams.set("callbackUrl", req.nextUrl.pathname);
+      return NextResponse.redirect(loginUrl);
+    }
+    return;
+  }
+
+  if (!req.auth?.clientId) {
     const loginUrl = new URL("/login", req.nextUrl.origin);
     loginUrl.searchParams.set("callbackUrl", req.nextUrl.pathname);
     return NextResponse.redirect(loginUrl);
@@ -23,5 +32,6 @@ export const config = {
     "/api/contracts/:path*",
     "/api/deposits/:path*",
     "/api/files/:path*",
+    "/dashboard/:path*",
   ],
 };
