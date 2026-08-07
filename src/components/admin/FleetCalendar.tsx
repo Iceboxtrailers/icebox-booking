@@ -1,19 +1,37 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
 import type { MonthCalendar } from "@/lib/admin/calendar";
+import { ReservationModal } from "@/components/admin/ReservationModal";
 
 const MONTH_LABELS_FR = [
   "janvier", "février", "mars", "avril", "mai", "juin",
   "juillet", "août", "septembre", "octobre", "novembre", "décembre",
 ];
 
+type ModalState =
+  | { mode: "edit"; reservationId: string }
+  | { mode: "create"; trailerId: string; pickupDate: string }
+  | null;
+
+function isoDateForDay(year: number, month: number, day: number): string {
+  const mm = String(month).padStart(2, "0");
+  const dd = String(day).padStart(2, "0");
+  return `${year}-${mm}-${dd}`;
+}
+
 export function FleetCalendar({ calendar }: { calendar: MonthCalendar }) {
   const { year, month, daysInMonth, rows } = calendar;
   const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
+  const [modal, setModal] = useState<ModalState>(null);
 
   const prevMonth = month === 1 ? 12 : month - 1;
   const prevYear = month === 1 ? year - 1 : year;
   const nextMonth = month === 12 ? 1 : month + 1;
   const nextYear = month === 12 ? year + 1 : year;
+
+  const trailers = rows.map((r) => ({ id: r.trailerId, name: r.trailerName, size: r.size }));
 
   return (
     <div>
@@ -35,6 +53,10 @@ export function FleetCalendar({ calendar }: { calendar: MonthCalendar }) {
             Suivant →
           </Link>
         </div>
+      </div>
+
+      <div className="mb-2 text-[11px] text-muted">
+        Cliquez sur une réservation pour la modifier, ou sur une case vide pour en créer une nouvelle.
       </div>
 
       <div className="overflow-x-auto rounded-lg border border-border-light">
@@ -67,14 +89,28 @@ export function FleetCalendar({ calendar }: { calendar: MonthCalendar }) {
                       key={day}
                       colSpan={span}
                       title={block.label}
-                      className="whitespace-nowrap border-l border-border-light bg-[#E4EEF4] px-1 py-1.5 text-center font-medium text-navy"
+                      onClick={() => setModal({ mode: "edit", reservationId: block.reservationId })}
+                      className="cursor-pointer whitespace-nowrap border-l border-border-light bg-[#E4EEF4] px-1 py-1.5 text-center font-medium text-navy hover:bg-[#cfe2ee]"
                     >
                       {span >= 2 ? block.label : ""}
                     </td>
                   );
                   day += span;
                 } else {
-                  cells.push(<td key={day} className="border-l border-border-light px-1 py-1.5" />);
+                  const thisDay = day;
+                  cells.push(
+                    <td
+                      key={day}
+                      onClick={() =>
+                        setModal({
+                          mode: "create",
+                          trailerId: row.trailerId,
+                          pickupDate: isoDateForDay(year, month, thisDay),
+                        })
+                      }
+                      className="cursor-pointer border-l border-border-light px-1 py-1.5 hover:bg-[#F4F6F7]"
+                    />
+                  );
                   day += 1;
                 }
               }
@@ -90,6 +126,15 @@ export function FleetCalendar({ calendar }: { calendar: MonthCalendar }) {
           </tbody>
         </table>
       </div>
+
+      {modal && (
+        <ReservationModal
+          key={modal.mode === "edit" ? modal.reservationId : `create-${modal.trailerId}-${modal.pickupDate}`}
+          state={modal}
+          trailers={trailers}
+          onClose={() => setModal(null)}
+        />
+      )}
     </div>
   );
 }

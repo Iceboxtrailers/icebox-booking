@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { RESERVATION_STATUS } from "@/lib/constants";
 
 const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Date invalide");
 
@@ -53,6 +54,35 @@ export const documentUploadSchema = z.object({
 
 export const signContractSchema = z.object({
   signerName: z.string().trim().min(1, "Nom du signataire requis"),
+});
+
+export const adminReservationCreateSchema = z
+  .object({
+    clientId: z.string().min(1, "Client requis"),
+    trailerId: z.string().min(1, "Remorque requise"),
+    pickupDate: isoDate,
+    returnDate: isoDate,
+    totalAmount: z.number().int().min(0),
+    status: z.enum(RESERVATION_STATUS).optional(),
+  })
+  .refine((v) => v.returnDate > v.pickupDate, {
+    message: "La date de retour doit être après la date de ramassage",
+    path: ["returnDate"],
+  });
+
+export const adminReservationUpdateSchema = z.object({
+  status: z.enum(RESERVATION_STATUS).optional(),
+  pickupDate: isoDate.optional(),
+  returnDate: isoDate.optional(),
+  trailerId: z.string().min(1).optional(),
+  totalAmount: z.number().int().min(0).optional(),
+});
+
+export const adminClientCreateSchema = z.object({
+  firstName: z.string().trim().min(1, "Prénom requis"),
+  lastName: z.string().trim().min(1, "Nom requis"),
+  email: z.string().trim().email("Courriel invalide"),
+  phone: z.string().trim().min(7, "Téléphone invalide"),
 });
 
 export const contactSchema = z.object({
