@@ -1,7 +1,8 @@
 import { z } from "zod";
-import { RESERVATION_STATUS } from "@/lib/constants";
+import { RESERVATION_STATUS, TRAILER_SIZE, TRAILER_STATUS } from "@/lib/constants";
 
 const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Date invalide");
+const isoTime = z.string().regex(/^\d{2}:\d{2}$/, "Heure invalide");
 
 export const signupSchema = z.object({
   firstName: z.string().trim().min(1, "Prénom requis"),
@@ -64,6 +65,9 @@ export const adminReservationCreateSchema = z
     returnDate: isoDate,
     totalAmount: z.number().int().min(0),
     status: z.enum(RESERVATION_STATUS).optional(),
+    note: z.string().trim().optional(),
+    pickupTime: isoTime.optional().or(z.literal("")),
+    returnTime: isoTime.optional().or(z.literal("")),
   })
   .refine((v) => v.returnDate > v.pickupDate, {
     message: "La date de retour doit être après la date de ramassage",
@@ -76,6 +80,20 @@ export const adminReservationUpdateSchema = z.object({
   returnDate: isoDate.optional(),
   trailerId: z.string().min(1).optional(),
   totalAmount: z.number().int().min(0).optional(),
+  note: z.string().trim().optional(),
+  pickupTime: isoTime.optional().or(z.literal("")),
+  returnTime: isoTime.optional().or(z.literal("")),
+});
+
+export const adminTrailerCreateSchema = z.object({
+  name: z.string().trim().min(1, "Nom requis"),
+  size: z.enum(TRAILER_SIZE),
+});
+
+export const adminTrailerUpdateSchema = z.object({
+  name: z.string().trim().min(1).optional(),
+  size: z.enum(TRAILER_SIZE).optional(),
+  status: z.enum(TRAILER_STATUS).optional(),
 });
 
 export const adminClientCreateSchema = z.object({

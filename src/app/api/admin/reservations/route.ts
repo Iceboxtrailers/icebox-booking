@@ -14,7 +14,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Requête invalide" }, { status: 400 });
   }
 
-  const { clientId, trailerId, pickupDate, returnDate, totalAmount, status } = parsed.data;
+  const { clientId, trailerId, pickupDate, returnDate, totalAmount, status, note, pickupTime, returnTime } =
+    parsed.data;
 
   const conflicting = await hasConflict(trailerId, pickupDate, returnDate);
   if (conflicting) {
@@ -30,6 +31,9 @@ export async function POST(request: Request) {
       totalAmount,
       status: status ?? "confirmed",
       dateRangeType: "fixed",
+      note: note || null,
+      pickupTime: pickupTime || null,
+      returnTime: returnTime || null,
     },
     include: { client: true, trailer: true },
   });

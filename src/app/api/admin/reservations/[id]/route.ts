@@ -32,7 +32,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Requête invalide" }, { status: 400 });
   }
 
-  const { pickupDate, returnDate, trailerId, ...rest } = parsed.data;
+  const { pickupDate, returnDate, trailerId, note, pickupTime, returnTime, ...rest } = parsed.data;
   const nextTrailerId = trailerId ?? existing.trailerId;
   const nextPickup = pickupDate ? new Date(`${pickupDate}T00:00:00Z`) : existing.pickupDate;
   const nextReturn = returnDate ? new Date(`${returnDate}T00:00:00Z`) : existing.returnDate;
@@ -56,6 +56,9 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       ...(trailerId ? { trailerId } : {}),
       ...(pickupDate ? { pickupDate: nextPickup } : {}),
       ...(returnDate ? { returnDate: nextReturn } : {}),
+      ...(note !== undefined ? { note: note || null } : {}),
+      ...(pickupTime !== undefined ? { pickupTime: pickupTime || null } : {}),
+      ...(returnTime !== undefined ? { returnTime: returnTime || null } : {}),
     },
     include: { client: true, trailer: true },
   });

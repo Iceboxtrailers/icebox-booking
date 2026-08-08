@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/Card";
 import { getDashboardKpis } from "@/lib/admin/kpis";
-import { getFleetCalendar } from "@/lib/admin/calendar";
-import { FleetCalendar } from "@/components/admin/FleetCalendar";
+import { getFleetBoardData } from "@/lib/admin/board";
+import { FleetBoard } from "@/components/admin/FleetBoard";
 import { TRAILER_SIZE } from "@/lib/constants";
 
 function StatCard({ label, value, sub }: { label: string; value: string; sub?: string }) {
@@ -24,7 +24,7 @@ export default async function DashboardPage({
   const year = Number(yearParam) || now.getFullYear();
   const month = Number(monthParam) || now.getMonth() + 1;
 
-  const [kpis, calendar] = await Promise.all([getDashboardKpis(), getFleetCalendar(year, month)]);
+  const [kpis, board] = await Promise.all([getDashboardKpis(), getFleetBoardData(year, month)]);
 
   const mostRequested = kpis.bookingsBySize[0];
   const mostRequestedLabel = mostRequested ? `${mostRequested.size} (${mostRequested.count})` : "—";
@@ -62,8 +62,7 @@ export default async function DashboardPage({
       </div>
 
       <div className="mt-8">
-        <h2 className="font-heading mb-3 text-lg">Calendrier de la flotte</h2>
-        <FleetCalendar calendar={calendar} />
+        <FleetBoard board={board} />
       </div>
     </div>
   );

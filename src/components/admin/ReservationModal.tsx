@@ -52,6 +52,10 @@ export function ReservationModal({
   );
   const [totalAmountDollars, setTotalAmountDollars] = useState("");
   const [status, setStatus] = useState<string>("confirmed");
+  const [note, setNote] = useState("");
+  const [pickupTime, setPickupTime] = useState("");
+  const [returnTime, setReturnTime] = useState("");
+  const [deleting, setDeleting] = useState(false);
 
   // Edit mode: read-only client display, fetched with the reservation.
   const [clientDisplay, setClientDisplay] = useState<ClientOption | null>(null);
@@ -88,6 +92,9 @@ export function ReservationModal({
       setReturnDate(data.returnDate ? data.returnDate.slice(0, 10) : "");
       setTotalAmountDollars((data.totalAmount / 100).toFixed(2));
       setStatus(data.status);
+      setNote(data.note ?? "");
+      setPickupTime(data.pickupTime ?? "");
+      setReturnTime(data.returnTime ?? "");
       setClientDisplay(data.client);
       setLoading(false);
     })();
@@ -137,7 +144,7 @@ export function ReservationModal({
         const res = await fetch(`/api/admin/reservations/${state.reservationId}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ status, pickupDate, returnDate, trailerId, totalAmount }),
+          body: JSON.stringify({ status, pickupDate, returnDate, trailerId, totalAmount, note, pickupTime, returnTime }),
         });
         if (!res.ok) {
           const data = await res.json().catch(() => ({}));
@@ -167,7 +174,17 @@ export function ReservationModal({
         const res = await fetch("/api/admin/reservations", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ clientId, trailerId, pickupDate, returnDate, totalAmount, status }),
+          body: JSON.stringify({
+            clientId,
+            trailerId,
+            pickupDate,
+            returnDate,
+            totalAmount,
+            status,
+            note,
+            pickupTime,
+            returnTime,
+          }),
         });
         if (!res.ok) {
           const data = await res.json().catch(() => ({}));
@@ -180,6 +197,29 @@ export function ReservationModal({
       onClose();
     } finally {
       setSubmitting(false);
+    }
+  }
+
+  async function handleDelete() {
+    if (state.mode !== "edit") return;
+    if (!window.confirm("Annuler cette réservation ?")) return;
+    setDeleting(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/admin/reservations/${state.reservationId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "cancelled" }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setError(data.error ?? "Impossible d'annuler");
+        return;
+      }
+      router.refresh();
+      onClose();
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -361,6 +401,15 @@ export function ReservationModal({
             </div>
 
             <div className="grid grid-cols-2 gap-3">
+              <Field label="Heure de ramassage">
+                <Input type="time" value={pickupTime} onChange={(e) => setPickupTime(e.target.value)} />
+              </Field>
+              <Field label="Heure de retour">
+                <Input type="time" value={returnTime} onChange={(e) => setReturnTime(e.target.value)} />
+              </Field>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
               <Field label="Montant total ($)">
                 <Input
                   type="number"
@@ -386,15 +435,38 @@ export function ReservationModal({
               </Field>
             </div>
 
+            <Field label="Note">
+              <textarea
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+                rows={2}
+                className="w-full rounded-md border border-border px-3 py-2.5 text-[13px] outline-none focus:border-navy"
+              />
+            </Field>
+
             {error && <div className="mb-3 text-[13px] text-red-600">{error}</div>}
 
-            <div className="mt-4 flex justify-end gap-2">
-              <Button type="button" onClick={onClose}>
-                Annuler
-              </Button>
-              <Button type="submit" variant="cta" disabled={submitting}>
-                {submitting ? "..." : "Enregistrer"}
-              </Button>
+            <div className="mt-4 flex items-center justify-between gap-2">
+              {state.mode === "edit" ? (
+                <button
+                  type="button"
+                  onClick={handleDelete}
+                  disabled={deleting}
+                  className="text-[13px] text-red-600 hover:underline disabled:opacity-50"
+                >
+                  {deleting ? "..." : "Supprimer"}
+                </button>
+              ) : (
+                <span />
+              )}
+              <div className="flex gap-2">
+                <Button type="button" onClick={onClose}>
+                  Annuler
+                </Button>
+                <Button type="submit" variant="cta" disabled={submitting}>
+                  {submitting ? "..." : "Enregistrer"}
+                </Button>
+              </div>
             </div>
           </form>
         )}
