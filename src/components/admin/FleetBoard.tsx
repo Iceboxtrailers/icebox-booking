@@ -25,12 +25,12 @@ const STATUS_LABEL_FR: Record<string, string> = {
 };
 
 const TRAILER_COLORS = [
-  { bg: "#E4EEF4", border: "#67bbe9", text: "#005f9b" },
-  { bg: "#E9F5EC", border: "#7ac999", text: "#2a6b45" },
-  { bg: "#FBF0E2", border: "#e5b06a", text: "#8a5a1c" },
-  { bg: "#F1EAF7", border: "#b590d9", text: "#5f3a85" },
-  { bg: "#FBE9EE", border: "#e58aa4", text: "#8a2f4d" },
-  { bg: "#E9F3F5", border: "#7fb8c4", text: "#2b5c68" },
+  { bg: "#E4EEF4", border: "#2F6690", text: "#173A50" },
+  { bg: "#E4F1F5", border: "#3E8FB0", text: "#1B4653" },
+  { bg: "#EAEFF4", border: "#5B7B9A", text: "#293F52" },
+  { bg: "#E1EAEF", border: "#26536F", text: "#152C3A" },
+  { bg: "#E5EFF1", border: "#4C8398", text: "#213B44" },
+  { bg: "#EBE8F2", border: "#6B5B95", text: "#332C4C" },
 ];
 
 type ModalState =
@@ -203,6 +203,10 @@ export function FleetBoard({ board }: { board: FleetBoardData }) {
           <div className="space-y-2">
             {trailers.map((t, i) => (
               <div key={t.id} className="flex flex-wrap items-center gap-2 border-b border-border-light pb-2 text-[13px]">
+                <span
+                  className="h-3 w-3 shrink-0 rounded-[3px]"
+                  style={{ background: TRAILER_COLORS[i % TRAILER_COLORS.length].border }}
+                />
                 <span className="w-5 text-muted">{i + 1}</span>
                 <input
                   defaultValue={t.name}
@@ -289,39 +293,28 @@ export function FleetBoard({ board }: { board: FleetBoardData }) {
             →
           </Link>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="relative">
-            <Search size={14} className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-muted" />
-            <Input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Rechercher client ou téléphone..."
-              className="w-56 pl-8"
-            />
-          </div>
-          <div className="flex rounded-md border border-border">
+        <div className="flex rounded-md border border-border">
+          <button
+            type="button"
+            onClick={() => setView("agenda")}
+            className={`flex items-center gap-1 px-2.5 py-1.5 text-[13px] ${view === "agenda" ? "bg-[#E4EEF4] text-navy" : "bg-white"}`}
+          >
+            <List size={14} /> Agenda
+          </button>
+          {!isNarrow && (
             <button
               type="button"
-              onClick={() => setView("agenda")}
-              className={`flex items-center gap-1 px-2.5 py-1.5 text-[13px] ${view === "agenda" ? "bg-[#E4EEF4] text-navy" : "bg-white"}`}
+              onClick={() => setView("grille")}
+              className={`flex items-center gap-1 border-l border-border px-2.5 py-1.5 text-[13px] ${view === "grille" ? "bg-[#E4EEF4] text-navy" : "bg-white"}`}
             >
-              <List size={14} /> Agenda
+              <LayoutGrid size={14} /> Grille
             </button>
-            {!isNarrow && (
-              <button
-                type="button"
-                onClick={() => setView("grille")}
-                className={`flex items-center gap-1 border-l border-border px-2.5 py-1.5 text-[13px] ${view === "grille" ? "bg-[#E4EEF4] text-navy" : "bg-white"}`}
-              >
-                <LayoutGrid size={14} /> Grille
-              </button>
-            )}
-          </div>
+          )}
         </div>
       </div>
 
-      {activeView === "grille" ? (
-        <div className="overflow-x-auto rounded-lg border border-border-light">
+      {activeView === "grille" && (
+        <div className="mb-4 overflow-x-auto rounded-lg border border-border-light">
           <table className="border-collapse text-[11px]">
             <thead>
               <tr>
@@ -419,7 +412,23 @@ export function FleetBoard({ board }: { board: FleetBoardData }) {
             </tbody>
           </table>
         </div>
-      ) : (
+      )}
+
+      <Card className="p-4">
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+          <div className="text-[14px] font-medium">
+            Réservations — {MONTH_LABELS_FR[month - 1]} {year}
+          </div>
+          <div className="relative">
+            <Search size={14} className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-muted" />
+            <Input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Rechercher un client..."
+              className="w-56 pl-8"
+            />
+          </div>
+        </div>
         <div className="space-y-2">
           {filteredReservations.length === 0 && (
             <div className="rounded-lg border border-border-light bg-[#FAFBFB] p-4 text-center text-[13px] text-muted">
@@ -455,7 +464,6 @@ export function FleetBoard({ board }: { board: FleetBoardData }) {
                     {trailerOpt ? `${trailerOpt.number} — ${trailerOpt.name}` : ""}
                   </div>
                 </div>
-                {r.note && <div className="max-w-[200px] truncate text-muted" title={r.note}>{r.note}</div>}
                 <div className="ml-auto flex items-center gap-2">
                   {isConflict && (
                     <span className="rounded-full bg-red-100 px-2 py-0.5 text-[11px] text-red-700">Conflit</span>
@@ -483,11 +491,12 @@ export function FleetBoard({ board }: { board: FleetBoardData }) {
                     Modifier
                   </button>
                 </div>
+                {r.note && <div className="basis-full pl-[22px] text-[12px] text-[#8a5a1c]">{r.note}</div>}
               </div>
             );
           })}
         </div>
-      )}
+      </Card>
 
       {modal && (
         <ReservationModal
