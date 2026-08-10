@@ -86,6 +86,9 @@ export function FleetBoard({ board }: { board: FleetBoardData }) {
   const isNarrow = useIsNarrow(680);
   const [view, setView] = useState<"grille" | "agenda">("agenda");
   const activeView = isNarrow ? "agenda" : view;
+  const DAY_W = isNarrow ? 26 : 34;
+  const LABEL_W = isNarrow ? 84 : 150;
+  const todayIso = new Date().toISOString().slice(0, 10);
 
   const [search, setSearch] = useState("");
   const [fleetOpen, setFleetOpen] = useState(false);
@@ -314,103 +317,142 @@ export function FleetBoard({ board }: { board: FleetBoardData }) {
       </div>
 
       {activeView === "grille" && (
-        <div className="mb-4 overflow-x-auto rounded-lg border border-border-light">
-          <table className="border-collapse text-[11px]">
-            <thead>
-              <tr>
-                <th className="sticky left-0 z-10 bg-[#FAFBFB] px-2 py-1.5 text-left font-medium text-muted">
-                  Remorque
-                </th>
-                {days.map((d) => (
-                  <th
+        <div className="mb-4 overflow-x-auto rounded-lg border border-border-light p-3">
+          <div style={{ minWidth: LABEL_W + daysInMonth * DAY_W }}>
+            <div style={{ display: "grid", gridTemplateColumns: `${LABEL_W}px repeat(${daysInMonth}, ${DAY_W}px)` }}>
+              <div />
+              {days.map((d) => {
+                const dow = new Date(Date.UTC(year, month - 1, d)).getUTCDay();
+                const isToday = isoDateForDay(year, month, d) === todayIso;
+                return (
+                  <div
                     key={d}
-                    className="min-w-[26px] border-l border-border-light bg-[#FAFBFB] px-1 py-1.5 text-center font-medium text-muted"
+                    className="text-center text-[10px] font-medium"
+                    style={{
+                      color: dow === 0 || dow === 6 ? "#B5732A" : "var(--color-muted)",
+                      background: isToday ? "#E4EEF4" : "transparent",
+                      borderRadius: 4,
+                      padding: "2px 0",
+                    }}
                   >
                     {d}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {trailers.map((trailer, rowIndex) => {
-                const color = TRAILER_COLORS[rowIndex % TRAILER_COLORS.length];
-                const monthFirstIso = isoDateForDay(year, month, 1);
-                const monthLastIso = isoDateForDay(year, month, daysInMonth);
-
-                const blocks = monthReservations
-                  .filter((r) => r.trailerId === trailer.id)
-                  .map((r) => {
-                    const clippedStartIso = r.pickupDate < monthFirstIso ? monthFirstIso : r.pickupDate;
-                    const lastOccupiedIso = new Date(
-                      new Date(`${r.returnDate}T00:00:00Z`).getTime() - 86400000
-                    )
-                      .toISOString()
-                      .slice(0, 10);
-                    const clippedEndIso = lastOccupiedIso > monthLastIso ? monthLastIso : lastOccupiedIso;
-                    return {
-                      reservation: r,
-                      startDay: Number(clippedStartIso.slice(8, 10)),
-                      endDay: Number(clippedEndIso.slice(8, 10)),
-                    };
-                  })
-                  .sort((a, b) => a.startDay - b.startDay);
-
-                const cells = [];
-                let day = 1;
-                while (day <= daysInMonth) {
-                  const block = blocks.find((b) => b.startDay === day);
-                  if (block) {
-                    const span = Math.max(1, block.endDay - block.startDay + 1);
-                    const r = block.reservation;
-                    const isConflict = conflictSet.has(r.id);
-                    cells.push(
-                      <td
-                        key={day}
-                        colSpan={span}
-                        title={`${r.clientName}${r.note ? " — " + r.note : ""}`}
-                        onClick={() => setModal({ mode: "edit", reservationId: r.id })}
-                        style={{
-                          background: color.bg,
-                          color: color.text,
-                          borderLeft: `2px solid ${isConflict ? "#dc2626" : color.border}`,
-                          borderTop: r.status === "pending" ? "1px dashed #8a5a1c" : undefined,
-                          borderBottom: r.status === "pending" ? "1px dashed #8a5a1c" : undefined,
-                        }}
-                        className="cursor-pointer whitespace-nowrap px-1 py-1.5 text-center font-medium hover:opacity-80"
-                      >
-                        {span >= 2 ? r.clientName.split(" ").slice(-1)[0] : ""}
-                      </td>
-                    );
-                    day += span;
-                  } else {
-                    const thisDay = day;
-                    cells.push(
-                      <td
-                        key={day}
-                        onClick={() =>
-                          setModal({
-                            mode: "create",
-                            trailerId: trailer.id,
-                            pickupDate: isoDateForDay(year, month, thisDay),
-                          })
-                        }
-                        className="cursor-pointer border-l border-border-light px-1 py-1.5 hover:bg-[#F4F6F7]"
-                      />
-                    );
-                    day += 1;
-                  }
-                }
-                return (
-                  <tr key={trailer.id}>
-                    <td className="sticky left-0 z-10 whitespace-nowrap bg-white px-2 py-1.5 font-medium">
-                      {rowIndex + 1} — {trailer.name}
-                    </td>
-                    {cells}
-                  </tr>
+                  </div>
                 );
               })}
-            </tbody>
-          </table>
+            </div>
+            {trailers.map((trailer, rowIndex) => {
+              const color = TRAILER_COLORS[rowIndex % TRAILER_COLORS.length];
+              const monthFirstIso = isoDateForDay(year, month, 1);
+              const monthLastIso = isoDateForDay(year, month, daysInMonth);
+
+              const blocks = monthReservations
+                .filter((r) => r.trailerId === trailer.id)
+                .map((r) => {
+                  const clippedStartIso = r.pickupDate < monthFirstIso ? monthFirstIso : r.pickupDate;
+                  const lastOccupiedIso = new Date(new Date(`${r.returnDate}T00:00:00Z`).getTime() - 86400000)
+                    .toISOString()
+                    .slice(0, 10);
+                  const clippedEndIso = lastOccupiedIso > monthLastIso ? monthLastIso : lastOccupiedIso;
+                  return {
+                    reservation: r,
+                    startDay: Number(clippedStartIso.slice(8, 10)),
+                    endDay: Number(clippedEndIso.slice(8, 10)),
+                  };
+                });
+
+              return (
+                <div
+                  key={trailer.id}
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: `${LABEL_W}px 1fr`,
+                    borderTop: "1px solid var(--color-border-light)",
+                    minHeight: 44,
+                  }}
+                >
+                  <div className="flex items-center gap-2 overflow-hidden py-1.5 pr-2 text-[12px]">
+                    <span
+                      className="h-2.5 w-2.5 shrink-0 rounded-[3px]"
+                      style={{ background: color.border }}
+                    />
+                    <div className="overflow-hidden">
+                      <div className="truncate font-medium">{trailer.name}</div>
+                      <div className="font-mono text-[10px] text-muted">{trailer.size}</div>
+                    </div>
+                  </div>
+                  <div style={{ position: "relative", width: daysInMonth * DAY_W }}>
+                    <div
+                      style={{
+                        display: "grid",
+                        gridTemplateColumns: `repeat(${daysInMonth}, ${DAY_W}px)`,
+                        position: "absolute",
+                        inset: 0,
+                      }}
+                    >
+                      {days.map((d) => {
+                        const dow = new Date(Date.UTC(year, month - 1, d)).getUTCDay();
+                        return (
+                          <div
+                            key={d}
+                            onClick={() =>
+                              setModal({
+                                mode: "create",
+                                trailerId: trailer.id,
+                                pickupDate: isoDateForDay(year, month, d),
+                              })
+                            }
+                            style={{
+                              height: "100%",
+                              borderRight: "1px solid #F3F5F6",
+                              background: dow === 0 || dow === 6 ? "#FAFBFB" : "transparent",
+                              cursor: "pointer",
+                            }}
+                          />
+                        );
+                      })}
+                    </div>
+                    {blocks.map(({ reservation: r, startDay, endDay }) => {
+                      const isConflict = conflictSet.has(r.id);
+                      const isPending = r.status === "pending";
+                      const left = (startDay - 1) * DAY_W;
+                      const width = Math.max((endDay - startDay + 1) * DAY_W - 4, DAY_W - 4);
+                      return (
+                        <div
+                          key={r.id}
+                          onClick={() => setModal({ mode: "edit", reservationId: r.id })}
+                          title={`${r.clientName}${r.note ? " — " + r.note : ""}`}
+                          style={{
+                            position: "absolute",
+                            top: 6,
+                            left,
+                            width,
+                            height: 32,
+                            background: color.border,
+                            opacity: isPending ? 0.65 : 1,
+                            borderRadius: 6,
+                            display: "flex",
+                            alignItems: "center",
+                            padding: "0 8px",
+                            fontSize: 11.5,
+                            fontWeight: 500,
+                            color: "#fff",
+                            overflow: "hidden",
+                            whiteSpace: "nowrap",
+                            textOverflow: "ellipsis",
+                            cursor: "pointer",
+                            boxShadow: "0 1px 2px rgba(0,0,0,0.08)",
+                            border: isConflict ? "2px solid #dc2626" : isPending ? "2px dashed rgba(255,255,255,0.85)" : "none",
+                          }}
+                        >
+                          {r.clientName}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
       )}
 
