@@ -1,9 +1,13 @@
-import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
+import { PDFDocument, StandardFonts, rgb, type PDFFont } from "pdf-lib";
 import { prisma } from "@/lib/prisma";
 import { getStorage } from "@/lib/providers/storage";
-import { buildContractText } from "./contract-text";
+import { buildContractLines } from "./contract-text";
 import { wrapText } from "./wrap-text";
 import type { SignatureProvider } from "./types";
+import type { TrailerSize } from "@/lib/constants";
+
+const PAGE_SIZE: [number, number] = [612, 792];
+const MARGIN = 56;
 
 // Renders a PDF contract from reservation data and captures the on-page
 // canvas signature as a PNG. Clearly stamped as a non-binding prototype.
@@ -22,38 +26,71 @@ export class StubSignatureProvider implements SignatureProvider {
     const start = reservation.pickupDate.toISOString().slice(0, 10);
     const end = reservation.returnDate.toISOString().slice(0, 10);
 
-    const paragraph = buildContractText({
+    const lines = buildContractLines({
       firstName: reservation.client.firstName,
       lastName: reservation.client.lastName,
-      trailerSize: reservation.trailer.size,
+      company: reservation.client.company,
+      email: reservation.client.email,
+      phone: reservation.client.phone,
+      trailerSize: reservation.trailer.size as TrailerSize,
       start,
       end,
       totalCents: reservation.totalAmount,
+      billingAddress: reservation.client.billingAddress,
+      billingCity: reservation.client.billingCity,
+      billingProvince: reservation.client.billingProvince,
+      billingPostalCode: reservation.client.billingPostalCode,
     });
 
     const pdfDoc = await PDFDocument.create();
-    const page = pdfDoc.addPage([612, 792]);
     const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
     const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-    const margin = 56;
-    const maxWidth = page.getWidth() - margin * 2;
-    let y = page.getHeight() - margin;
+    const maxWidth = PAGE_SIZE[0] - MARGIN * 2;
+
+    let page = pdfDoc.addPage(PAGE_SIZE);
+    let y = page.getHeight() - MARGIN;
 
     page.drawText("PROTOTYPE — NON LÉGALEMENT CONTRAIGNANT", {
-      x: margin,
+      x: MARGIN,
       y,
-      size: 10,
+      size: 9,
       font: boldFont,
       color: rgb(0.75, 0.25, 0.05),
     });
-    y -= 28;
+    y -= 22;
 
-    page.drawText("Contrat de location — aperçu généré", { x: margin, y, size: 14, font: boldFont });
-    y -= 24;
+    const newPage = () => {
+      page = pdfDoc.addPage(PAGE_SIZE);
+      y = page.getHeight() - MARGIN;
+    };
+    const ensureRoom = (needed: number) => {
+      if (y - needed < MARGIN) newPage();
+    };
+    const drawWrapped = (text: string, size: number, useFont: PDFFont, color = rgb(0.15, 0.17, 0.2)) => {
+      for (const line of wrapText(text, useFont, size, maxWidth)) {
+        ensureRoom(size + 4);
+        page.drawText(line, { x: MARGIN, y, size, font: useFont, color });
+        y -= size + 4;
+      }
+    };
 
-    for (const line of wrapText(paragraph, font, 11, maxWidth)) {
-      page.drawText(line, { x: margin, y, size: 11, font, color: rgb(0.15, 0.17, 0.2) });
-      y -= 16;
+    for (const line of lines) {
+      if (line.type === "title") {
+        ensureRoom(20);
+        drawWrapped(line.text, 15, boldFont);
+        y -= 6;
+      } else if (line.type === "heading") {
+        ensureRoom(18);
+        y -= 4;
+        drawWrapped(line.text, 12.5, boldFont);
+      } else if (line.type === "subheading") {
+        ensureRoom(15);
+        drawWrapped(line.text, 11, boldFont);
+      } else if (line.type === "body") {
+        drawWrapped(line.text, 10.5, font);
+      } else {
+        y -= 8;
+      }
     }
 
     const pdfBytes = await pdfDoc.save();

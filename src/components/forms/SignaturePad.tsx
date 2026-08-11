@@ -6,15 +6,16 @@ import { RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Field } from "@/components/ui/Field";
 import { Input } from "@/components/ui/Input";
+import type { ContractLine } from "@/lib/providers/signature/contract-text";
 
 export function SignaturePad({
   reservationId,
-  contractText,
+  contractLines,
   defaultSignerName,
   initialPdfUrl,
 }: {
   reservationId: string;
-  contractText: string;
+  contractLines: ContractLine[];
   defaultSignerName: string;
   initialPdfUrl: string | null;
 }) {
@@ -115,14 +116,37 @@ export function SignaturePad({
 
   return (
     <div>
-      <div className="mb-4 rounded-lg border border-border-light bg-[#FAFBFB] p-4">
-        <div className="mb-2 text-[13px] font-semibold uppercase">
-          Contrat de location — aperçu généré
-        </div>
+      <div className="mb-4 max-h-96 overflow-y-auto rounded-lg border border-border-light bg-[#FAFBFB] p-4">
         <div className="mb-2 text-[11px] font-medium text-warn-text">
           PROTOTYPE — non légalement contraignant
         </div>
-        <div className="text-[12px] leading-relaxed text-[#3A454E]">{contractText}</div>
+        <div className="space-y-1 text-[12px] leading-relaxed text-[#3A454E]">
+          {contractLines.map((line, i) => {
+            if (line.type === "spacer") return <div key={i} className="h-2" />;
+            if (line.type === "title") {
+              return (
+                <div key={i} className="font-heading mb-1 text-[14px] text-foreground">
+                  {line.text}
+                </div>
+              );
+            }
+            if (line.type === "heading") {
+              return (
+                <div key={i} className="mt-2 text-[12.5px] font-semibold text-foreground">
+                  {line.text}
+                </div>
+              );
+            }
+            if (line.type === "subheading") {
+              return (
+                <div key={i} className="font-medium text-foreground">
+                  {line.text}
+                </div>
+              );
+            }
+            return <div key={i}>{line.text}</div>;
+          })}
+        </div>
         {pdfUrl && (
           <a href={pdfUrl} target="_blank" rel="noreferrer" className="mt-2 inline-block text-[12px] text-navy underline">
             Voir le contrat en PDF

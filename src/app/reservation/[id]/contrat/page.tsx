@@ -4,7 +4,8 @@ import { getCurrentClientId } from "@/lib/session";
 import { WizardShell } from "@/components/wizard/WizardShell";
 import { SignaturePad } from "@/components/forms/SignaturePad";
 import { stepIndexForSegment } from "@/lib/wizard";
-import { buildContractText } from "@/lib/providers/signature/contract-text";
+import { buildContractLines } from "@/lib/providers/signature/contract-text";
+import type { TrailerSize } from "@/lib/constants";
 
 export default async function ContratPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -23,20 +24,27 @@ export default async function ContratPage({ params }: { params: Promise<{ id: st
 
   const start = reservation.pickupDate.toISOString().slice(0, 10);
   const end = reservation.returnDate.toISOString().slice(0, 10);
-  const contractText = buildContractText({
+  const contractLines = buildContractLines({
     firstName: reservation.client.firstName,
     lastName: reservation.client.lastName,
-    trailerSize: reservation.trailer.size,
+    company: reservation.client.company,
+    email: reservation.client.email,
+    phone: reservation.client.phone,
+    trailerSize: reservation.trailer.size as TrailerSize,
     start,
     end,
     totalCents: reservation.totalAmount,
+    billingAddress: reservation.client.billingAddress,
+    billingCity: reservation.client.billingCity,
+    billingProvince: reservation.client.billingProvince,
+    billingPostalCode: reservation.client.billingPostalCode,
   });
 
   return (
     <WizardShell step={stepIndexForSegment("contrat")}>
       <SignaturePad
         reservationId={id}
-        contractText={contractText}
+        contractLines={contractLines}
         defaultSignerName={`${reservation.client.firstName} ${reservation.client.lastName}`}
         initialPdfUrl={reservation.contract?.pdfUrl ?? null}
       />
