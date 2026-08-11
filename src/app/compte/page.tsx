@@ -9,7 +9,14 @@ export default async function ComptePage() {
 
   return (
     <div>
-      <AccountProfileForm initialEmail={client.email} initialPhone={client.phone} />
+      <AccountProfileForm
+        initialEmail={client.email}
+        initialPhone={client.phone}
+        initialBillingAddress={client.billingAddress}
+        initialBillingCity={client.billingCity}
+        initialBillingProvince={client.billingProvince}
+        initialBillingPostalCode={client.billingPostalCode}
+      />
       <ChangePasswordForm />
     </div>
   );

@@ -5,9 +5,27 @@ import { Field } from "@/components/ui/Field";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 
-export function AccountProfileForm({ initialEmail, initialPhone }: { initialEmail: string; initialPhone: string }) {
+export function AccountProfileForm({
+  initialEmail,
+  initialPhone,
+  initialBillingAddress,
+  initialBillingCity,
+  initialBillingProvince,
+  initialBillingPostalCode,
+}: {
+  initialEmail: string;
+  initialPhone: string;
+  initialBillingAddress: string | null;
+  initialBillingCity: string | null;
+  initialBillingProvince: string | null;
+  initialBillingPostalCode: string | null;
+}) {
   const [email, setEmail] = useState(initialEmail);
   const [phone, setPhone] = useState(initialPhone);
+  const [billingAddress, setBillingAddress] = useState(initialBillingAddress ?? "");
+  const [billingCity, setBillingCity] = useState(initialBillingCity ?? "");
+  const [billingProvince, setBillingProvince] = useState(initialBillingProvince ?? "Québec");
+  const [billingPostalCode, setBillingPostalCode] = useState(initialBillingPostalCode ?? "");
   const [status, setStatus] = useState<"idle" | "submitting" | "saved">("idle");
   const [error, setError] = useState<string | null>(null);
 
@@ -19,7 +37,7 @@ export function AccountProfileForm({ initialEmail, initialPhone }: { initialEmai
       const res = await fetch("/api/account", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, phone }),
+        body: JSON.stringify({ email, phone, billingAddress, billingCity, billingProvince, billingPostalCode }),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -43,6 +61,23 @@ export function AccountProfileForm({ initialEmail, initialPhone }: { initialEmai
       <Field label="Téléphone">
         <Input value={phone} onChange={(e) => setPhone(e.target.value)} required />
       </Field>
+
+      <div className="mt-5 mb-3 text-[13px] font-medium">Adresse de facturation</div>
+      <Field label="Adresse">
+        <Input value={billingAddress} onChange={(e) => setBillingAddress(e.target.value)} />
+      </Field>
+      <div className="grid grid-cols-2 gap-3">
+        <Field label="Ville">
+          <Input value={billingCity} onChange={(e) => setBillingCity(e.target.value)} />
+        </Field>
+        <Field label="Province">
+          <Input value={billingProvince} onChange={(e) => setBillingProvince(e.target.value)} />
+        </Field>
+      </div>
+      <Field label="Code postal">
+        <Input value={billingPostalCode} onChange={(e) => setBillingPostalCode(e.target.value)} />
+      </Field>
+
       {error && <div className="mb-3 text-[13px] text-red-600">{error}</div>}
       {status === "saved" && <div className="mb-3 text-[13px] text-success">Informations enregistrées.</div>}
       <Button type="submit" variant="cta" disabled={status === "submitting"}>
