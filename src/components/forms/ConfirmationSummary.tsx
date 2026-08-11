@@ -1,5 +1,7 @@
+import Link from "next/link";
 import { CheckCircle2 } from "lucide-react";
 import { fmt } from "@/lib/dates";
+import { Button } from "@/components/ui/Button";
 
 export function ConfirmationSummary({
   firstName,
@@ -21,9 +23,14 @@ export function ConfirmationSummary({
       <div className="mb-4 text-[13px] text-muted">
         Remorque {trailerSize} du {fmt(start)} au {fmt(end)} pour {firstName} {lastName}.
       </div>
-      <div className="mx-auto max-w-sm text-[12px] text-muted">
+      <div className="mx-auto mb-5 max-w-sm text-[12px] text-muted">
         Un courriel de confirmation avec copie du contrat signé vous a été envoyé.
       </div>
+      <Link href="/compte/reservations">
+        <Button type="button" variant="cta">
+          Retourner à l&apos;espace client
+        </Button>
+      </Link>
     </div>
   );
 }
