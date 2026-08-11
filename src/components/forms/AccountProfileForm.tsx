@@ -6,6 +6,9 @@ import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 
 export function AccountProfileForm({
+  initialFirstName,
+  initialLastName,
+  initialCompany,
   initialEmail,
   initialPhone,
   initialBillingAddress,
@@ -13,6 +16,9 @@ export function AccountProfileForm({
   initialBillingProvince,
   initialBillingPostalCode,
 }: {
+  initialFirstName: string;
+  initialLastName: string;
+  initialCompany: string | null;
   initialEmail: string;
   initialPhone: string;
   initialBillingAddress: string | null;
@@ -20,6 +26,9 @@ export function AccountProfileForm({
   initialBillingProvince: string | null;
   initialBillingPostalCode: string | null;
 }) {
+  const [firstName, setFirstName] = useState(initialFirstName);
+  const [lastName, setLastName] = useState(initialLastName);
+  const [company, setCompany] = useState(initialCompany ?? "");
   const [email, setEmail] = useState(initialEmail);
   const [phone, setPhone] = useState(initialPhone);
   const [billingAddress, setBillingAddress] = useState(initialBillingAddress ?? "");
@@ -37,7 +46,17 @@ export function AccountProfileForm({
       const res = await fetch("/api/account", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, phone, billingAddress, billingCity, billingProvince, billingPostalCode }),
+        body: JSON.stringify({
+          firstName,
+          lastName,
+          company,
+          email,
+          phone,
+          billingAddress,
+          billingCity,
+          billingProvince,
+          billingPostalCode,
+        }),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -55,6 +74,17 @@ export function AccountProfileForm({
   return (
     <form onSubmit={handleSubmit} className="rounded-lg border border-border-light bg-white p-4">
       <div className="mb-3 text-[13px] font-medium">Informations personnelles</div>
+      <div className="grid grid-cols-2 gap-3">
+        <Field label="Prénom">
+          <Input value={firstName} onChange={(e) => setFirstName(e.target.value)} required />
+        </Field>
+        <Field label="Nom">
+          <Input value={lastName} onChange={(e) => setLastName(e.target.value)} required />
+        </Field>
+      </div>
+      <Field label="Entreprise (si applicable)">
+        <Input value={company} onChange={(e) => setCompany(e.target.value)} />
+      </Field>
       <Field label="Courriel">
         <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
       </Field>

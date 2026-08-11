@@ -21,6 +21,9 @@ export async function PATCH(request: Request) {
   const updated = await prisma.client.update({
     where: { id: clientId },
     data: {
+      firstName: parsed.data.firstName,
+      lastName: parsed.data.lastName,
+      company: parsed.data.company,
       email: parsed.data.email,
       phone: parsed.data.phone,
       billingAddress: parsed.data.billingAddress,
@@ -31,6 +34,9 @@ export async function PATCH(request: Request) {
   });
 
   return NextResponse.json({
+    firstName: updated.firstName,
+    lastName: updated.lastName,
+    company: updated.company,
     email: updated.email,
     phone: updated.phone,
     billingAddress: updated.billingAddress,

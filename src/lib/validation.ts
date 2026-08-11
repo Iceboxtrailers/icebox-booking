@@ -33,6 +33,9 @@ export const resetPasswordSchema = z.object({
 });
 
 export const updateAccountSchema = z.object({
+  firstName: z.string().trim().min(1, "Prénom requis"),
+  lastName: z.string().trim().min(1, "Nom requis"),
+  company: z.string().trim().optional(),
   email: z.string().trim().email("Courriel invalide"),
   phone: z.string().trim().min(7, "Téléphone invalide"),
   billingAddress: z.string().trim().optional(),

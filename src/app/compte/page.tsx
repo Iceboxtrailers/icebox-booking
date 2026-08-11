@@ -10,6 +10,9 @@ export default async function ComptePage() {
   return (
     <div>
       <AccountProfileForm
+        initialFirstName={client.firstName}
+        initialLastName={client.lastName}
+        initialCompany={client.company}
         initialEmail={client.email}
         initialPhone={client.phone}
         initialBillingAddress={client.billingAddress}

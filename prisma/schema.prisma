@@ -33,6 +33,7 @@ model Client {
   billingCity          String?
   billingProvince      String?
   billingPostalCode    String?
+  company              String?
 
   reservations Reservation[]
   documents    Document[]
