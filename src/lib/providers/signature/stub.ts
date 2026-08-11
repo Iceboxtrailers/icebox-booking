@@ -36,10 +36,7 @@ export class StubSignatureProvider implements SignatureProvider {
       start,
       end,
       totalCents: reservation.totalAmount,
-      billingAddress: reservation.client.billingAddress,
-      billingCity: reservation.client.billingCity,
-      billingProvince: reservation.client.billingProvince,
-      billingPostalCode: reservation.client.billingPostalCode,
+      usageLocation: reservation.usageLocation,
     });
 
     const pdfDoc = await PDFDocument.create();

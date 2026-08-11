@@ -13,6 +13,7 @@ const patchSchema = z.object({
   flexWindowDays: z.number().int().min(0).max(14).optional(),
   trailerId: z.string().min(1).optional(),
   totalAmount: z.number().int().min(0).optional(),
+  usageLocation: z.string().trim().min(1, "Lieu d'utilisation requis").optional(),
 });
 
 async function loadOwnedReservation(id: string, clientId: string) {

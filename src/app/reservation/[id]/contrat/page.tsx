@@ -18,7 +18,7 @@ export default async function ContratPage({ params }: { params: Promise<{ id: st
   });
   if (!reservation || reservation.clientId !== clientId) notFound();
   if (reservation.status !== "pending") redirect(`/reservation/${id}/confirmation`);
-  if (!reservation.trailer || !reservation.pickupDate || !reservation.returnDate) {
+  if (!reservation.trailer || !reservation.pickupDate || !reservation.returnDate || !reservation.usageLocation) {
     redirect(`/reservation/${id}/remorque-dates`);
   }
 
@@ -34,10 +34,7 @@ export default async function ContratPage({ params }: { params: Promise<{ id: st
     start,
     end,
     totalCents: reservation.totalAmount,
-    billingAddress: reservation.client.billingAddress,
-    billingCity: reservation.client.billingCity,
-    billingProvince: reservation.client.billingProvince,
-    billingPostalCode: reservation.client.billingPostalCode,
+    usageLocation: reservation.usageLocation,
   });
 
   return (

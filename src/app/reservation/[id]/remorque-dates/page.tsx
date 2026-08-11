@@ -19,6 +19,7 @@ export default async function RemorqueDatesPage({ params }: { params: Promise<{ 
     dateRangeType: (reservation.dateRangeType as DateRangeType) ?? "fixed",
     start: reservation.pickupDate ? reservation.pickupDate.toISOString().slice(0, 10) : "",
     end: reservation.returnDate ? reservation.returnDate.toISOString().slice(0, 10) : "",
+    usageLocation: reservation.usageLocation ?? "",
   };
 
   return (

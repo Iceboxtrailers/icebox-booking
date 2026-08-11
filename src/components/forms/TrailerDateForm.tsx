@@ -14,16 +14,17 @@ export function TrailerDateForm({
   initial,
 }: {
   reservationId: string;
-  initial: { dateRangeType: DateRangeType; start: string; end: string };
+  initial: { dateRangeType: DateRangeType; start: string; end: string; usageLocation: string };
 }) {
   const router = useRouter();
   const [dateRangeType, setDateRangeType] = useState<DateRangeType>(initial.dateRangeType);
   const [start, setStart] = useState(initial.start);
   const [end, setEnd] = useState(initial.end);
+  const [usageLocation, setUsageLocation] = useState(initial.usageLocation);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  const canSubmit = Boolean(start && end);
+  const canSubmit = Boolean(start && end && usageLocation.trim());
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -42,6 +43,7 @@ export function TrailerDateForm({
           pickupDate: start,
           returnDate: end,
           flexWindowDays: dateRangeType === "flexible" ? FLEX_WINDOW_DAYS : 0,
+          usageLocation,
         }),
       });
       if (!res.ok) {
@@ -94,6 +96,15 @@ export function TrailerDateForm({
           {fmt(addDays(start, FLEX_WINDOW_DAYS))}.
         </div>
       )}
+
+      <Field label="Lieu d'utilisation">
+        <Input
+          value={usageLocation}
+          onChange={(e) => setUsageLocation(e.target.value)}
+          placeholder="Adresse où la remorque sera utilisée"
+          required
+        />
+      </Field>
 
       {error && <div className="mb-3 text-[13px] text-red-600">{error}</div>}
 

@@ -80,6 +80,7 @@ model Reservation {
   note           String?
   pickupTime     String? // "HH:MM", display-only — pickupDate/returnDate stay pure dates
   returnTime     String? // "HH:MM", display-only
+  usageLocation  String? // where the trailer will be used, collected in the wizard, shown on the contract
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 

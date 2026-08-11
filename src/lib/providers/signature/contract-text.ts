@@ -8,8 +8,7 @@ import type { TrailerSize } from "@/lib/constants";
 const LOCATEUR_NAME = "Remorques Réfrigérées ICEBOX";
 const LOCATEUR_ADDRESS_LINE1 = "1005, rue du Parc-Industriel";
 const LOCATEUR_ADDRESS_LINE2 = "Lévis (Québec) G6Z 1C5";
-const LOCATEUR_SIGNATORY = "Vincent Bilodeau, Président";
-const ADDITIONAL_INSURED = "Gestion Immobilière VBFG Inc.";
+const ADDITIONAL_INSURED = "Remorques Réfrigérées ICEBOX Inc.";
 
 export type ContractLine =
   | { type: "title"; text: string }
@@ -36,20 +35,13 @@ export function buildContractLines(p: {
   start: string;
   end: string;
   totalCents: number;
-  billingAddress: string | null;
-  billingCity: string | null;
-  billingProvince: string | null;
-  billingPostalCode: string | null;
+  usageLocation: string | null;
 }): ContractLine[] {
   const n = nights(p.start, p.end);
   const catalogue = catalogueFor(p.trailerSize);
   const rate = RATE_TABLE[p.trailerSize];
   const clientName = `${p.firstName} ${p.lastName}`;
-
-  const addressParts = [p.billingAddress, p.billingCity, p.billingProvince, p.billingPostalCode].filter(
-    (v): v is string => Boolean(v && v.trim())
-  );
-  const lieuUtilisation = addressParts.length > 0 ? addressParts.join(", ") : "Adresse du locataire (voir dossier client)";
+  const lieuUtilisation = p.usageLocation?.trim() || "À préciser";
 
   const lines: ContractLine[] = [];
   const body = (text: string) => lines.push({ type: "body", text });
@@ -150,7 +142,7 @@ export function buildContractLines(p: {
   body(`Fait à Lévis, le ${fmt(today)}.`);
   spacer();
   subheading("Pour le Locateur :");
-  body(`${LOCATEUR_NAME} — ${LOCATEUR_SIGNATORY}`);
+  body(LOCATEUR_NAME);
   spacer();
   subheading("Pour le Locataire :");
   body(clientName);
