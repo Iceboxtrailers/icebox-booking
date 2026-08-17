@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getCurrentClientId } from "@/lib/session";
+import { getCurrentClientId, getCurrentAdminId } from "@/lib/session";
 import { getStorage } from "@/lib/providers/storage";
 
 const MIME_BY_EXT: Record<string, string> = {
@@ -8,6 +8,7 @@ const MIME_BY_EXT: Record<string, string> = {
   png: "image/png",
   jpg: "image/jpeg",
   jpeg: "image/jpeg",
+  webp: "image/webp",
 };
 
 async function isOwnedByClient(segments: string[], clientId: string): Promise<boolean> {
@@ -31,15 +32,22 @@ async function isOwnedByClient(segments: string[], clientId: string): Promise<bo
 }
 
 export async function GET(_request: Request, { params }: { params: Promise<{ path: string[] }> }) {
-  const clientId = await getCurrentClientId();
-  if (!clientId) {
-    return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
-  }
-
   const { path: segments } = await params;
-  const owned = await isOwnedByClient(segments, clientId);
-  if (!owned) {
-    return NextResponse.json({ error: "Introuvable" }, { status: 404 });
+  const [kind] = segments;
+
+  if (kind === "trailers") {
+    // Fleet photos are admin-managed assets, not tied to any one client.
+    const adminId = await getCurrentAdminId();
+    if (!adminId) return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
+  } else {
+    const clientId = await getCurrentClientId();
+    if (!clientId) {
+      return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
+    }
+    const owned = await isOwnedByClient(segments, clientId);
+    if (!owned) {
+      return NextResponse.json({ error: "Introuvable" }, { status: 404 });
+    }
   }
 
   const ext = segments[segments.length - 1].split(".").pop() ?? "";

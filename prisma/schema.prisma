@@ -53,12 +53,14 @@ model AdminUser {
 }
 
 model Trailer {
-  id        String   @id @default(cuid())
-  name      String // physical unit label, e.g. "5x10-01"
-  size      String // 5x10 | 6x12 — the only variant; pricing lives in src/lib/pricing.ts
-  plate     String?
-  status    String   @default("available") // available | maintenance | retired
-  createdAt DateTime @default(now())
+  id          String   @id @default(cuid())
+  name        String // physical unit label, e.g. "5x10-01"
+  size        String // 5x10 | 6x12 — the only variant; pricing lives in src/lib/pricing.ts
+  plate       String?
+  status      String   @default("available") // available | maintenance | retired
+  imageUrl    String?
+  description String?
+  createdAt   DateTime @default(now())
 
   reservations Reservation[]
 

@@ -101,6 +101,7 @@ export const adminTrailerUpdateSchema = z.object({
   name: z.string().trim().min(1).optional(),
   size: z.enum(TRAILER_SIZE).optional(),
   status: z.enum(TRAILER_STATUS).optional(),
+  description: z.string().trim().optional(),
 });
 
 export const adminClientCreateSchema = z.object({

@@ -6,6 +6,8 @@ export type BoardTrailer = {
   name: string;
   size: TrailerSize;
   status: string;
+  imageUrl: string | null;
+  description: string | null;
 };
 
 export type BoardReservation = {
@@ -112,7 +114,14 @@ export async function getFleetBoardData(year: number, month: number): Promise<Fl
   return {
     year,
     month,
-    trailers: trailers.map((t) => ({ id: t.id, name: t.name, size: t.size as TrailerSize, status: t.status })),
+    trailers: trailers.map((t) => ({
+      id: t.id,
+      name: t.name,
+      size: t.size as TrailerSize,
+      status: t.status,
+      imageUrl: t.imageUrl,
+      description: t.description,
+    })),
     monthReservations,
     fleetSize: trailers.length,
     availableToday,

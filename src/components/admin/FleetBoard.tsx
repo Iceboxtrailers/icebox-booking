@@ -8,7 +8,8 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { ReservationModal } from "@/components/admin/ReservationModal";
-import type { FleetBoardData } from "@/lib/admin/board";
+import { TrailerInfoModal } from "@/components/admin/TrailerInfoModal";
+import type { FleetBoardData, BoardTrailer } from "@/lib/admin/board";
 import { TRAILER_SIZE, TRAILER_STATUS } from "@/lib/constants";
 
 const MONTH_LABELS_FR = [
@@ -93,9 +94,11 @@ export function FleetBoard({ board }: { board: FleetBoardData }) {
   const [search, setSearch] = useState("");
   const [fleetOpen, setFleetOpen] = useState(false);
   const [modal, setModal] = useState<ModalState>(null);
+  const [infoTrailer, setInfoTrailer] = useState<BoardTrailer | null>(null);
   const [fleetError, setFleetError] = useState<string | null>(null);
   const [newTrailer, setNewTrailer] = useState({ name: "", size: TRAILER_SIZE[0] as string });
   const [savingTrailer, setSavingTrailer] = useState(false);
+  const [uploadingImageFor, setUploadingImageFor] = useState<string | null>(null);
 
   const prevMonth = month === 1 ? 12 : month - 1;
   const prevYear = month === 1 ? year - 1 : year;
@@ -130,6 +133,24 @@ export function FleetBoard({ board }: { board: FleetBoardData }) {
       return;
     }
     router.refresh();
+  }
+
+  async function handleImageUpload(id: string, file: File) {
+    setFleetError(null);
+    setUploadingImageFor(id);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch(`/api/admin/trailers/${id}/image`, { method: "POST", body: formData });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        setFleetError(body.error ?? "Impossible de téléverser l'image");
+        return;
+      }
+      router.refresh();
+    } finally {
+      setUploadingImageFor(null);
+    }
   }
 
   async function handleTrailerRemove(id: string) {
@@ -205,51 +226,84 @@ export function FleetBoard({ board }: { board: FleetBoardData }) {
           {fleetError && <div className="mb-2 text-[13px] text-red-600">{fleetError}</div>}
           <div className="space-y-2">
             {trailers.map((t, i) => (
-              <div key={t.id} className="flex flex-wrap items-center gap-2 border-b border-border-light pb-2 text-[13px]">
-                <span
-                  className="h-3 w-3 shrink-0 rounded-[3px]"
-                  style={{ background: TRAILER_COLORS[i % TRAILER_COLORS.length].border }}
-                />
-                <span className="w-5 text-muted">{i + 1}</span>
-                <input
-                  defaultValue={t.name}
-                  onBlur={(e) => {
-                    if (e.target.value.trim() && e.target.value !== t.name) {
-                      handleTrailerUpdate(t.id, { name: e.target.value.trim() });
-                    }
-                  }}
-                  className="w-32 rounded-md border border-border px-2 py-1"
-                />
-                <select
-                  defaultValue={t.size}
-                  onChange={(e) => handleTrailerUpdate(t.id, { size: e.target.value })}
-                  className="rounded-md border border-border px-2 py-1"
-                >
-                  {TRAILER_SIZE.map((s) => (
-                    <option key={s} value={s}>
-                      {s}
-                    </option>
-                  ))}
-                </select>
-                <select
-                  defaultValue={t.status}
-                  onChange={(e) => handleTrailerUpdate(t.id, { status: e.target.value })}
-                  className="rounded-md border border-border px-2 py-1"
-                >
-                  {TRAILER_STATUS.map((s) => (
-                    <option key={s} value={s}>
-                      {s}
-                    </option>
-                  ))}
-                </select>
-                <button
-                  type="button"
-                  onClick={() => handleTrailerRemove(t.id)}
-                  className="ml-auto text-muted hover:text-red-600"
-                  title="Retirer"
-                >
-                  <Trash2 size={15} />
-                </button>
+              <div key={t.id} className="border-b border-border-light pb-2 text-[13px]">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span
+                    className="h-3 w-3 shrink-0 rounded-[3px]"
+                    style={{ background: TRAILER_COLORS[i % TRAILER_COLORS.length].border }}
+                  />
+                  <span className="w-5 text-muted">{i + 1}</span>
+                  <input
+                    defaultValue={t.name}
+                    onBlur={(e) => {
+                      if (e.target.value.trim() && e.target.value !== t.name) {
+                        handleTrailerUpdate(t.id, { name: e.target.value.trim() });
+                      }
+                    }}
+                    className="w-32 rounded-md border border-border px-2 py-1"
+                  />
+                  <select
+                    defaultValue={t.size}
+                    onChange={(e) => handleTrailerUpdate(t.id, { size: e.target.value })}
+                    className="rounded-md border border-border px-2 py-1"
+                  >
+                    {TRAILER_SIZE.map((s) => (
+                      <option key={s} value={s}>
+                        {s}
+                      </option>
+                    ))}
+                  </select>
+                  <select
+                    defaultValue={t.status}
+                    onChange={(e) => handleTrailerUpdate(t.id, { status: e.target.value })}
+                    className="rounded-md border border-border px-2 py-1"
+                  >
+                    {TRAILER_STATUS.map((s) => (
+                      <option key={s} value={s}>
+                        {s}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    onClick={() => handleTrailerRemove(t.id)}
+                    className="ml-auto text-muted hover:text-red-600"
+                    title="Retirer"
+                  >
+                    <Trash2 size={15} />
+                  </button>
+                </div>
+                <div className="mt-2 flex flex-wrap items-center gap-2 pl-7">
+                  {t.imageUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element -- private, admin-only blob URL
+                    <img src={t.imageUrl} alt={t.name} className="h-10 w-14 shrink-0 rounded-md border border-border-light object-cover" />
+                  ) : (
+                    <div className="flex h-10 w-14 shrink-0 items-center justify-center rounded-md border border-dashed border-border-light text-[9px] text-muted">
+                      Aucune
+                    </div>
+                  )}
+                  <input
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp"
+                    disabled={uploadingImageFor === t.id}
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) handleImageUpload(t.id, file);
+                      e.target.value = "";
+                    }}
+                    className="w-36 text-[11px]"
+                  />
+                  <input
+                    defaultValue={t.description ?? ""}
+                    placeholder="Brève description..."
+                    onBlur={(e) => {
+                      if (e.target.value.trim() !== (t.description ?? "")) {
+                        handleTrailerUpdate(t.id, { description: e.target.value.trim() });
+                      }
+                    }}
+                    className="min-w-[180px] flex-1 rounded-md border border-border px-2 py-1"
+                  />
+                </div>
               </div>
             ))}
           </div>
@@ -370,7 +424,11 @@ export function FleetBoard({ board }: { board: FleetBoardData }) {
                     minHeight: 44,
                   }}
                 >
-                  <div className="flex items-center gap-2 overflow-hidden py-1.5 pr-2 text-[12px]">
+                  <div
+                    className="flex cursor-pointer items-center gap-2 overflow-hidden py-1.5 pr-2 text-[12px] hover:bg-[#F4F6F7]"
+                    onClick={() => setInfoTrailer(trailer)}
+                    title="Voir la fiche de la remorque"
+                  >
                     <span
                       className="h-2.5 w-2.5 shrink-0 rounded-[3px]"
                       style={{ background: color.border }}
@@ -548,6 +606,8 @@ export function FleetBoard({ board }: { board: FleetBoardData }) {
           onClose={() => setModal(null)}
         />
       )}
+
+      {infoTrailer && <TrailerInfoModal trailer={infoTrailer} onClose={() => setInfoTrailer(null)} />}
     </div>
   );
 }
