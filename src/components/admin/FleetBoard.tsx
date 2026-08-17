@@ -107,7 +107,7 @@ export function FleetBoard({ board }: { board: FleetBoardData }) {
   };
 
   const isNarrow = useIsNarrow(680);
-  const [view, setView] = useState<"grille" | "agenda">("agenda");
+  const [view, setView] = useState<"grille" | "agenda">("grille");
   const activeView = isNarrow ? "agenda" : view;
   const DAY_W = isNarrow ? 26 : 34;
   const LABEL_W = isNarrow ? 84 : 150;
