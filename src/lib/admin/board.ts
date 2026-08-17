@@ -42,6 +42,8 @@ function toIsoDate(d: Date): string {
 export async function getFleetBoardData(year: number, month: number): Promise<FleetBoardData> {
   const monthStart = new Date(Date.UTC(year, month - 1, 1));
   const monthEndExclusive = new Date(Date.UTC(year, month, 1));
+  const today = new Date();
+  today.setUTCHours(0, 0, 0, 0);
 
   const [trailers, monthRes, activeReservations, toConfirmCount] = await Promise.all([
     prisma.trailer.findMany({ orderBy: [{ size: "asc" }, { name: "asc" }] }),
@@ -59,7 +61,10 @@ export async function getFleetBoardData(year: number, month: number): Promise<Fl
       where: { status: { not: "cancelled" }, trailerId: { not: null } },
       select: { id: true, trailerId: true, pickupDate: true, returnDate: true },
     }),
-    prisma.reservation.count({ where: { status: "pending" } }),
+    // Pending reservations whose pickup date has already passed no longer
+    // need confirming (the window's gone) — they stay visible in the grid
+    // to track demand, they just drop out of this count.
+    prisma.reservation.count({ where: { status: "pending", pickupDate: { gte: today } } }),
   ]);
 
   const monthReservations: BoardReservation[] = monthRes
@@ -78,8 +83,6 @@ export async function getFleetBoardData(year: number, month: number): Promise<Fl
       totalAmount: r.totalAmount,
     }));
 
-  const today = new Date();
-  today.setUTCHours(0, 0, 0, 0);
   const occupiedTrailerIds = new Set(
     activeReservations
       .filter((r) => r.pickupDate && r.returnDate && r.pickupDate <= today && r.returnDate > today)
