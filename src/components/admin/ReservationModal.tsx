@@ -68,6 +68,7 @@ export function ReservationModal({
   const [newClient, setNewClient] = useState({
     firstName: "",
     lastName: "",
+    company: "",
     email: "",
     phone: "",
     billingAddress: "",
@@ -315,6 +316,12 @@ export function ReservationModal({
                       placeholder="Nom"
                       value={newClient.lastName}
                       onChange={(e) => setNewClient((c) => ({ ...c, lastName: e.target.value }))}
+                    />
+                    <Input
+                      placeholder="Entreprise (optionnel)"
+                      className="col-span-2"
+                      value={newClient.company}
+                      onChange={(e) => setNewClient((c) => ({ ...c, company: e.target.value }))}
                     />
                     <Input
                       placeholder="Courriel"
