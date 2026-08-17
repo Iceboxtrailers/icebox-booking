@@ -3,7 +3,10 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentAdminId } from "@/lib/session";
 import { getStorage } from "@/lib/providers/storage";
 
-const MAX_FILE_BYTES = 8 * 1024 * 1024;
+// Vercel's Serverless Functions hard-cap the request body at ~4.5 MB
+// regardless of this value, so the client (FleetBoard.tsx) resizes/recompresses
+// photos before upload — this is just a defensive ceiling under that limit.
+const MAX_FILE_BYTES = 4 * 1024 * 1024;
 const ALLOWED_MIME = new Set(["image/png", "image/jpeg", "image/webp"]);
 const EXT_BY_MIME: Record<string, string> = {
   "image/png": "png",
@@ -25,7 +28,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     return NextResponse.json({ error: "Fichier requis" }, { status: 400 });
   }
   if (file.size === 0 || file.size > MAX_FILE_BYTES) {
-    return NextResponse.json({ error: "Fichier vide ou trop volumineux (max 8 Mo)" }, { status: 400 });
+    return NextResponse.json({ error: "Fichier vide ou trop volumineux (max 4 Mo)" }, { status: 400 });
   }
   if (!ALLOWED_MIME.has(file.type)) {
     return NextResponse.json({ error: "Format d'image non supporté (png, jpg, webp)" }, { status: 400 });

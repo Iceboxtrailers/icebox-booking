@@ -39,6 +39,28 @@ type ModalState =
   | { mode: "create"; trailerId: string; pickupDate: string }
   | null;
 
+// Vercel's Serverless Functions cap the request body at ~4.5 MB, well under
+// what a modern phone photo weighs — resize/recompress in the browser first
+// so uploads actually succeed instead of failing with an opaque 413.
+async function resizeImageForUpload(file: File, maxDimension = 1600, quality = 0.82): Promise<File> {
+  const bitmap = await createImageBitmap(file);
+  const scale = Math.min(1, maxDimension / Math.max(bitmap.width, bitmap.height));
+  const width = Math.round(bitmap.width * scale);
+  const height = Math.round(bitmap.height * scale);
+
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return file;
+  ctx.drawImage(bitmap, 0, 0, width, height);
+
+  const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/jpeg", quality));
+  if (!blob) return file;
+  const name = file.name.replace(/\.[^.]+$/, "") + ".jpg";
+  return new File([blob], name, { type: "image/jpeg" });
+}
+
 function isoDateForDay(year: number, month: number, day: number): string {
   const mm = String(month).padStart(2, "0");
   const dd = String(day).padStart(2, "0");
@@ -139,8 +161,9 @@ export function FleetBoard({ board }: { board: FleetBoardData }) {
     setFleetError(null);
     setUploadingImageFor(id);
     try {
+      const resized = await resizeImageForUpload(file);
       const formData = new FormData();
-      formData.append("file", file);
+      formData.append("file", resized);
       const res = await fetch(`/api/admin/trailers/${id}/image`, { method: "POST", body: formData });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
@@ -148,6 +171,8 @@ export function FleetBoard({ board }: { board: FleetBoardData }) {
         return;
       }
       router.refresh();
+    } catch {
+      setFleetError("Impossible de traiter cette image");
     } finally {
       setUploadingImageFor(null);
     }
