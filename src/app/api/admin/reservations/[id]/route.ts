@@ -4,6 +4,14 @@ import { getCurrentAdminId } from "@/lib/session";
 import { hasConflict } from "@/lib/availability";
 import { adminReservationUpdateSchema } from "@/lib/validation";
 
+const RESERVATION_CLIENT_SELECT = {
+  id: true,
+  firstName: true,
+  lastName: true,
+  email: true,
+  phone: true,
+} as const;
+
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   const adminId = await getCurrentAdminId();
   if (!adminId) return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
@@ -11,7 +19,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   const { id } = await params;
   const reservation = await prisma.reservation.findUnique({
     where: { id },
-    include: { client: true, trailer: true },
+    include: { client: { select: RESERVATION_CLIENT_SELECT }, trailer: true },
   });
   if (!reservation) return NextResponse.json({ error: "Introuvable" }, { status: 404 });
 
@@ -60,7 +68,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       ...(pickupTime !== undefined ? { pickupTime: pickupTime || null } : {}),
       ...(returnTime !== undefined ? { returnTime: returnTime || null } : {}),
     },
-    include: { client: true, trailer: true },
+    include: { client: { select: RESERVATION_CLIENT_SELECT }, trailer: true },
   });
 
   return NextResponse.json(updated);

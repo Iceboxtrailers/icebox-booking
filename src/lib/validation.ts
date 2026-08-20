@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { RESERVATION_STATUS, TRAILER_SIZE, TRAILER_STATUS } from "@/lib/constants";
+import { CLIENT_STATUS, RESERVATION_STATUS, TRAILER_SIZE, TRAILER_STATUS } from "@/lib/constants";
 
 const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Date invalide");
 const isoTime = z.string().regex(/^\d{2}:\d{2}$/, "Heure invalide");
@@ -114,6 +114,20 @@ export const adminClientCreateSchema = z.object({
   billingCity: z.string().trim().optional(),
   billingProvince: z.string().trim().optional(),
   billingPostalCode: z.string().trim().optional(),
+});
+
+export const adminClientUpdateSchema = z.object({
+  firstName: z.string().trim().min(1, "Prénom requis").optional(),
+  lastName: z.string().trim().min(1, "Nom requis").optional(),
+  company: z.string().trim().optional(),
+  email: z.string().trim().email("Courriel invalide").optional(),
+  phone: z.string().trim().min(7, "Téléphone invalide").optional(),
+  billingAddress: z.string().trim().optional(),
+  billingCity: z.string().trim().optional(),
+  billingProvince: z.string().trim().optional(),
+  billingPostalCode: z.string().trim().optional(),
+  status: z.enum(CLIENT_STATUS).optional(),
+  internalNote: z.string().trim().optional(),
 });
 
 export const contactSchema = z.object({

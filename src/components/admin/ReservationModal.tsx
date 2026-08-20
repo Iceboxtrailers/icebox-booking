@@ -6,6 +6,7 @@ import { X } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Field } from "@/components/ui/Field";
 import { Input } from "@/components/ui/Input";
+import { ClientModal } from "@/components/admin/ClientModal";
 import { computeTotalCents } from "@/lib/pricing";
 import { RESERVATION_STATUS } from "@/lib/constants";
 import type { TrailerSize } from "@/lib/constants";
@@ -57,8 +58,9 @@ export function ReservationModal({
   const [returnTime, setReturnTime] = useState("");
   const [deleting, setDeleting] = useState(false);
 
-  // Edit mode: read-only client display, fetched with the reservation.
+  // Edit mode: client display, fetched with the reservation; editable via ClientModal.
   const [clientDisplay, setClientDisplay] = useState<ClientOption | null>(null);
+  const [editingClient, setEditingClient] = useState(false);
 
   // Create mode: existing-client search vs. quick-create a new one.
   const [clientMode, setClientMode] = useState<"search" | "new">("search");
@@ -225,6 +227,7 @@ export function ReservationModal({
   }
 
   return (
+    <>
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
       <div
         className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-xl bg-white p-5"
@@ -244,13 +247,22 @@ export function ReservationModal({
         ) : (
           <form onSubmit={handleSubmit}>
             {state.mode === "edit" && clientDisplay && (
-              <div className="mb-3 rounded-lg border border-border-light bg-[#FAFBFB] p-3 text-[13px]">
-                <div className="font-medium">
-                  {clientDisplay.firstName} {clientDisplay.lastName}
+              <div className="mb-3 flex items-center justify-between gap-2 rounded-lg border border-border-light bg-[#FAFBFB] p-3 text-[13px]">
+                <div>
+                  <div className="font-medium">
+                    {clientDisplay.firstName} {clientDisplay.lastName}
+                  </div>
+                  <div className="text-muted">
+                    {clientDisplay.email} · {clientDisplay.phone}
+                  </div>
                 </div>
-                <div className="text-muted">
-                  {clientDisplay.email} · {clientDisplay.phone}
-                </div>
+                <button
+                  type="button"
+                  onClick={() => setEditingClient(true)}
+                  className="shrink-0 rounded-md border border-border px-2.5 py-1.5 text-[12px] hover:bg-[#EDF2F4]"
+                >
+                  Modifier
+                </button>
               </div>
             )}
 
@@ -479,5 +491,17 @@ export function ReservationModal({
         )}
       </div>
     </div>
+
+    {editingClient && clientDisplay && (
+      <ClientModal
+        clientId={clientDisplay.id}
+        onClose={() => setEditingClient(false)}
+        onSaved={(updated) => {
+          setClientDisplay(updated);
+          router.refresh();
+        }}
+      />
+    )}
+    </>
   );
 }

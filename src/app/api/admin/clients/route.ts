@@ -5,6 +5,32 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentAdminId } from "@/lib/session";
 import { adminClientCreateSchema } from "@/lib/validation";
 
+const CLIENT_LIST_SELECT = {
+  id: true,
+  firstName: true,
+  lastName: true,
+  company: true,
+  email: true,
+  phone: true,
+  status: true,
+  billingCity: true,
+  billingProvince: true,
+  createdAt: true,
+  _count: { select: { reservations: true } },
+} as const;
+
+export async function GET() {
+  const adminId = await getCurrentAdminId();
+  if (!adminId) return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
+
+  const clients = await prisma.client.findMany({
+    select: CLIENT_LIST_SELECT,
+    orderBy: { lastName: "asc" },
+  });
+
+  return NextResponse.json(clients);
+}
+
 export async function POST(request: Request) {
   const adminId = await getCurrentAdminId();
   if (!adminId) return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
@@ -27,6 +53,7 @@ export async function POST(request: Request) {
 
   const client = await prisma.client.create({
     data: { ...parsed.data, passwordHash },
+    select: CLIENT_LIST_SELECT,
   });
 
   return NextResponse.json(client);
