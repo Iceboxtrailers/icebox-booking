@@ -1,3 +1,5 @@
+import { readFile } from "node:fs/promises";
+import path from "node:path";
 import { PDFDocument, StandardFonts, rgb, type PDFFont } from "pdf-lib";
 import { prisma } from "@/lib/prisma";
 import { getStorage } from "@/lib/providers/storage";
@@ -8,6 +10,8 @@ import type { TrailerSize } from "@/lib/constants";
 
 const PAGE_SIZE: [number, number] = [612, 792];
 const MARGIN = 56;
+const LOGO_PATH = path.join(process.cwd(), "public/brand/logo-horizontal.png");
+const LOGO_HEIGHT = 46;
 
 // Renders a PDF contract from reservation data and captures the on-page
 // canvas signature as a PNG. Clearly stamped as a non-binding prototype.
@@ -46,6 +50,11 @@ export class StubSignatureProvider implements SignatureProvider {
 
     let page = pdfDoc.addPage(PAGE_SIZE);
     let y = page.getHeight() - MARGIN;
+
+    const logoImage = await pdfDoc.embedPng(await readFile(LOGO_PATH));
+    const logoWidth = (logoImage.width / logoImage.height) * LOGO_HEIGHT;
+    page.drawImage(logoImage, { x: MARGIN, y: y - LOGO_HEIGHT, width: logoWidth, height: LOGO_HEIGHT });
+    y -= LOGO_HEIGHT + 12;
 
     page.drawText("PROTOTYPE — NON LÉGALEMENT CONTRAIGNANT", {
       x: MARGIN,
