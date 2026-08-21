@@ -4,6 +4,10 @@ import { getCurrentAdminId } from "@/lib/session";
 import { BrandMark } from "@/components/BrandMark";
 import { SignOutButton } from "@/components/admin/SignOutButton";
 import { DashboardNav } from "@/components/admin/DashboardNav";
+import { adminPwaMetadata, adminPwaViewport } from "@/lib/admin-pwa-metadata";
+
+export const metadata = adminPwaMetadata;
+export const viewport = adminPwaViewport;
 
 export default async function DashboardLayout({ children }: { children: ReactNode }) {
   const adminId = await getCurrentAdminId();
