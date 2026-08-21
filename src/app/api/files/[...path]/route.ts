@@ -39,6 +39,15 @@ export async function GET(_request: Request, { params }: { params: Promise<{ pat
     // Fleet photos are admin-managed assets, not tied to any one client.
     const adminId = await getCurrentAdminId();
     if (!adminId) return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
+  } else if (kind === "contracts" || kind === "signatures") {
+    // Staff are a party to every contract, so any signed-in admin can view them.
+    const adminId = await getCurrentAdminId();
+    if (!adminId) {
+      const clientId = await getCurrentClientId();
+      if (!clientId || !(await isOwnedByClient(segments, clientId))) {
+        return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
+      }
+    }
   } else {
     const clientId = await getCurrentClientId();
     if (!clientId) {

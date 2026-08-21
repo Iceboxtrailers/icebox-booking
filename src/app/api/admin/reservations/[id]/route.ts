@@ -19,7 +19,11 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   const { id } = await params;
   const reservation = await prisma.reservation.findUnique({
     where: { id },
-    include: { client: { select: RESERVATION_CLIENT_SELECT }, trailer: true },
+    include: {
+      client: { select: RESERVATION_CLIENT_SELECT },
+      trailer: true,
+      contract: { select: { pdfUrl: true, signatureStatus: true } },
+    },
   });
   if (!reservation) return NextResponse.json({ error: "Introuvable" }, { status: 404 });
 
@@ -68,7 +72,11 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       ...(pickupTime !== undefined ? { pickupTime: pickupTime || null } : {}),
       ...(returnTime !== undefined ? { returnTime: returnTime || null } : {}),
     },
-    include: { client: { select: RESERVATION_CLIENT_SELECT }, trailer: true },
+    include: {
+      client: { select: RESERVATION_CLIENT_SELECT },
+      trailer: true,
+      contract: { select: { pdfUrl: true, signatureStatus: true } },
+    },
   });
 
   return NextResponse.json(updated);

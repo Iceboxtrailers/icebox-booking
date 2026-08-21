@@ -62,6 +62,10 @@ export function ReservationModal({
   const [clientDisplay, setClientDisplay] = useState<ClientOption | null>(null);
   const [editingClient, setEditingClient] = useState(false);
 
+  // Edit mode: contract PDF, fetched with the reservation; (re)generated on demand.
+  const [contractPdfUrl, setContractPdfUrl] = useState<string | null>(null);
+  const [generatingContract, setGeneratingContract] = useState(false);
+
   // Create mode: existing-client search vs. quick-create a new one.
   const [clientMode, setClientMode] = useState<"search" | "new">("search");
   const [clientQuery, setClientQuery] = useState("");
@@ -99,12 +103,32 @@ export function ReservationModal({
       setPickupTime(data.pickupTime ?? "");
       setReturnTime(data.returnTime ?? "");
       setClientDisplay(data.client);
+      setContractPdfUrl(data.contract?.pdfUrl ?? null);
       setLoading(false);
     })();
     return () => {
       cancelled = true;
     };
   }, [state]);
+
+  async function handleGenerateContract() {
+    if (state.mode !== "edit") return;
+    setError(null);
+    setGeneratingContract(true);
+    try {
+      const res = await fetch(`/api/admin/reservations/${state.reservationId}/contract`, {
+        method: "POST",
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(data.error ?? "Impossible de générer le contrat");
+        return;
+      }
+      setContractPdfUrl(data.pdfUrl);
+    } finally {
+      setGeneratingContract(false);
+    }
+  }
 
   // Live-suggest the total based on the tiered rate table whenever trailer/dates
   // change in create mode — still fully editable afterward. Computed directly
@@ -262,6 +286,34 @@ export function ReservationModal({
                   className="shrink-0 rounded-md border border-border px-2.5 py-1.5 text-[12px] hover:bg-[#EDF2F4]"
                 >
                   Modifier
+                </button>
+              </div>
+            )}
+
+            {state.mode === "edit" && (
+              <div className="mb-3 flex items-center justify-between gap-2 rounded-lg border border-border-light bg-[#FAFBFB] p-3 text-[13px]">
+                <div>
+                  <div className="font-medium">Contrat de location</div>
+                  {contractPdfUrl ? (
+                    <a
+                      href={contractPdfUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-navy hover:underline"
+                    >
+                      Voir le PDF
+                    </a>
+                  ) : (
+                    <div className="text-muted">Aucun contrat généré.</div>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  onClick={handleGenerateContract}
+                  disabled={generatingContract}
+                  className="shrink-0 rounded-md border border-border px-2.5 py-1.5 text-[12px] hover:bg-[#EDF2F4] disabled:opacity-50"
+                >
+                  {generatingContract ? "..." : contractPdfUrl ? "Régénérer le PDF" : "Générer le contrat (PDF)"}
                 </button>
               </div>
             )}

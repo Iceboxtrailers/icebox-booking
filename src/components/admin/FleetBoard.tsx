@@ -289,6 +289,16 @@ export function FleetBoard({ board }: { board: FleetBoardData }) {
                       </option>
                     ))}
                   </select>
+                  <input
+                    defaultValue={t.plate ?? ""}
+                    placeholder="Immatriculation"
+                    onBlur={(e) => {
+                      if (e.target.value.trim() !== (t.plate ?? "")) {
+                        handleTrailerUpdate(t.id, { plate: e.target.value.trim() });
+                      }
+                    }}
+                    className="w-28 rounded-md border border-border px-2 py-1"
+                  />
                   <button
                     type="button"
                     onClick={() => handleTrailerRemove(t.id)}

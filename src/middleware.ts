@@ -26,6 +26,16 @@ export default auth((req) => {
     return;
   }
 
+  // Staff are a party to every contract, so an admin session alone should
+  // reach these — same reasoning as /api/files/trailers above. The route
+  // handler still checks ownership for the client-session fallback path.
+  if (req.nextUrl.pathname.startsWith("/api/files/contracts") || req.nextUrl.pathname.startsWith("/api/files/signatures")) {
+    if (!req.auth?.adminId && !req.auth?.clientId) {
+      return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
+    }
+    return;
+  }
+
   if (!req.auth?.clientId) {
     const loginUrl = new URL("/login", req.nextUrl.origin);
     loginUrl.searchParams.set("callbackUrl", req.nextUrl.pathname);

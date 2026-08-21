@@ -54,6 +54,11 @@ export default async function ReservationDetailPage({ params }: { params: Promis
               {start ? fmt(start) : "—"} → {end ? fmt(end) : "—"}
               {start && end ? ` (${nights(start, end)} nuit${nights(start, end) > 1 ? "s" : ""})` : ""}
             </div>
+            {reservation.trailer?.plate && (
+              <div className="mt-1 text-[13px] text-muted">
+                Immatriculation : <span className="font-mono">{reservation.trailer.plate}</span>
+              </div>
+            )}
           </div>
           <span className="rounded-full bg-[#E4EEF4] px-3 py-1 text-[12px] font-medium text-navy">
             {STATUS_LABEL_FR[reservation.status] ?? reservation.status}

@@ -10,6 +10,41 @@ const LOCATEUR_ADDRESS_LINE1 = "1005, rue du Parc-Industriel";
 const LOCATEUR_ADDRESS_LINE2 = "Lévis (Québec) G6Z 1C5";
 const ADDITIONAL_INSURED = "Remorques Réfrigérées ICEBOX Inc.";
 
+// Per-size hardware specs from the real IceBox rental contract template —
+// legally significant, do not infer or alter these.
+type TrailerContractSpec = {
+  essieux: number;
+  dimensions: string; // "extérieures (intérieures)", matches the template's own convention
+  mainDeRemorque: string;
+  refrigerationLabel: string;
+  refrigerationValue: string;
+  equipements: string;
+  thermostat: string;
+};
+
+const TRAILER_SPECS: Record<TrailerSize, TrailerContractSpec> = {
+  "5x10": {
+    essieux: 1,
+    dimensions: "5' x 10' (52'' x 110'')",
+    mainDeRemorque: "2''",
+    refrigerationLabel: "Unité de réfrigération",
+    refrigerationValue: "Commerciale (prise 120V, 15A)",
+    equipements:
+      "Rails pour suspension de viande, éclairage LED, drain de plancher, valve de décompression",
+    thermostat: "Réglable manuellement",
+  },
+  "6x12": {
+    essieux: 2,
+    dimensions: "6'-6'' x 12' (70'' x 120'')",
+    mainDeRemorque: "2 5/16''",
+    refrigerationLabel: "Unité de réfrigération et congélation",
+    refrigerationValue: "Prise standard 120V/15A",
+    equipements:
+      "Rails pour suspension de viande, éclairage LED, drain de plancher, valve de décompression, marche, pattes stabilisatrices, emplacement pour génératrice à l'avant",
+    thermostat: "Réglable avant livraison",
+  },
+};
+
 export type ContractLine =
   | { type: "title"; text: string }
   | { type: "heading"; text: string }
@@ -40,6 +75,7 @@ export function buildContractLines(p: {
   const n = nights(p.start, p.end);
   const catalogue = catalogueFor(p.trailerSize);
   const rate = RATE_TABLE[p.trailerSize];
+  const spec = TRAILER_SPECS[p.trailerSize];
   const clientName = `${p.firstName} ${p.lastName}`;
   const lieuUtilisation = p.usageLocation?.trim() || "À préciser";
 
@@ -67,16 +103,17 @@ export function buildContractLines(p: {
 
   heading("1. Objet de la Location");
   body(
-    `Le Locateur loue au Locataire une remorque réfrigérée « ICEBOX » ${p.trailerSize}, à 1 essieu, avec les spécifications suivantes :`
+    `Le Locateur loue au Locataire une remorque réfrigérée « ICEBOX » ${p.trailerSize}, à ${spec.essieux} essieu${spec.essieux > 1 ? "x" : ""}, avec les spécifications suivantes :`
   );
-  body(`Dimensions intérieures : ${catalogue?.interiorDimensions ?? "—"}`);
+  body(`Dimensions extérieures (intérieures) : ${spec.dimensions}`);
+  body(`Essieux : ${spec.essieux}`);
+  body(`Main de remorque : ${spec.mainDeRemorque}`);
   body(`Plage de température : ${catalogue?.tempRangeLabel ?? "—"}`);
   body("Isolation : Panneaux métalliques (R-32)");
-  body("Unité de réfrigération : Commerciale (prise 120V, 15A)");
-  body(
-    "Équipements inclus : Rails pour suspension de viande, éclairage LED, drain de plancher, valve de décompression"
-  );
+  body(`${spec.refrigerationLabel} : ${spec.refrigerationValue}`);
+  body(`Équipements inclus : ${spec.equipements}`);
   body("Conformité : La remorque est conforme à la circulation routière.");
+  body(`Thermostat : ${spec.thermostat}`);
   spacer();
 
   heading("2. Durée de la Location");

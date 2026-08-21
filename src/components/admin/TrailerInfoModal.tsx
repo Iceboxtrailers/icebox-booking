@@ -6,7 +6,13 @@ export function TrailerInfoModal({
   trailer,
   onClose,
 }: {
-  trailer: { name: string; size: string; imageUrl: string | null; description: string | null };
+  trailer: {
+    name: string;
+    size: string;
+    imageUrl: string | null;
+    description: string | null;
+    plate: string | null;
+  };
   onClose: () => void;
 }) {
   return (
@@ -36,6 +42,12 @@ export function TrailerInfoModal({
         )}
 
         <div className="mb-2 text-[12px] font-medium uppercase tracking-wide text-muted">{trailer.size}</div>
+        {trailer.plate && (
+          <div className="mb-2 text-[13px]">
+            <span className="text-muted">Immatriculation : </span>
+            <span className="font-mono">{trailer.plate}</span>
+          </div>
+        )}
         <div className="text-[13px] leading-relaxed text-[#3A454E]">
           {trailer.description || "Aucune description."}
         </div>

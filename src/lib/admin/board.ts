@@ -8,6 +8,7 @@ export type BoardTrailer = {
   status: string;
   imageUrl: string | null;
   description: string | null;
+  plate: string | null;
 };
 
 export type BoardReservation = {
@@ -124,6 +125,7 @@ export async function getFleetBoardData(year: number, month: number): Promise<Fl
       status: t.status,
       imageUrl: t.imageUrl,
       description: t.description,
+      plate: t.plate,
     })),
     monthReservations,
     fleetSize: trailers.length,
