@@ -144,6 +144,16 @@ export function SignaturePad({
                 </div>
               );
             }
+            if (line.type === "rule") {
+              return <hr key={i} className="my-2 border-border-light" />;
+            }
+            if (line.type === "bullet") {
+              return (
+                <div key={i} className="pl-3">
+                  • {line.text}
+                </div>
+              );
+            }
             return <div key={i}>{line.text}</div>;
           })}
         </div>

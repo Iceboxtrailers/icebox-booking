@@ -11,7 +11,11 @@ import type { TrailerSize } from "@/lib/constants";
 const PAGE_SIZE: [number, number] = [612, 792];
 const MARGIN = 56;
 const LOGO_PATH = path.join(process.cwd(), "public/brand/logo-horizontal.png");
-const LOGO_HEIGHT = 46;
+// The logo sits beside the "Entre les parties" header block (Locateur/Locataire),
+// sized to roughly fill that block's height, capped so it never overwhelms the page.
+const LOGO_MAX_HEIGHT = 140;
+const LOGO_MIN_HEIGHT = 60;
+const LOGO_COLUMN_WIDTH = 150; // reserved on the right so header text wraps around it
 
 // Renders a PDF contract from reservation data and captures the on-page
 // canvas signature as a PNG. Clearly stamped as a non-binding prototype.
@@ -36,6 +40,10 @@ export class StubSignatureProvider implements SignatureProvider {
       company: reservation.client.company,
       email: reservation.client.email,
       phone: reservation.client.phone,
+      billingAddress: reservation.client.billingAddress,
+      billingCity: reservation.client.billingCity,
+      billingProvince: reservation.client.billingProvince,
+      billingPostalCode: reservation.client.billingPostalCode,
       trailerSize: reservation.trailer.size as TrailerSize,
       start,
       end,
@@ -50,11 +58,6 @@ export class StubSignatureProvider implements SignatureProvider {
 
     let page = pdfDoc.addPage(PAGE_SIZE);
     let y = page.getHeight() - MARGIN;
-
-    const logoImage = await pdfDoc.embedPng(await readFile(LOGO_PATH));
-    const logoWidth = (logoImage.width / logoImage.height) * LOGO_HEIGHT;
-    page.drawImage(logoImage, { x: MARGIN, y: y - LOGO_HEIGHT, width: logoWidth, height: LOGO_HEIGHT });
-    y -= LOGO_HEIGHT + 12;
 
     page.drawText("PROTOTYPE — NON LÉGALEMENT CONTRAIGNANT", {
       x: MARGIN,
@@ -72,32 +75,80 @@ export class StubSignatureProvider implements SignatureProvider {
     const ensureRoom = (needed: number) => {
       if (y - needed < MARGIN) newPage();
     };
-    const drawWrapped = (text: string, size: number, useFont: PDFFont, color = rgb(0.15, 0.17, 0.2)) => {
-      for (const line of wrapText(text, useFont, size, maxWidth)) {
+    const drawWrapped = (
+      text: string,
+      size: number,
+      useFont: PDFFont,
+      width = maxWidth,
+      x = MARGIN,
+      color = rgb(0.15, 0.17, 0.2)
+    ) => {
+      for (const wline of wrapText(text, useFont, size, width)) {
         ensureRoom(size + 4);
-        page.drawText(line, { x: MARGIN, y, size, font: useFont, color });
+        page.drawText(wline, { x, y, size, font: useFont, color });
         y -= size + 4;
       }
     };
-
-    for (const line of lines) {
+    const drawRule = () => {
+      ensureRoom(10);
+      page.drawLine({
+        start: { x: MARGIN, y },
+        end: { x: MARGIN + maxWidth, y },
+        thickness: 0.75,
+        color: rgb(0.8, 0.8, 0.8),
+      });
+      y -= 10;
+    };
+    const renderLine = (line: (typeof lines)[number], width = maxWidth) => {
       if (line.type === "title") {
         ensureRoom(20);
-        drawWrapped(line.text, 15, boldFont);
+        drawWrapped(line.text, 15, boldFont, width);
         y -= 6;
       } else if (line.type === "heading") {
         ensureRoom(18);
         y -= 4;
-        drawWrapped(line.text, 12.5, boldFont);
+        drawWrapped(line.text, 12.5, boldFont, width);
       } else if (line.type === "subheading") {
         ensureRoom(15);
-        drawWrapped(line.text, 11, boldFont);
+        drawWrapped(line.text, 11, boldFont, width);
       } else if (line.type === "body") {
-        drawWrapped(line.text, 10.5, font);
+        drawWrapped(line.text, 10.5, font, width);
+      } else if (line.type === "bullet") {
+        ensureRoom(14.5);
+        page.drawText("•", { x: MARGIN, y, size: 10.5, font, color: rgb(0.15, 0.17, 0.2) });
+        drawWrapped(line.text, 10.5, font, width - 12, MARGIN + 12);
+      } else if (line.type === "rule") {
+        drawRule();
       } else {
         y -= 8;
       }
-    }
+    };
+
+    // Header ("Entre les parties" through the client's email) is laid out in a
+    // narrower left column so the logo can sit large beside it, matching the
+    // real IceBox contract template — everything from "1. Objet…" on uses the
+    // full page width via the generic loop below.
+    const firstHeadingIndex = lines.findIndex((l) => l.type === "heading");
+    const headerLines = firstHeadingIndex >= 0 ? lines.slice(0, firstHeadingIndex) : lines;
+    const bodyLines = firstHeadingIndex >= 0 ? lines.slice(firstHeadingIndex) : [];
+
+    const headerTopY = y;
+    for (const line of headerLines) renderLine(line, maxWidth - LOGO_COLUMN_WIDTH);
+    const headerBottomY = y;
+
+    const logoImage = await pdfDoc.embedPng(await readFile(LOGO_PATH));
+    const logoHeight = Math.min(LOGO_MAX_HEIGHT, Math.max(headerTopY - headerBottomY, LOGO_MIN_HEIGHT));
+    const logoWidth = (logoImage.width / logoImage.height) * logoHeight;
+    page.drawImage(logoImage, {
+      x: page.getWidth() - MARGIN - logoWidth,
+      y: headerTopY - logoHeight,
+      width: logoWidth,
+      height: logoHeight,
+    });
+    y = Math.min(headerBottomY, headerTopY - logoHeight) - 8;
+    drawRule();
+
+    for (const line of bodyLines) renderLine(line);
 
     const pdfBytes = await pdfDoc.save();
     const { url } = await getStorage().save(

@@ -50,6 +50,8 @@ export type ContractLine =
   | { type: "heading"; text: string }
   | { type: "subheading"; text: string }
   | { type: "body"; text: string }
+  | { type: "bullet"; text: string }
+  | { type: "rule" }
   | { type: "spacer" };
 
 function money(cents: number): string {
@@ -66,6 +68,10 @@ export function buildContractLines(p: {
   company: string | null;
   email: string;
   phone: string;
+  billingAddress?: string | null;
+  billingCity?: string | null;
+  billingProvince?: string | null;
+  billingPostalCode?: string | null;
   trailerSize: TrailerSize;
   start: string;
   end: string;
@@ -78,9 +84,13 @@ export function buildContractLines(p: {
   const spec = TRAILER_SPECS[p.trailerSize];
   const clientName = `${p.firstName} ${p.lastName}`;
   const lieuUtilisation = p.usageLocation?.trim() || "À préciser";
+  const cityLine = [p.billingCity, p.billingProvince].filter(Boolean).join(", ");
+  const cityPostalLine = [cityLine, p.billingPostalCode].filter(Boolean).join(" ");
 
   const lines: ContractLine[] = [];
   const body = (text: string) => lines.push({ type: "body", text });
+  const bullet = (text: string) => lines.push({ type: "bullet", text });
+  const rule = () => lines.push({ type: "rule" });
   const spacer = () => lines.push({ type: "spacer" });
   const heading = (text: string) => lines.push({ type: "heading", text });
   const subheading = (text: string) => lines.push({ type: "subheading", text });
@@ -97,6 +107,8 @@ export function buildContractLines(p: {
   subheading("Le Locataire :");
   body(clientName);
   if (p.company) body(p.company);
+  if (p.billingAddress) body(p.billingAddress);
+  if (cityPostalLine) body(cityPostalLine);
   body(`Téléphone : ${p.phone}`);
   body(`Courriel : ${p.email}`);
   spacer();
@@ -105,46 +117,51 @@ export function buildContractLines(p: {
   body(
     `Le Locateur loue au Locataire une remorque réfrigérée « ICEBOX » ${p.trailerSize}, à ${spec.essieux} essieu${spec.essieux > 1 ? "x" : ""}, avec les spécifications suivantes :`
   );
-  body(`Dimensions extérieures (intérieures) : ${spec.dimensions}`);
-  body(`Essieux : ${spec.essieux}`);
-  body(`Main de remorque : ${spec.mainDeRemorque}`);
-  body(`Plage de température : ${catalogue?.tempRangeLabel ?? "—"}`);
-  body("Isolation : Panneaux métalliques (R-32)");
-  body(`${spec.refrigerationLabel} : ${spec.refrigerationValue}`);
-  body(`Équipements inclus : ${spec.equipements}`);
-  body("Conformité : La remorque est conforme à la circulation routière.");
-  body(`Thermostat : ${spec.thermostat}`);
+  bullet(`Dimensions extérieures (intérieures) : ${spec.dimensions}`);
+  bullet(`Essieux : ${spec.essieux}`);
+  bullet(`Main de remorque : ${spec.mainDeRemorque}`);
+  bullet(`Plage de température : ${catalogue?.tempRangeLabel ?? "—"}`);
+  bullet("Isolation : Panneaux métalliques (R-32)");
+  bullet(`${spec.refrigerationLabel} : ${spec.refrigerationValue}`);
+  bullet(`Équipements inclus : ${spec.equipements}`);
+  bullet("Conformité : La remorque est conforme à la circulation routière.");
+  bullet(`Thermostat : ${spec.thermostat}`);
   spacer();
+  rule();
 
   heading("2. Durée de la Location");
   body(`La location est accordée pour ${n} jour${n > 1 ? "s" : ""}, du ${fmt(p.start)} au ${fmt(p.end)}, inclusivement.`);
   spacer();
+  rule();
 
   heading("3. Lieu d'Utilisation");
   body(lieuUtilisation);
   spacer();
+  rule();
 
   heading("4. Conditions Financières");
   body("Le coût de location pour la remorque est de :");
-  body(`${money(rate.dayCents)} $ +Tx CAD par jour;`);
-  body(`${money(rate.weekCents)} $ +Tx CAD par semaine;`);
-  body(`${money(rate.monthCents)} $ +Tx CAD par mois.`);
-  body(`${money(TRANSPORT_FEE_PER_TRIP_CENTS)} $ / transport dans un rayon de 50 km du Locateur.`);
+  bullet(`${money(rate.dayCents)} $ +Tx CAD par jour;`);
+  bullet(`${money(rate.weekCents)} $ +Tx CAD par semaine;`);
+  bullet(`${money(rate.monthCents)} $ +Tx CAD par mois.`);
+  bullet(`${money(TRANSPORT_FEE_PER_TRIP_CENTS)} $ / transport dans un rayon de 50 km du Locateur.`);
   body(`Montant estimé pour cette réservation : ${money(p.totalCents)} $ +Tx CAD, pour ${n} jour${n > 1 ? "s" : ""}.`);
   body("Le paiement total est exigible sur réception de la remorque.");
   spacer();
+  rule();
 
   heading("5. Responsabilités du Locataire");
   body("Le Locataire s'engage à :");
-  body("Utiliser la remorque de manière appropriée et à maintenir son bon état de fonctionnement.");
-  body("Informer le Locateur immédiatement en cas de bris, perte ou dommage.");
-  body("Respecter toutes les lois en vigueur lors de l'utilisation de la remorque.");
+  bullet("Utiliser la remorque de manière appropriée et à maintenir son bon état de fonctionnement.");
+  bullet("Informer le Locateur immédiatement en cas de bris, perte ou dommage.");
+  bullet("Respecter toutes les lois en vigueur lors de l'utilisation de la remorque.");
   spacer();
+  rule();
 
   heading("6. Assurance");
   body("Le Locataire doit souscrire et maintenir en vigueur, pendant toute la durée de ce contrat :");
-  body("Une assurance responsabilité civile automobile avec un montant minimal de 2 000 000 $.");
-  body(
+  bullet("Une assurance responsabilité civile automobile avec un montant minimal de 2 000 000 $.");
+  bullet(
     "Une assurance responsabilité civile générale des entreprises couvrant l'utilisation de la remorque pour un montant minimal de 2 000 000 $."
   );
   spacer();
@@ -154,25 +171,29 @@ export function buildContractLines(p: {
   );
   subheading("Assuré Additionnel");
   body(`Le Locateur, ${ADDITIONAL_INSURED}, sera désigné comme assuré additionnel sur la police d'assurance du Locataire.`);
+  spacer();
   subheading("Certificat d'Assurance Requis");
   body("Avant la prise de possession de la remorque, le Locataire devra fournir un certificat d'assurance confirmant :");
-  body("La présence de la couverture F.A.Q. n° 27 et de la responsabilité civile avec les limites spécifiées.");
-  body("L'identification du Locateur comme assuré additionnel.");
-  body("Les dates de validité de la police.");
-  body("La description détaillée de la remorque (marque, modèle et numéro de série).");
+  bullet("La présence de la couverture F.A.Q. n° 27 et de la responsabilité civile avec les limites spécifiées.");
+  bullet("L'identification du Locateur comme assuré additionnel.");
+  bullet("Les dates de validité de la police.");
+  bullet("La description détaillée de la remorque (marque, modèle et numéro de série).");
   spacer();
+  rule();
 
   heading("7. Retour des Équipements");
   body(
     "Le Locataire s'engage à retourner la remorque à l'adresse du Locateur. La remorque devra être restituée en bon état de propreté et de fonctionnement."
   );
   spacer();
+  rule();
 
   heading("8. Dispositions Générales");
   body(
     "Le présent contrat constitue l'intégralité de l'entente entre les parties. Aucune modification de ce contrat ne sera valable sans le consentement écrit mutuel des deux parties."
   );
   spacer();
+  rule();
 
   const today = new Date().toISOString().slice(0, 10);
   heading("Signatures");
@@ -191,7 +212,7 @@ export function buildContractLines(p: {
 // by the PDF/preview, which render buildContractLines() directly).
 export function buildContractText(p: Parameters<typeof buildContractLines>[0]): string {
   return buildContractLines(p)
-    .filter((l) => l.type !== "spacer")
+    .filter((l): l is Exclude<ContractLine, { type: "spacer" | "rule" }> => l.type !== "spacer" && l.type !== "rule")
     .map((l) => l.text)
     .join(" ");
 }
