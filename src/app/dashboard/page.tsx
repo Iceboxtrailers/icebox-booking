@@ -33,7 +33,7 @@ export default async function DashboardPage({
     <div>
       <h1 className="font-heading mb-6 text-2xl">Tableau de bord</h1>
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-7">
         <StatCard label="Réservations (total)" value={String(kpis.totalReservations)} />
         <StatCard label="Ce mois-ci" value={String(kpis.reservationsThisMonth)} />
         <StatCard label="À venir" value={String(kpis.upcomingCount)} />
@@ -47,6 +47,10 @@ export default async function DashboardPage({
           value={kpis.avgNights !== null ? `${kpis.avgNights.toFixed(1)} j` : "—"}
         />
         <StatCard label="Remorque la + demandée" value={mostRequestedLabel} />
+        <StatCard
+          label="Taux d'annulation"
+          value={kpis.cancellationRate !== null ? `${(kpis.cancellationRate * 100).toFixed(1)} %` : "—"}
+        />
       </div>
 
       <div className="mt-3 grid grid-cols-2 gap-3 sm:w-1/2">

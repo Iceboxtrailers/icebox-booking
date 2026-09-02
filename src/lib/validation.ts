@@ -75,6 +75,7 @@ export const adminReservationCreateSchema = z
     note: z.string().trim().optional(),
     pickupTime: isoTime.optional().or(z.literal("")),
     returnTime: isoTime.optional().or(z.literal("")),
+    isTest: z.boolean().optional(),
   })
   .refine((v) => v.returnDate > v.pickupDate, {
     message: "La date de retour doit être après la date de ramassage",
@@ -90,6 +91,7 @@ export const adminReservationUpdateSchema = z.object({
   note: z.string().trim().optional(),
   pickupTime: isoTime.optional().or(z.literal("")),
   returnTime: isoTime.optional().or(z.literal("")),
+  isTest: z.boolean().optional(),
 });
 
 export const adminTrailerCreateSchema = z.object({

@@ -14,7 +14,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Requête invalide" }, { status: 400 });
   }
 
-  const { clientId, trailerId, pickupDate, returnDate, totalAmount, status, note, pickupTime, returnTime } =
+  const { clientId, trailerId, pickupDate, returnDate, totalAmount, status, note, pickupTime, returnTime, isTest } =
     parsed.data;
 
   const conflicting = await hasConflict(trailerId, pickupDate, returnDate);
@@ -34,8 +34,12 @@ export async function POST(request: Request) {
       note: note || null,
       pickupTime: pickupTime || null,
       returnTime: returnTime || null,
+      isTest: isTest ?? false,
     },
-    include: { client: true, trailer: true },
+    include: {
+      client: { select: { id: true, firstName: true, lastName: true, email: true, phone: true } },
+      trailer: true,
+    },
   });
 
   return NextResponse.json(reservation);

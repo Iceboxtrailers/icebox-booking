@@ -56,6 +56,7 @@ export function ReservationModal({
   const [note, setNote] = useState("");
   const [pickupTime, setPickupTime] = useState("");
   const [returnTime, setReturnTime] = useState("");
+  const [isTest, setIsTest] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
   // Edit mode: client display, fetched with the reservation; editable via ClientModal.
@@ -102,6 +103,7 @@ export function ReservationModal({
       setNote(data.note ?? "");
       setPickupTime(data.pickupTime ?? "");
       setReturnTime(data.returnTime ?? "");
+      setIsTest(Boolean(data.isTest));
       setClientDisplay(data.client);
       setContractPdfUrl(data.contract?.pdfUrl ?? null);
       setLoading(false);
@@ -171,7 +173,17 @@ export function ReservationModal({
         const res = await fetch(`/api/admin/reservations/${state.reservationId}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ status, pickupDate, returnDate, trailerId, totalAmount, note, pickupTime, returnTime }),
+          body: JSON.stringify({
+            status,
+            pickupDate,
+            returnDate,
+            trailerId,
+            totalAmount,
+            note,
+            pickupTime,
+            returnTime,
+            isTest,
+          }),
         });
         if (!res.ok) {
           const data = await res.json().catch(() => ({}));
@@ -211,6 +223,7 @@ export function ReservationModal({
             note,
             pickupTime,
             returnTime,
+            isTest,
           }),
         });
         if (!res.ok) {
@@ -514,6 +527,11 @@ export function ReservationModal({
                 className="w-full rounded-md border border-border px-3 py-2.5 text-[13px] outline-none focus:border-navy"
               />
             </Field>
+
+            <label className="mb-3 flex items-center gap-2 text-[13px]">
+              <input type="checkbox" checked={isTest} onChange={(e) => setIsTest(e.target.checked)} />
+              Réservation test (exclue des statistiques)
+            </label>
 
             {error && <div className="mb-3 text-[13px] text-red-600">{error}</div>}
 

@@ -10,13 +10,18 @@ export type DashboardKpis = {
   avgNights: number | null;
   bookingsBySize: { size: TrailerSize; count: number }[];
   upcomingCount: number;
+  cancellationRate: number | null;
 };
 
 export async function getDashboardKpis(): Promise<DashboardKpis> {
-  const reservations = await prisma.reservation.findMany({
-    where: { status: { in: REAL_BOOKING_STATUSES } },
-    include: { trailer: true },
-  });
+  const [reservations, cancelledCount, allReservationsCount] = await Promise.all([
+    prisma.reservation.findMany({
+      where: { status: { in: REAL_BOOKING_STATUSES }, isTest: false },
+      include: { trailer: true },
+    }),
+    prisma.reservation.count({ where: { status: "cancelled", isTest: false } }),
+    prisma.reservation.count({ where: { isTest: false } }),
+  ]);
 
   const now = new Date();
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -61,5 +66,6 @@ export async function getDashboardKpis(): Promise<DashboardKpis> {
       .map(([size, count]) => ({ size: size as TrailerSize, count }))
       .sort((a, b) => b.count - a.count),
     upcomingCount,
+    cancellationRate: allReservationsCount > 0 ? cancelledCount / allReservationsCount : null,
   };
 }

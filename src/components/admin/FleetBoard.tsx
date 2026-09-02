@@ -437,11 +437,12 @@ export function FleetBoard({ board }: { board: FleetBoardData }) {
               const blocks = monthReservations
                 .filter((r) => r.trailerId === trailer.id)
                 .map((r) => {
+                  // Drawn through the return date itself (not the day before) so the bar
+                  // matches what the admin typed — even though the trailer is actually
+                  // available again that morning per the "return morning" convention
+                  // used everywhere else (nights/pricing/availability, see lib/availability.ts).
                   const clippedStartIso = r.pickupDate < monthFirstIso ? monthFirstIso : r.pickupDate;
-                  const lastOccupiedIso = new Date(new Date(`${r.returnDate}T00:00:00Z`).getTime() - 86400000)
-                    .toISOString()
-                    .slice(0, 10);
-                  const clippedEndIso = lastOccupiedIso > monthLastIso ? monthLastIso : lastOccupiedIso;
+                  const clippedEndIso = r.returnDate > monthLastIso ? monthLastIso : r.returnDate;
                   return {
                     reservation: r,
                     startDay: Number(clippedStartIso.slice(8, 10)),
