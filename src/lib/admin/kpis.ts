@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import type { TrailerSize } from "@/lib/constants";
 
-const REAL_BOOKING_STATUSES = ["confirmed", "in_progress", "completed"];
+export const REAL_BOOKING_STATUSES = ["confirmed", "in_progress", "completed"];
 
 export type DashboardKpis = {
   totalReservations: number;

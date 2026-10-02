@@ -133,6 +133,12 @@ export const adminClientUpdateSchema = z.object({
   internalNote: z.string().trim().optional(),
 });
 
+export const adminReportQuerySchema = z.discriminatedUnion("type", [
+  z.object({ type: z.literal("month"), year: z.coerce.number().int(), month: z.coerce.number().int().min(1).max(12) }),
+  z.object({ type: z.literal("year"), year: z.coerce.number().int() }),
+  z.object({ type: z.literal("custom"), start: isoDate, end: isoDate }),
+]);
+
 export const contactSchema = z.object({
   topic: z.string().trim().min(1),
   name: z.string().trim().min(1, "Nom requis"),
