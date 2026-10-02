@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { BrandMark } from "@/components/BrandMark";
 import { Card } from "@/components/ui/Card";
@@ -11,8 +11,9 @@ import { Button } from "@/components/ui/Button";
 
 type Step = "email" | "login" | "details";
 
-export default function GuestReservationPage() {
+function GuestReservationForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [step, setStep] = useState<Step>("email");
   const [form, setForm] = useState({ firstName: "", lastName: "", email: "", phone: "" });
   const [password, setPassword] = useState("");
@@ -20,6 +21,16 @@ export default function GuestReservationPage() {
   const [submitting, setSubmitting] = useState(false);
 
   const set = (k: keyof typeof form, v: string) => setForm((f) => ({ ...f, [k]: v }));
+
+  function goToNewReservation() {
+    const pickupDate = searchParams.get("pickupDate");
+    const returnDate = searchParams.get("returnDate");
+    const qs = new URLSearchParams();
+    if (pickupDate) qs.set("pickupDate", pickupDate);
+    if (returnDate) qs.set("returnDate", returnDate);
+    const suffix = qs.toString() ? `?${qs}` : "";
+    router.push(`/reservation/new${suffix}`);
+  }
 
   async function handleEmailSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -52,7 +63,7 @@ export default function GuestReservationPage() {
         setError("Mot de passe invalide");
         return;
       }
-      router.push("/reservation/new");
+      goToNewReservation();
     } finally {
       setSubmitting(false);
     }
@@ -87,7 +98,7 @@ export default function GuestReservationPage() {
         setError("Impossible de continuer. Essayez de vous connecter.");
         return;
       }
-      router.push("/reservation/new");
+      goToNewReservation();
     } finally {
       setSubmitting(false);
     }
@@ -201,5 +212,13 @@ export default function GuestReservationPage() {
         </div>
       </Card>
     </div>
+  );
+}
+
+export default function GuestReservationPage() {
+  return (
+    <Suspense>
+      <GuestReservationForm />
+    </Suspense>
   );
 }

@@ -39,6 +39,15 @@ export function SiteFooter() {
         <div>
           <div className="mb-2 text-[11px] font-medium uppercase tracking-wide text-muted">Liens</div>
           <div className="flex flex-col gap-1 text-[12px]">
+            <Link href="/comment-ca-marche" className="text-foreground hover:text-navy">
+              Comment ça marche
+            </Link>
+            <Link href="/faq" className="text-foreground hover:text-navy">
+              FAQ
+            </Link>
+            <Link href="/contact" className="text-foreground hover:text-navy">
+              Contact
+            </Link>
             <Link href="/chambre-froide" className="text-foreground hover:text-navy">
               Chambre froide
             </Link>

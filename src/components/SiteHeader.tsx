@@ -1,16 +1,54 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
-import { User, LogOut } from "lucide-react";
+import { User, LogOut, ChevronDown } from "lucide-react";
 import { BrandMark } from "@/components/BrandMark";
 
 const NAV_ITEMS = [
-  { label: "Remorques", href: "/" },
-  { label: "Chambre froide", href: "/chambre-froide" },
-  { label: "Chambre de congélation", href: "/chambre-congelation" },
-  { label: "Attaches & accessoires", href: "/attaches-accessoires" },
+  { label: "Nos remorques", href: "/#remorques" },
+  { label: "Comment ça marche", href: "/comment-ca-marche" },
+  { label: "FAQ", href: "/faq" },
+  { label: "Contact", href: "/contact" },
 ];
+
+const OTHER_SERVICES = [
+  { label: "Chambres froides", href: "/chambre-froide" },
+  { label: "Chambres de congélation", href: "/chambre-congelation" },
+  { label: "Accessoires", href: "/attaches-accessoires" },
+  { label: "Devenir concessionnaire", href: "/devenir-concessionnaire" },
+];
+
+function OtherServicesMenu({ onNavigate }: { onNavigate?: () => void }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        onBlur={() => setTimeout(() => setOpen(false), 150)}
+        className="flex items-center gap-1 text-[13px] font-medium text-foreground hover:text-navy"
+      >
+        Autres services <ChevronDown size={14} />
+      </button>
+      {open && (
+        <div className="absolute left-0 top-full z-10 mt-2 min-w-[200px] rounded-lg border border-border-light bg-white py-1.5 shadow-md">
+          {OTHER_SERVICES.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              onClick={onNavigate}
+              className="block px-4 py-2 text-[13px] text-foreground hover:bg-[#F4F6F7] hover:text-navy"
+            >
+              {item.label}
+            </Link>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export function SiteHeader() {
   const { data: session } = useSession();
@@ -29,11 +67,14 @@ export function SiteHeader() {
               {item.label}
             </Link>
           ))}
+          <OtherServicesMenu />
         </nav>
 
         <div className="ml-auto flex items-center gap-4">
-          <Link href="/devenir-concessionnaire" className="hidden text-[13px] font-medium text-muted hover:text-navy sm:inline">
-            Devenir concessionnaire
+          <Link href="/reservation/invite" className="hidden sm:inline">
+            <span className="rounded-md border border-cta bg-cta px-3.5 py-2 text-[13px] font-medium text-white hover:bg-cta-hover">
+              Louer une remorque
+            </span>
           </Link>
           {session ? (
             <>
@@ -59,8 +100,16 @@ export function SiteHeader() {
       </div>
 
       <nav className="flex items-center gap-4 overflow-x-auto border-t border-border-light px-4 py-2 sm:hidden">
+        <Link href="/reservation/invite" className="whitespace-nowrap text-[12px] font-medium text-cta">
+          Louer une remorque
+        </Link>
         {NAV_ITEMS.map((item) => (
           <Link key={item.href} href={item.href} className="whitespace-nowrap text-[12px] font-medium text-foreground">
+            {item.label}
+          </Link>
+        ))}
+        {OTHER_SERVICES.map((item) => (
+          <Link key={item.href} href={item.href} className="whitespace-nowrap text-[12px] text-muted">
             {item.label}
           </Link>
         ))}
