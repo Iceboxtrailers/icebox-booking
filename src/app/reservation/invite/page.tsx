@@ -3,17 +3,15 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
-import { User } from "lucide-react";
 import { BrandMark } from "@/components/BrandMark";
 import { Card } from "@/components/ui/Card";
 import { Field } from "@/components/ui/Field";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 
-export default function SignupPage() {
+export default function GuestReservationPage() {
   const router = useRouter();
-  const [form, setForm] = useState({ firstName: "", lastName: "", email: "", phone: "", password: "" });
-  const [marketingOptIn, setMarketingOptIn] = useState(false);
+  const [form, setForm] = useState({ firstName: "", lastName: "", email: "", phone: "" });
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -24,23 +22,28 @@ export default function SignupPage() {
     setError(null);
     setSubmitting(true);
     try {
+      // No password field shown to the guest — generate one behind the scenes
+      // so a Client row (required by the reservation schema) can still exist.
+      // They can set a real password later via "mot de passe oublié" if they
+      // ever want to revisit /compte.
+      const password = crypto.randomUUID();
       const res = await fetch("/api/auth/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...form, marketingOptIn }),
+        body: JSON.stringify({ ...form, password }),
       });
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error ?? "Impossible de créer le compte");
+        setError(data.error ?? "Impossible de continuer");
         return;
       }
       const signInResult = await signIn("credentials", {
         email: form.email,
-        password: form.password,
+        password,
         redirect: false,
       });
       if (signInResult?.error) {
-        setError("Compte créé, mais la connexion a échoué. Essayez de vous connecter.");
+        setError("Impossible de continuer. Essayez de vous connecter.");
         return;
       }
       router.push("/reservation/new");
@@ -54,10 +57,10 @@ export default function SignupPage() {
       <Card className="w-full p-6">
         <div className="mb-5 flex items-center gap-2.5">
           <BrandMark size={32} />
-          <div className="font-heading text-lg uppercase tracking-wide">Créer un compte</div>
+          <div className="font-heading text-lg uppercase tracking-wide">Réserver sans compte</div>
         </div>
-        <div className="mb-4 flex items-center gap-2 text-[13px] text-muted">
-          <User size={16} /> Créez votre compte pour réserver et suivre l&apos;historique de vos locations.
+        <div className="mb-4 text-[13px] text-muted">
+          Entrez vos coordonnées pour commencer votre réservation — aucun mot de passe requis.
         </div>
         <form onSubmit={handleSubmit}>
           <div className="grid grid-cols-2 gap-3">
@@ -80,36 +83,13 @@ export default function SignupPage() {
           <Field label="Téléphone">
             <Input value={form.phone} onChange={(e) => set("phone", e.target.value)} placeholder="418-000-0000" required />
           </Field>
-          <Field label="Mot de passe">
-            <Input
-              type="password"
-              value={form.password}
-              onChange={(e) => set("password", e.target.value)}
-              placeholder="8 caractères minimum"
-              required
-              minLength={8}
-            />
-          </Field>
-          <label className="mb-4 flex items-start gap-2 text-[12px] text-muted">
-            <input
-              type="checkbox"
-              checked={marketingOptIn}
-              onChange={(e) => setMarketingOptIn(e.target.checked)}
-              className="mt-0.5"
-            />
-            J&apos;accepte de recevoir des courriels promotionnels d&apos;IceBox concernant les offres et
-            nouveautés.
-          </label>
           {error && <div className="mb-3 text-[13px] text-red-600">{error}</div>}
           <Button type="submit" variant="cta" disabled={submitting} className="w-full justify-center">
-            {submitting ? "Création..." : "Créer mon compte"}
+            {submitting ? "Un instant..." : "Continuer ma réservation"}
           </Button>
         </form>
         <div className="mt-4 text-center text-[13px] text-muted">
           Déjà un compte ? <a href="/login" className="text-navy underline">Se connecter</a>
-        </div>
-        <div className="mt-2 text-center text-[13px] text-muted">
-          ou <a href="/reservation/invite" className="text-navy underline">réservez sans créer de compte</a>
         </div>
       </Card>
     </div>

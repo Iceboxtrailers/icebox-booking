@@ -62,6 +62,9 @@ function LoginForm() {
         <div className="mt-4 text-center text-[13px] text-muted">
           Pas encore de compte ? <a href="/signup" className="text-navy underline">Créer un compte</a>
         </div>
+        <div className="mt-2 text-center text-[13px] text-muted">
+          ou <a href="/reservation/invite" className="text-navy underline">réservez sans créer de compte</a>
+        </div>
       </Card>
     </div>
   );

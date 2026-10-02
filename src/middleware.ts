@@ -36,6 +36,12 @@ export default auth((req) => {
     return;
   }
 
+  // The guest-checkout page is how a visitor *gets* a client session — it
+  // can't require one already, unlike every other /reservation/* route.
+  if (req.nextUrl.pathname === "/reservation/invite") {
+    return;
+  }
+
   if (!req.auth?.clientId) {
     const loginUrl = new URL("/login", req.nextUrl.origin);
     loginUrl.searchParams.set("callbackUrl", req.nextUrl.pathname);
