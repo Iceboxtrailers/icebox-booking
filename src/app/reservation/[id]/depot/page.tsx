@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { notFound, redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getCurrentClientId } from "@/lib/session";
@@ -20,7 +21,9 @@ export default async function DepotPage({ params }: { params: Promise<{ id: stri
 
   return (
     <WizardShell step={stepIndexForSegment("depot")}>
-      <DepositForm reservationId={id} initiallyAuthorized={reservation.depositStatus === "authorized"} />
+      <Suspense>
+        <DepositForm reservationId={id} initiallyAuthorized={reservation.depositStatus === "authorized"} />
+      </Suspense>
     </WizardShell>
   );
 }

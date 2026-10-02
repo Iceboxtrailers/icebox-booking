@@ -64,6 +64,10 @@ export const signContractSchema = z.object({
   signerName: z.string().trim().min(1, "Nom du signataire requis"),
 });
 
+export const depositAuthorizeSchema = z.object({
+  transactionId: z.string().trim().min(1, "transactionId requis"),
+});
+
 export const adminReservationCreateSchema = z
   .object({
     clientId: z.string().min(1, "Client requis"),
