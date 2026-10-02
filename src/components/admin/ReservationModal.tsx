@@ -67,6 +67,14 @@ export function ReservationModal({
   const [contractPdfUrl, setContractPdfUrl] = useState<string | null>(null);
   const [generatingContract, setGeneratingContract] = useState(false);
 
+  // Edit mode: security deposit, fetched with the reservation; released or
+  // (partially) captured once the trailer comes back.
+  const [depositStatus, setDepositStatus] = useState<string>("none");
+  const [depositAmountCents, setDepositAmountCents] = useState(0);
+  const [capturingFees, setCapturingFees] = useState(false);
+  const [feeAmountDollars, setFeeAmountDollars] = useState("");
+  const [depositActionPending, setDepositActionPending] = useState(false);
+
   // Create mode: existing-client search vs. quick-create a new one.
   const [clientMode, setClientMode] = useState<"search" | "new">("search");
   const [clientQuery, setClientQuery] = useState("");
@@ -106,6 +114,8 @@ export function ReservationModal({
       setIsTest(Boolean(data.isTest));
       setClientDisplay(data.client);
       setContractPdfUrl(data.contract?.pdfUrl ?? null);
+      setDepositStatus(data.depositStatus ?? "none");
+      setDepositAmountCents(data.depositAmount ?? 0);
       setLoading(false);
     })();
     return () => {
@@ -129,6 +139,53 @@ export function ReservationModal({
       setContractPdfUrl(data.pdfUrl);
     } finally {
       setGeneratingContract(false);
+    }
+  }
+
+  async function handleReleaseDeposit() {
+    if (state.mode !== "edit") return;
+    setError(null);
+    setDepositActionPending(true);
+    try {
+      const res = await fetch(`/api/admin/reservations/${state.reservationId}/deposit/release`, {
+        method: "POST",
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(data.error ?? "Impossible de libérer le dépôt");
+        return;
+      }
+      setDepositStatus(data.depositStatus);
+    } finally {
+      setDepositActionPending(false);
+    }
+  }
+
+  async function handleCaptureFees() {
+    if (state.mode !== "edit") return;
+    setError(null);
+    const amountCents = feeAmountDollars ? Math.round(parseFloat(feeAmountDollars) * 100) : undefined;
+    if (amountCents !== undefined && (!Number.isFinite(amountCents) || amountCents <= 0)) {
+      setError("Montant invalide");
+      return;
+    }
+    setDepositActionPending(true);
+    try {
+      const res = await fetch(`/api/admin/reservations/${state.reservationId}/deposit/capture`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ amountCents }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(data.error ?? "Impossible de prélever le dépôt");
+        return;
+      }
+      setDepositStatus(data.depositStatus);
+      if (typeof data.amountCents === "number") setDepositAmountCents(data.amountCents);
+      setCapturingFees(false);
+    } finally {
+      setDepositActionPending(false);
     }
   }
 
@@ -328,6 +385,61 @@ export function ReservationModal({
                 >
                   {generatingContract ? "..." : contractPdfUrl ? "Régénérer le PDF" : "Générer le contrat (PDF)"}
                 </button>
+              </div>
+            )}
+
+            {state.mode === "edit" && (
+              <div className="mb-3 rounded-lg border border-border-light bg-[#FAFBFB] p-3 text-[13px]">
+                <div className="flex items-center justify-between gap-2">
+                  <div>
+                    <div className="font-medium">Dépôt de sécurité</div>
+                    <div className="text-muted">
+                      {depositStatus === "none" && "Aucun dépôt autorisé."}
+                      {depositStatus === "authorized" &&
+                        `Autorisé — ${(depositAmountCents / 100).toFixed(2)} $`}
+                      {depositStatus === "captured" &&
+                        `Prélevé — ${(depositAmountCents / 100).toFixed(2)} $`}
+                      {depositStatus === "released" && "Libéré."}
+                    </div>
+                  </div>
+                  {depositStatus === "authorized" && (
+                    <div className="flex shrink-0 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setCapturingFees((v) => !v)}
+                        disabled={depositActionPending}
+                        className="rounded-md border border-border px-2.5 py-1.5 text-[12px] hover:bg-[#EDF2F4] disabled:opacity-50"
+                      >
+                        Ajouter des frais
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleReleaseDeposit}
+                        disabled={depositActionPending}
+                        className="rounded-md border border-border px-2.5 py-1.5 text-[12px] hover:bg-[#EDF2F4] disabled:opacity-50"
+                      >
+                        {depositActionPending ? "..." : "Retour OK — libérer"}
+                      </button>
+                    </div>
+                  )}
+                </div>
+                {capturingFees && (
+                  <div className="mt-2.5 flex items-center gap-2 border-t border-border-light pt-2.5">
+                    <Input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      max={depositAmountCents / 100}
+                      placeholder={`Max ${(depositAmountCents / 100).toFixed(2)} $`}
+                      value={feeAmountDollars}
+                      onChange={(e) => setFeeAmountDollars(e.target.value)}
+                      className="flex-1"
+                    />
+                    <Button type="button" variant="cta" onClick={handleCaptureFees} disabled={depositActionPending}>
+                      {depositActionPending ? "..." : "Prélever"}
+                    </Button>
+                  </div>
+                )}
               </div>
             )}
 

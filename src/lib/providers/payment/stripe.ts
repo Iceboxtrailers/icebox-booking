@@ -25,8 +25,10 @@ export class StripePaymentProvider implements PaymentProvider {
     return { status: intent.status === "requires_capture" ? ("authorized" as const) : ("failed" as const) };
   }
 
-  async capture(transactionId: string) {
-    const intent = await stripe.paymentIntents.capture(transactionId);
+  async capture(transactionId: string, amountCents?: number) {
+    const intent = await stripe.paymentIntents.capture(transactionId, {
+      ...(amountCents !== undefined ? { amount_to_capture: amountCents } : {}),
+    });
     return { status: intent.status === "succeeded" ? ("captured" as const) : ("failed" as const) };
   }
 

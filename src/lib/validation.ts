@@ -68,6 +68,10 @@ export const depositAuthorizeSchema = z.object({
   transactionId: z.string().trim().min(1, "transactionId requis"),
 });
 
+export const adminDepositCaptureSchema = z.object({
+  amountCents: z.number().int().min(1).optional(),
+});
+
 export const adminReservationCreateSchema = z
   .object({
     clientId: z.string().min(1, "Client requis"),
