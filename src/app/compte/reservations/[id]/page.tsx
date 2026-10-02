@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentClientId } from "@/lib/session";
 import { Card } from "@/components/ui/Card";
 import { fmt, nights } from "@/lib/dates";
-import { priceBreakdown } from "@/lib/pricing";
+import { priceBreakdown, computeTaxBreakdown } from "@/lib/pricing";
 import type { TrailerSize } from "@/lib/constants";
 
 const STATUS_LABEL_FR: Record<string, string> = {
@@ -37,6 +37,7 @@ export default async function ReservationDetailPage({ params }: { params: Promis
   const end = reservation.returnDate?.toISOString().slice(0, 10) ?? null;
   const size = reservation.trailer?.size as TrailerSize | undefined;
   const breakdown = size && start && end ? priceBreakdown(size, start, end) : null;
+  const tax = computeTaxBreakdown(reservation.totalAmount);
 
   return (
     <div>
@@ -84,15 +85,41 @@ export default async function ReservationDetailPage({ params }: { params: Promis
                   <span className="text-muted">{breakdown.days} jour(s)</span>
                 </div>
               )}
+              <div className="mt-2 flex justify-between border-t border-border-light pt-2">
+                <span className="text-muted">Sous-total (avant taxes)</span>
+                <span className="font-mono">{(tax.subtotalCents / 100).toFixed(2)} $</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted">TPS (5%)</span>
+                <span className="font-mono">{(tax.gstCents / 100).toFixed(2)} $</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted">TVQ (9,975%)</span>
+                <span className="font-mono">{(tax.qstCents / 100).toFixed(2)} $</span>
+              </div>
               <div className="mt-2 flex justify-between border-t border-border-light pt-2 font-medium">
-                <span>Total (avant taxes)</span>
-                <span className="font-mono">{(reservation.totalAmount / 100).toFixed(2)} $</span>
+                <span>Total</span>
+                <span className="font-mono">{(tax.totalWithTaxCents / 100).toFixed(2)} $</span>
               </div>
             </div>
           ) : (
-            <div className="text-[13px] text-muted">
-              Total : <span className="font-mono">{(reservation.totalAmount / 100).toFixed(2)} $</span> (avant
-              taxes)
+            <div className="space-y-1 text-[13px]">
+              <div className="flex justify-between">
+                <span className="text-muted">Sous-total (avant taxes)</span>
+                <span className="font-mono">{(tax.subtotalCents / 100).toFixed(2)} $</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted">TPS (5%)</span>
+                <span className="font-mono">{(tax.gstCents / 100).toFixed(2)} $</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted">TVQ (9,975%)</span>
+                <span className="font-mono">{(tax.qstCents / 100).toFixed(2)} $</span>
+              </div>
+              <div className="mt-2 flex justify-between border-t border-border-light pt-2 font-medium">
+                <span>Total</span>
+                <span className="font-mono">{(tax.totalWithTaxCents / 100).toFixed(2)} $</span>
+              </div>
             </div>
           )}
         </div>

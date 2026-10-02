@@ -42,3 +42,21 @@ export function priceBreakdown(size: TrailerSize, start: string, end: string): P
 export function computeTotalCents(size: TrailerSize, start: string, end: string): number {
   return priceBreakdown(size, start, end).totalCents;
 }
+
+// Current Québec rates (TPS fédérale + TVQ provinciale), both computed on the
+// pre-tax subtotal — not compounded, per the method in effect since 2013.
+export const GST_RATE = 0.05;
+export const QST_RATE = 0.09975;
+
+export type TaxBreakdown = {
+  subtotalCents: number;
+  gstCents: number;
+  qstCents: number;
+  totalWithTaxCents: number;
+};
+
+export function computeTaxBreakdown(subtotalCents: number): TaxBreakdown {
+  const gstCents = Math.round(subtotalCents * GST_RATE);
+  const qstCents = Math.round(subtotalCents * QST_RATE);
+  return { subtotalCents, gstCents, qstCents, totalWithTaxCents: subtotalCents + gstCents + qstCents };
+}

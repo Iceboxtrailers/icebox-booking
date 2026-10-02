@@ -6,6 +6,7 @@ import Link from "next/link";
 import { CheckCircle2, Truck } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { fmt } from "@/lib/dates";
+import { computeTaxBreakdown } from "@/lib/pricing";
 import type { AvailabilityCandidate } from "@/lib/availability";
 
 export function AvailabilityList({
@@ -81,7 +82,12 @@ export function AvailabilityList({
                 {fmt(c.windowStart)} → {fmt(c.windowEnd)} · {c.nights} jour(s)
               </div>
             </div>
-            <div className="font-mono font-medium">{(c.totalCents / 100).toFixed(2)} $</div>
+            <div className="text-right">
+              <div className="font-mono font-medium">{(c.totalCents / 100).toFixed(2)} $</div>
+              <div className="font-mono text-[10px] text-muted">
+                {(computeTaxBreakdown(c.totalCents).totalWithTaxCents / 100).toFixed(2)} $ taxes incl.
+              </div>
+            </div>
             {chosen && <CheckCircle2 size={18} className="text-navy" />}
           </div>
         );

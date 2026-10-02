@@ -1,6 +1,6 @@
 import { fmt, nights } from "@/lib/dates";
 import { catalogueFor } from "@/lib/catalogue";
-import { RATE_TABLE, TRANSPORT_FEE_PER_TRIP_CENTS } from "@/lib/pricing";
+import { RATE_TABLE, TRANSPORT_FEE_PER_TRIP_CENTS, computeTaxBreakdown } from "@/lib/pricing";
 import type { TrailerSize } from "@/lib/constants";
 
 // Company-side facts from the real IceBox rental contract template —
@@ -139,13 +139,19 @@ export function buildContractLines(p: {
   spacer();
   rule();
 
+  const tax = computeTaxBreakdown(p.totalCents);
+
   heading("4. Conditions Financières");
   body("Le coût de location pour la remorque est de :");
   bullet(`${money(rate.dayCents)} $ +Tx CAD par jour;`);
   bullet(`${money(rate.weekCents)} $ +Tx CAD par semaine;`);
   bullet(`${money(rate.monthCents)} $ +Tx CAD par mois.`);
   bullet(`${money(TRANSPORT_FEE_PER_TRIP_CENTS)} $ / transport dans un rayon de 50 km du Locateur.`);
-  body(`Montant estimé pour cette réservation : ${money(p.totalCents)} $ +Tx CAD, pour ${n} jour${n > 1 ? "s" : ""}.`);
+  body(`Montant pour cette réservation (${n} jour${n > 1 ? "s" : ""}) :`);
+  bullet(`Sous-total : ${money(tax.subtotalCents)} $ CAD`);
+  bullet(`TPS (5%) : ${money(tax.gstCents)} $`);
+  bullet(`TVQ (9,975%) : ${money(tax.qstCents)} $`);
+  bullet(`Total : ${money(tax.totalWithTaxCents)} $ CAD`);
   body("Le paiement total est exigible sur réception de la remorque.");
   spacer();
   rule();
