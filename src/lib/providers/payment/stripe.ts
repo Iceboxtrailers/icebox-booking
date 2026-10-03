@@ -1,7 +1,19 @@
 import Stripe from "stripe";
 import type { PaymentProvider } from "./types";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+// Lazy so importing this module never throws when STRIPE_SECRET_KEY is unset
+// (e.g. a prod build before the key is configured in Vercel) — the eager
+// `new Stripe(...)` at module scope used to crash Next.js's "collect page
+// data" step for every route that imports getPaymentProvider(), even though
+// getPaymentProvider() only picks this provider once the key actually exists.
+let stripeClient: Stripe | null = null;
+function getStripeClient(): Stripe {
+  if (!stripeClient) {
+    if (!process.env.STRIPE_SECRET_KEY) throw new Error("STRIPE_SECRET_KEY n'est pas configuré");
+    stripeClient = new Stripe(process.env.STRIPE_SECRET_KEY);
+  }
+  return stripeClient;
+}
 
 // Security deposit = a manual-capture Payment Intent: "authorize" holds the
 // funds without charging them, "capture" takes the money (damage found),
@@ -9,7 +21,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 // states the rest of the app already models.
 export class StripePaymentProvider implements PaymentProvider {
   async createDepositIntent({ reservationId, amount }: { reservationId: string; amount: number }) {
-    const intent = await stripe.paymentIntents.create({
+    const intent = await getStripeClient().paymentIntents.create({
       amount,
       currency: "cad",
       capture_method: "manual",
@@ -21,19 +33,19 @@ export class StripePaymentProvider implements PaymentProvider {
   }
 
   async confirmDeposit(transactionId: string) {
-    const intent = await stripe.paymentIntents.retrieve(transactionId);
+    const intent = await getStripeClient().paymentIntents.retrieve(transactionId);
     return { status: intent.status === "requires_capture" ? ("authorized" as const) : ("failed" as const) };
   }
 
   async capture(transactionId: string, amountCents?: number) {
-    const intent = await stripe.paymentIntents.capture(transactionId, {
+    const intent = await getStripeClient().paymentIntents.capture(transactionId, {
       ...(amountCents !== undefined ? { amount_to_capture: amountCents } : {}),
     });
     return { status: intent.status === "succeeded" ? ("captured" as const) : ("failed" as const) };
   }
 
   async release(transactionId: string) {
-    const intent = await stripe.paymentIntents.cancel(transactionId);
+    const intent = await getStripeClient().paymentIntents.cancel(transactionId);
     return { status: intent.status === "canceled" ? ("released" as const) : ("failed" as const) };
   }
 }
