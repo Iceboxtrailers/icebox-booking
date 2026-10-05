@@ -69,8 +69,11 @@ export function AvailabilityList({
 
   return (
     <div>
-      <div className="mb-3.5 text-[13px] text-muted">
+      <div className="mb-1 text-[13px] text-muted">
         Remorques disponibles pour votre demande :
+      </div>
+      <div className="mb-3.5 flex items-center gap-1.5 text-[12px] text-navy">
+        <Sparkles size={13} /> Meilleur tarif appliqué automatiquement
       </div>
 
       <div className="mb-3.5 rounded-lg border border-border-light bg-[#FAFBFB] p-3.5">

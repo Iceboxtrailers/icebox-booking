@@ -73,7 +73,7 @@ export function SiteHeader() {
         <div className="ml-auto flex items-center gap-4">
           <Link href="/reservation/invite" className="hidden sm:inline">
             <span className="rounded-md border border-cta bg-cta px-3.5 py-2 text-[13px] font-medium text-white hover:bg-cta-hover">
-              Louer une remorque
+              Réserver
             </span>
           </Link>
           {session ? (
@@ -101,7 +101,7 @@ export function SiteHeader() {
 
       <nav className="flex items-center gap-4 overflow-x-auto border-t border-border-light px-4 py-2 sm:hidden">
         <Link href="/reservation/invite" className="whitespace-nowrap text-[12px] font-medium text-cta">
-          Louer une remorque
+          Réserver
         </Link>
         {NAV_ITEMS.map((item) => (
           <Link key={item.href} href={item.href} className="whitespace-nowrap text-[12px] font-medium text-foreground">

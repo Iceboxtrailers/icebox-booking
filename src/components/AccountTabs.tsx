@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 const TABS = [
   { label: "Mon compte", href: "/compte" },
   { label: "Mes réservations", href: "/compte/reservations" },
+  { label: "Ma remorque", href: "/compte/ma-remorque" },
 ];
 
 export function AccountTabs() {
