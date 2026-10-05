@@ -105,10 +105,10 @@ export default function HomePage() {
           <div className="text-[13px] text-muted">Service d&apos;urgence disponible 24/7.</div>
         </div>
         <a
-          href="tel:+14185764147"
+          href="tel:+15818892093"
           className="shrink-0 rounded-md border border-cta bg-cta px-4 py-2.5 text-[13px] font-medium text-white hover:bg-cta-hover"
         >
-          Appelez-nous → 418 576-4147
+          Appelez-nous → 581 889-2093
         </a>
       </section>
     </MarketingLayout>

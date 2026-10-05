@@ -31,12 +31,6 @@ export default function ContactPage() {
               Bureau : 581 889-2093
             </a>
           </div>
-          <div className="flex items-center gap-2 text-foreground">
-            <Phone size={15} />
-            <a href="tel:+14185764147" className="hover:text-navy">
-              Urgence 24/7 : 418 576-4147
-            </a>
-          </div>
           <div className="flex items-start gap-2 text-muted">
             <MapPin size={15} className="mt-0.5 shrink-0" />
             1005 rue du Parc-Industriel, Lévis, QC G6Z 1C5

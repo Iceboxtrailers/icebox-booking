@@ -33,7 +33,7 @@ const FAQ_ITEMS = [
   },
   {
     q: "J'ai besoin d'une remorque aujourd'hui, que faire ?",
-    a: "Appelez-nous directement — nous offrons un service d'urgence disponible 24/7 au 418 576-4147.",
+    a: "Appelez-nous directement — nous offrons un service d'urgence disponible 24/7 au 581 889-2093.",
   },
 ];
 

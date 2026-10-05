@@ -28,12 +28,6 @@ export function SiteFooter() {
               Bureau : 581 889-2093
             </a>
           </div>
-          <div className="mt-1 flex items-center gap-1.5 text-[12px] text-foreground">
-            <Phone size={13} />
-            <a href="tel:+14185764147" className="hover:text-navy">
-              Cellulaire : 418 576-4147
-            </a>
-          </div>
         </div>
 
         <div>
