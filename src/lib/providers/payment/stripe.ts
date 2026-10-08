@@ -25,7 +25,9 @@ export class StripePaymentProvider implements PaymentProvider {
       amount,
       currency: "cad",
       capture_method: "manual",
-      automatic_payment_methods: { enabled: true },
+      // Card only (Apple Pay / Google Pay ride on "card"): buy-now-pay-later
+      // methods like Klarna/Affirm can't back a manual-capture deposit hold.
+      allowed_payment_method_types: ["card"],
       metadata: { reservationId, kind: "deposit" },
     });
     if (!intent.client_secret) throw new Error("Stripe n'a pas retourné de client secret");
