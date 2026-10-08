@@ -8,8 +8,8 @@ import { Field } from "@/components/ui/Field";
 import { Input } from "@/components/ui/Input";
 import { ClientModal } from "@/components/admin/ClientModal";
 import { computeTotalCents } from "@/lib/pricing";
-import { RESERVATION_STATUS } from "@/lib/constants";
-import type { TrailerSize } from "@/lib/constants";
+import { DELIVERY_OPTION_LABEL_FR, RESERVATION_STATUS } from "@/lib/constants";
+import type { DeliveryOption, TrailerSize } from "@/lib/constants";
 
 type ModalState =
   | { mode: "edit"; reservationId: string }
@@ -57,6 +57,12 @@ export function ReservationModal({
   const [pickupTime, setPickupTime] = useState("");
   const [returnTime, setReturnTime] = useState("");
   const [isTest, setIsTest] = useState(false);
+  const [delivery, setDelivery] = useState<{
+    option: DeliveryOption;
+    address: string;
+    km: number | null;
+    feeCents: number;
+  } | null>(null);
   const [deleting, setDeleting] = useState(false);
 
   // Edit mode: client display, fetched with the reservation; editable via ClientModal.
@@ -112,6 +118,16 @@ export function ReservationModal({
       setPickupTime(data.pickupTime ?? "");
       setReturnTime(data.returnTime ?? "");
       setIsTest(Boolean(data.isTest));
+      setDelivery(
+        data.deliveryOption && data.deliveryOption !== "pickup"
+          ? {
+              option: data.deliveryOption as DeliveryOption,
+              address: data.usageLocation ?? "",
+              km: data.deliveryDistanceKm ?? null,
+              feeCents: data.deliveryFeeCents ?? 0,
+            }
+          : null,
+      );
       setClientDisplay(data.client);
       setContractPdfUrl(data.contract?.pdfUrl ?? null);
       setDepositStatus(data.depositStatus ?? "none");
@@ -604,6 +620,17 @@ export function ReservationModal({
                 <Input type="time" value={returnTime} onChange={(e) => setReturnTime(e.target.value)} />
               </Field>
             </div>
+
+            {delivery && (
+              <div className="mb-3 rounded-md border border-border-light bg-[#FAFBFB] p-3 text-[12px]">
+                <div className="font-medium">{DELIVERY_OPTION_LABEL_FR[delivery.option]}</div>
+                <div className="text-muted">{delivery.address}</div>
+                <div className="text-muted">
+                  {delivery.km !== null && `${delivery.km} km depuis Lévis · `}
+                  Transport inclus dans le total : {(delivery.feeCents / 100).toFixed(2)} $ (avant taxes)
+                </div>
+              </div>
+            )}
 
             <div className="grid grid-cols-2 gap-3">
               <Field label="Montant total ($)">

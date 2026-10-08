@@ -2,7 +2,10 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getCurrentClientId } from "@/lib/session";
-import { DATE_RANGE_TYPE } from "@/lib/constants";
+import { DATE_RANGE_TYPE, DELIVERY_OPTION, deliveryTrips } from "@/lib/constants";
+import type { DeliveryOption } from "@/lib/constants";
+import { computeDeliveryFeeCents } from "@/lib/pricing";
+import { getDrivingDistanceKm } from "@/lib/geo/distance";
 
 const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Date invalide");
 
@@ -14,6 +17,7 @@ const patchSchema = z.object({
   trailerId: z.string().min(1).optional(),
   totalAmount: z.number().int().min(0).optional(),
   usageLocation: z.string().trim().min(1, "Lieu d'utilisation requis").optional(),
+  deliveryOption: z.enum(DELIVERY_OPTION).optional(),
 });
 
 async function loadOwnedReservation(id: string, clientId: string) {
@@ -55,11 +59,43 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Requête invalide" }, { status: 400 });
   }
 
-  const { pickupDate, returnDate, ...rest } = parsed.data;
+  const { pickupDate, returnDate, totalAmount, ...rest } = parsed.data;
+
+  const deliveryOption = rest.deliveryOption ?? reservation.deliveryOption;
+  const usageLocation = rest.usageLocation ?? reservation.usageLocation;
+  let deliveryFeeCents = reservation.deliveryFeeCents;
+  let deliveryDistanceKm = reservation.deliveryDistanceKm;
+
+  if (rest.deliveryOption !== undefined || rest.usageLocation !== undefined) {
+    const trips = deliveryTrips(deliveryOption as DeliveryOption);
+    if (trips > 0 && usageLocation) {
+      try {
+        deliveryDistanceKm = await getDrivingDistanceKm(usageLocation);
+        deliveryFeeCents = computeDeliveryFeeCents(deliveryDistanceKm, trips);
+      } catch (error) {
+        console.error("Delivery distance lookup failed", error);
+        return NextResponse.json(
+          {
+            error:
+              "Impossible de calculer la distance pour cette adresse. Vérifiez l'adresse (numéro, rue, ville) ou choisissez le ramassage au dépôt.",
+          },
+          { status: 422 },
+        );
+      }
+    } else {
+      deliveryDistanceKm = null;
+      deliveryFeeCents = 0;
+    }
+  }
+
   const updated = await prisma.reservation.update({
     where: { id },
     data: {
       ...rest,
+      deliveryDistanceKm,
+      deliveryFeeCents,
+      // The client only knows the rental price; the transport fee is added server-side.
+      ...(totalAmount !== undefined ? { totalAmount: totalAmount + deliveryFeeCents } : {}),
       ...(pickupDate ? { pickupDate: new Date(`${pickupDate}T00:00:00Z`) } : {}),
       ...(returnDate ? { returnDate: new Date(`${returnDate}T00:00:00Z`) } : {}),
     },

@@ -26,9 +26,15 @@ function recommendSize(tempNeed: TempNeed | null, volumeNeed: VolumeNeed | null)
 export function AvailabilityList({
   reservationId,
   candidates,
+  deliveryFeeCents,
+  deliveryDistanceKm,
+  deliveryTrips,
 }: {
   reservationId: string;
   candidates: AvailabilityCandidate[];
+  deliveryFeeCents: number;
+  deliveryDistanceKm: number | null;
+  deliveryTrips: number;
 }) {
   const router = useRouter();
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
@@ -181,9 +187,10 @@ export function AvailabilityList({
               </div>
             </div>
             <div className="text-right">
-              <div className="font-mono font-medium">{(c.totalCents / 100).toFixed(2)} $</div>
+              <div className="font-mono font-medium">{((c.totalCents + deliveryFeeCents) / 100).toFixed(2)} $</div>
               <div className="font-mono text-[10px] text-muted">
-                {(computeTaxBreakdown(c.totalCents).totalWithTaxCents / 100).toFixed(2)} $ taxes incl.
+                {(computeTaxBreakdown(c.totalCents + deliveryFeeCents).totalWithTaxCents / 100).toFixed(2)} $ taxes
+                incl.
               </div>
             </div>
             {chosen && <CheckCircle2 size={18} className="text-navy" />}
@@ -193,10 +200,24 @@ export function AvailabilityList({
 
       {error && <div className="mb-3 text-[13px] text-red-600">{error}</div>}
 
+      {deliveryFeeCents > 0 && (
+        <div className="mb-3 flex items-center gap-1.5 rounded-lg border border-border-light bg-[#FAFBFB] p-3 text-[12px] text-foreground">
+          <Truck size={14} className="shrink-0 text-navy" />
+          <span>
+            Transport inclus dans les prix ci-dessus :{" "}
+            <strong className="font-mono">{(deliveryFeeCents / 100).toFixed(2)} $</strong>
+            {deliveryDistanceKm !== null &&
+              ` (${deliveryDistanceKm} km depuis Lévis, ${deliveryTrips} trajet${deliveryTrips > 1 ? "s" : ""})`}
+            .
+          </span>
+        </div>
+      )}
+
       <div className="mb-4 text-[11px] text-muted">
-        Prix avant taxes. Des frais de transport (livraison et récupération) et, pour les demandes de
-        dernière minute, des frais d&apos;urgence peuvent s&apos;appliquer en sus — voir les détails sur la
-        page{" "}
+        Prix avant taxes.{" "}
+        {deliveryFeeCents === 0 && "Des frais de transport s'ajoutent si vous choisissez la livraison. "}
+        Pour les demandes de dernière minute, des frais d&apos;urgence peuvent s&apos;appliquer en sus — voir
+        les détails sur la page{" "}
         <Link href="/#tarification" className="text-navy underline">
           tarification
         </Link>

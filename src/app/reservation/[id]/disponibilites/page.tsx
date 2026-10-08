@@ -5,7 +5,8 @@ import { WizardShell } from "@/components/wizard/WizardShell";
 import { AvailabilityList } from "@/components/forms/AvailabilityList";
 import { stepIndexForSegment } from "@/lib/wizard";
 import { searchAvailability } from "@/lib/availability";
-import type { DateRangeType } from "@/lib/constants";
+import { deliveryTrips } from "@/lib/constants";
+import type { DateRangeType, DeliveryOption } from "@/lib/constants";
 
 export default async function DisponibilitesPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -30,7 +31,13 @@ export default async function DisponibilitesPage({ params }: { params: Promise<{
 
   return (
     <WizardShell step={stepIndexForSegment("disponibilites")}>
-      <AvailabilityList reservationId={id} candidates={candidates} />
+      <AvailabilityList
+        reservationId={id}
+        candidates={candidates}
+        deliveryFeeCents={reservation.deliveryFeeCents}
+        deliveryDistanceKm={reservation.deliveryDistanceKm}
+        deliveryTrips={deliveryTrips(reservation.deliveryOption as DeliveryOption)}
+      />
     </WizardShell>
   );
 }

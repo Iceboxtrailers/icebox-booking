@@ -11,11 +11,20 @@ export const RATE_TABLE: Record<TrailerSize, RateTier> = {
   "6x12": { dayCents: 18000, weekCents: 60000, monthCents: 130000 },
 };
 
-// Transport (delivery + pickup) and rush/urgency fees, shown to customers as
-// informational text for now — not auto-calculated, since that needs a
-// delivery address + distance (geocoding), which isn't collected yet.
+// Transport (delivery + pickup) is auto-calculated from the driving distance
+// (see computeDeliveryFeeCents). Rush/urgency fees are informational only.
 export const TRANSPORT_FEE_PER_TRIP_CENTS = 6000; // per one-way trip, first 50km
 export const TRANSPORT_FEE_PER_KM_BEYOND_CENTS = 95; // per km beyond 50km
+export const TRANSPORT_INCLUDED_KM = 50;
+
+// distanceKm is the one-way driving distance from the depot; trips is 2 for
+// delivery + pickup, 1 for a one-way request.
+export function computeDeliveryFeeCents(distanceKm: number, trips: number): number {
+  const beyondKm = Math.max(0, distanceKm - TRANSPORT_INCLUDED_KM);
+  const perTripCents = TRANSPORT_FEE_PER_TRIP_CENTS + Math.round(beyondKm * TRANSPORT_FEE_PER_KM_BEYOND_CENTS);
+  return perTripCents * trips;
+}
+
 export const URGENCY_FEE_PER_KM_CENTS = 125;
 export const URGENCY_FEE_PER_HOUR_CENTS = 10000;
 export const URGENCY_MIN_HOURS = 3;

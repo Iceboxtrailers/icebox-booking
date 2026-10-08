@@ -13,6 +13,24 @@ export type TrailerSize = (typeof TRAILER_SIZE)[number];
 export const DATE_RANGE_TYPE = ["fixed", "flexible"] as const;
 export type DateRangeType = (typeof DATE_RANGE_TYPE)[number];
 
+// pickup = customer comes to the depot both ways; delivery = we deliver and collect
+// (2 one-way trips); delivery_only / return_only = a single trip.
+export const DELIVERY_OPTION = ["pickup", "delivery", "delivery_only", "return_only"] as const;
+export type DeliveryOption = (typeof DELIVERY_OPTION)[number];
+
+export const DELIVERY_OPTION_LABEL_FR: Record<DeliveryOption, string> = {
+  pickup: "Ramassage au dépôt (Lévis)",
+  delivery: "Livraison et récupération",
+  delivery_only: "Livraison seulement",
+  return_only: "Récupération seulement",
+};
+
+export function deliveryTrips(option: DeliveryOption): number {
+  if (option === "delivery") return 2;
+  if (option === "delivery_only" || option === "return_only") return 1;
+  return 0;
+}
+
 export const RESERVATION_STATUS = [
   "pending",
   "confirmed",

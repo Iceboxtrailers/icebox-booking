@@ -84,6 +84,9 @@ model Reservation {
   returnTime     String? // "HH:MM", display-only
   usageLocation  String? // where the trailer will be used, collected in the wizard, shown on the contract
   isTest         Boolean   @default(false) // admin-flagged test booking, excluded from dashboard KPIs
+  deliveryOption     String @default("pickup") // pickup | delivery
+  deliveryDistanceKm Float? // one-way driving distance depot -> usageLocation, set when deliveryOption = delivery
+  deliveryFeeCents   Int    @default(0) // delivery + pickup transport, pre-tax, included in totalAmount
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 

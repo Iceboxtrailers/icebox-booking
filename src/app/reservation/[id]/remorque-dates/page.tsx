@@ -4,7 +4,7 @@ import { getCurrentClientId } from "@/lib/session";
 import { WizardShell } from "@/components/wizard/WizardShell";
 import { TrailerDateForm } from "@/components/forms/TrailerDateForm";
 import { stepIndexForSegment } from "@/lib/wizard";
-import type { DateRangeType } from "@/lib/constants";
+import type { DateRangeType, DeliveryOption } from "@/lib/constants";
 
 export default async function RemorqueDatesPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -20,6 +20,7 @@ export default async function RemorqueDatesPage({ params }: { params: Promise<{ 
     start: reservation.pickupDate ? reservation.pickupDate.toISOString().slice(0, 10) : "",
     end: reservation.returnDate ? reservation.returnDate.toISOString().slice(0, 10) : "",
     usageLocation: reservation.usageLocation ?? "",
+    deliveryOption: (reservation.deliveryOption as DeliveryOption) ?? "pickup",
   };
 
   return (
