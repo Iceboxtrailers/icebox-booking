@@ -14,6 +14,28 @@ export function EmployeesManager({ employees }: { employees: Employee[] }) {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [resettingId, setResettingId] = useState<string | null>(null);
+  const [newPassword, setNewPassword] = useState("");
+  const [notice, setNotice] = useState<string | null>(null);
+
+  async function handleResetPassword(e: React.FormEvent, employee: Employee) {
+    e.preventDefault();
+    setError(null);
+    setNotice(null);
+    const res = await fetch(`/api/admin/users/${employee.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ password: newPassword }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      setError(data.error ?? "Impossible de changer le mot de passe");
+      return;
+    }
+    setResettingId(null);
+    setNewPassword("");
+    setNotice(`Mot de passe de « ${employee.username} » mis à jour.`);
+  }
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
@@ -61,27 +83,61 @@ export function EmployeesManager({ employees }: { employees: Employee[] }) {
           <div className="p-3 text-[13px] text-muted">Aucun compte employé.</div>
         ) : (
           employees.map((employee) => (
-            <div
-              key={employee.id}
-              className="flex items-center justify-between border-b border-border-light p-3 text-[13px] last:border-b-0"
-            >
-              <div>
-                <div className="font-medium">{employee.username}</div>
-                <div className="text-[11px] text-muted">
-                  Créé le {new Date(employee.createdAt).toLocaleDateString("fr-CA")}
+            <div key={employee.id} className="border-b border-border-light p-3 text-[13px] last:border-b-0">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <div className="font-medium">{employee.username}</div>
+                  <div className="text-[11px] text-muted">
+                    Créé le {new Date(employee.createdAt).toLocaleDateString("fr-CA")}
+                  </div>
+                </div>
+                <div className="flex shrink-0 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setResettingId(resettingId === employee.id ? null : employee.id);
+                      setNewPassword("");
+                      setError(null);
+                      setNotice(null);
+                    }}
+                    className="text-[12px] text-navy hover:underline"
+                  >
+                    Nouveau mot de passe
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleDelete(employee)}
+                    className="text-[12px] text-red-600 hover:underline"
+                  >
+                    Supprimer
+                  </button>
                 </div>
               </div>
-              <button
-                type="button"
-                onClick={() => handleDelete(employee)}
-                className="text-[12px] text-red-600 hover:underline"
-              >
-                Supprimer
-              </button>
+              {resettingId === employee.id && (
+                <form onSubmit={(e) => handleResetPassword(e, employee)} className="mt-2.5 flex items-start gap-2">
+                  <div className="flex-1">
+                    <Input
+                      type="password"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      placeholder="Nouveau mot de passe (10 caractères min.)"
+                      minLength={10}
+                      required
+                      autoComplete="new-password"
+                    />
+                  </div>
+                  <Button type="submit" variant="cta">
+                    Enregistrer
+                  </Button>
+                </form>
+              )}
             </div>
           ))
         )}
       </div>
+
+      {notice && <div className="mb-4 text-[13px] text-green-700">{notice}</div>}
+      {error && <div className="mb-4 text-[13px] text-red-600">{error}</div>}
 
       <form onSubmit={handleCreate}>
         <div className="mb-2 text-[13px] font-medium">Nouveau compte employé</div>
@@ -98,7 +154,6 @@ export function EmployeesManager({ employees }: { employees: Employee[] }) {
             autoComplete="new-password"
           />
         </Field>
-        {error && <div className="mb-3 text-[13px] text-red-600">{error}</div>}
         <Button type="submit" variant="cta" disabled={submitting}>
           {submitting ? "..." : "Créer le compte"}
         </Button>
