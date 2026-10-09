@@ -43,8 +43,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const parsed = adminLoginSchema.safeParse(rawCredentials);
         if (!parsed.success) return null;
 
-        const admin = await prisma.adminUser.findUnique({
-          where: { username: parsed.data.username },
+        // Case-insensitive so "vincentbilodeau" and "VincentBilodeau" are the same login.
+        const admin = await prisma.adminUser.findFirst({
+          where: { username: { equals: parsed.data.username, mode: "insensitive" } },
         });
         if (!admin) return null;
 

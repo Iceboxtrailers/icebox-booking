@@ -17,7 +17,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Requête invalide" }, { status: 400 });
   }
 
-  const existing = await prisma.adminUser.findUnique({ where: { username: parsed.data.username } });
+  const existing = await prisma.adminUser.findFirst({
+    where: { username: { equals: parsed.data.username, mode: "insensitive" } },
+  });
   if (existing) return NextResponse.json({ error: "Ce nom d'utilisateur existe déjà" }, { status: 409 });
 
   const user = await prisma.adminUser.create({
