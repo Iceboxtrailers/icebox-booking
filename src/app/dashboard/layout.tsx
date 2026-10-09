@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { ReactNode } from "react";
-import { getCurrentAdminId } from "@/lib/session";
+import { getCurrentAdmin } from "@/lib/admin-auth";
 import { BrandMark } from "@/components/BrandMark";
 import { SignOutButton } from "@/components/admin/SignOutButton";
 import { DashboardNav } from "@/components/admin/DashboardNav";
@@ -10,8 +10,8 @@ export const metadata = adminPwaMetadata;
 export const viewport = adminPwaViewport;
 
 export default async function DashboardLayout({ children }: { children: ReactNode }) {
-  const adminId = await getCurrentAdminId();
-  if (!adminId) redirect("/admin/login?callbackUrl=/dashboard");
+  const admin = await getCurrentAdmin();
+  if (!admin) redirect("/admin/login?callbackUrl=/dashboard");
 
   return (
     <div className="min-h-screen bg-background">
@@ -20,7 +20,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
           <BrandMark size={28} />
           <span className="font-heading text-base uppercase tracking-wide">Console Admin</span>
           <div className="ml-6">
-            <DashboardNav />
+            <DashboardNav role={admin.role} />
           </div>
           <SignOutButton />
         </div>

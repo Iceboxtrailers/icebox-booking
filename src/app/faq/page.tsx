@@ -13,7 +13,7 @@ const FAQ_ITEMS = [
   },
   {
     q: "Qu'est-ce que le dépôt de sécurité ?",
-    a: "Un dépôt de 250 $ est autorisé sur votre carte au moment de la prise de possession — il n'est jamais débité à l'avance, seulement retenu, et il est remis après le retour de la remorque en bon état.",
+    a: "Vous enregistrez votre carte à la réservation (rien n'est débité). Un dépôt de 1 000 $ est ensuite retenu sur cette carte juste avant la remise de la remorque — il n'est jamais débité, seulement retenu, et il est libéré après l'inspection du retour. Pour les locations de plus de 7 jours, la retenue peut devoir être renouvelée.",
   },
   {
     q: "Quels documents dois-je fournir ?",

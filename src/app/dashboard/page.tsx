@@ -3,6 +3,7 @@ import { getDashboardKpis } from "@/lib/admin/kpis";
 import { getFleetBoardData } from "@/lib/admin/board";
 import { FleetBoard } from "@/components/admin/FleetBoard";
 import { TRAILER_SIZE } from "@/lib/constants";
+import { getCurrentAdmin } from "@/lib/admin-auth";
 
 function StatCard({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
@@ -24,15 +25,22 @@ export default async function DashboardPage({
   const year = Number(yearParam) || now.getFullYear();
   const month = Number(monthParam) || now.getMonth() + 1;
 
-  const [kpis, board] = await Promise.all([getDashboardKpis(), getFleetBoardData(year, month)]);
+  const admin = await getCurrentAdmin();
+  const role = admin?.role ?? "employee";
+  const [kpis, board] = await Promise.all([
+    role === "owner" ? getDashboardKpis() : Promise.resolve(null),
+    getFleetBoardData(year, month),
+  ]);
 
-  const mostRequested = kpis.bookingsBySize[0];
+  const mostRequested = kpis?.bookingsBySize[0];
   const mostRequestedLabel = mostRequested ? `${mostRequested.size} (${mostRequested.count})` : "—";
 
   return (
     <div>
       <h1 className="font-heading mb-6 text-2xl">Tableau de bord</h1>
 
+      {kpis && (
+        <>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-7">
         <StatCard label="Réservations (total)" value={String(kpis.totalReservations)} />
         <StatCard label="Ce mois-ci" value={String(kpis.reservationsThisMonth)} />
@@ -65,8 +73,11 @@ export default async function DashboardPage({
         })}
       </div>
 
+        </>
+      )}
+
       <div className="mt-8">
-        <FleetBoard board={board} />
+        <FleetBoard board={board} role={role} />
       </div>
     </div>
   );

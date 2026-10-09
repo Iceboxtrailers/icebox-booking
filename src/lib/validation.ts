@@ -68,8 +68,31 @@ export const depositAuthorizeSchema = z.object({
   transactionId: z.string().trim().min(1, "transactionId requis"),
 });
 
+export const cardSavedSchema = z.object({
+  setupIntentId: z.string().trim().min(1, "setupIntentId requis"),
+});
+
 export const adminDepositCaptureSchema = z.object({
   amountCents: z.number().int().min(1).optional(),
+});
+
+export const adminDepositAuthorizeSchema = z.object({
+  // Replace a still-active hold (e.g. one that will expire before the trailer is back).
+  renew: z.boolean().optional(),
+});
+
+export const adminInspectionSchema = z.object({
+  notes: z.string().trim().max(2000).optional(),
+});
+
+export const adminUserCreateSchema = z.object({
+  username: z
+    .string()
+    .trim()
+    .min(3, "Nom d'utilisateur trop court")
+    .max(40)
+    .regex(/^[a-zA-Z0-9._-]+$/, "Lettres, chiffres, point, tiret seulement"),
+  password: z.string().min(10, "Mot de passe : 10 caractères minimum"),
 });
 
 export const adminReservationCreateSchema = z
@@ -100,6 +123,10 @@ export const adminReservationUpdateSchema = z.object({
   pickupTime: isoTime.optional().or(z.literal("")),
   returnTime: isoTime.optional().or(z.literal("")),
   isTest: z.boolean().optional(),
+  // Departure checks (status -> in_progress): the hold covers less than the rental,
+  // or the deposit was taken another way (owner only).
+  acknowledgeDepositExpiry: z.boolean().optional(),
+  waiveDeposit: z.boolean().optional(),
 });
 
 export const adminTrailerCreateSchema = z.object({

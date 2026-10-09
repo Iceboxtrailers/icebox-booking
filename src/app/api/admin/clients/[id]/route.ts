@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getCurrentAdminId } from "@/lib/session";
+import { requireOwner } from "@/lib/admin-auth";
 import { adminClientUpdateSchema } from "@/lib/validation";
 
 const CLIENT_DETAIL_SELECT = {
@@ -21,8 +21,8 @@ const CLIENT_DETAIL_SELECT = {
 } as const;
 
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const adminId = await getCurrentAdminId();
-  if (!adminId) return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
+  const ownerGuard = await requireOwner();
+  if (ownerGuard.error) return ownerGuard.error;
 
   const { id } = await params;
   const client = await prisma.client.findUnique({ where: { id }, select: CLIENT_DETAIL_SELECT });
@@ -32,8 +32,8 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
 }
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const adminId = await getCurrentAdminId();
-  if (!adminId) return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
+  const ownerGuard = await requireOwner();
+  if (ownerGuard.error) return ownerGuard.error;
 
   const { id } = await params;
   const body = await request.json().catch(() => null);

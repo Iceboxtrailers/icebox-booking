@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { randomBytes } from "node:crypto";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
-import { getCurrentAdminId } from "@/lib/session";
+import { requireOwner } from "@/lib/admin-auth";
 import { adminClientCreateSchema } from "@/lib/validation";
 
 const CLIENT_LIST_SELECT = {
@@ -20,8 +20,8 @@ const CLIENT_LIST_SELECT = {
 } as const;
 
 export async function GET() {
-  const adminId = await getCurrentAdminId();
-  if (!adminId) return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
+  const ownerGuard = await requireOwner();
+  if (ownerGuard.error) return ownerGuard.error;
 
   const clients = await prisma.client.findMany({
     select: CLIENT_LIST_SELECT,
@@ -32,8 +32,8 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const adminId = await getCurrentAdminId();
-  if (!adminId) return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
+  const ownerGuard = await requireOwner();
+  if (ownerGuard.error) return ownerGuard.error;
 
   const body = await request.json().catch(() => null);
   const parsed = adminClientCreateSchema.safeParse(body);

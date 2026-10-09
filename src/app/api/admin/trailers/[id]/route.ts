@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getCurrentAdminId } from "@/lib/session";
+import { requireOwner } from "@/lib/admin-auth";
 import { adminTrailerUpdateSchema } from "@/lib/validation";
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const adminId = await getCurrentAdminId();
-  if (!adminId) return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
+  const ownerGuard = await requireOwner();
+  if (ownerGuard.error) return ownerGuard.error;
 
   const { id } = await params;
   const body = await request.json().catch(() => null);
@@ -19,8 +19,8 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 }
 
 export async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const adminId = await getCurrentAdminId();
-  if (!adminId) return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
+  const ownerGuard = await requireOwner();
+  if (ownerGuard.error) return ownerGuard.error;
 
   const { id } = await params;
   const referenced = await prisma.reservation.findFirst({ where: { trailerId: id }, select: { id: true } });

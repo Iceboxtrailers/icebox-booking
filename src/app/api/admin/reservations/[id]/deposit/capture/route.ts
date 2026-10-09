@@ -1,12 +1,16 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getCurrentAdminId } from "@/lib/session";
+import { requireOwner } from "@/lib/admin-auth";
 import { getPaymentProvider } from "@/lib/providers/payment";
 import { adminDepositCaptureSchema } from "@/lib/validation";
+import { latestAuthorizedDepositPayment, lockDeposit, unlockDeposit } from "@/lib/deposits";
+import { logAudit } from "@/lib/audit";
 
+// Charging any part of the deposit is owner-only.
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const adminId = await getCurrentAdminId();
-  if (!adminId) return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
+  const guard = await requireOwner();
+  if (guard.error) return guard.error;
+  const { admin } = guard;
 
   const { id } = await params;
   const reservation = await prisma.reservation.findUnique({ where: { id } });
@@ -24,16 +28,24 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     return NextResponse.json({ error: "Le montant dépasse le dépôt autorisé" }, { status: 400 });
   }
 
-  const payment = await prisma.payment.findFirst({
-    where: { reservationId: id, type: "deposit", status: "authorized" },
-    orderBy: { createdAt: "desc" },
-  });
+  const payment = await latestAuthorizedDepositPayment(id);
   if (!payment?.transactionId) {
     return NextResponse.json({ error: "Paiement introuvable" }, { status: 404 });
   }
 
-  const result = await getPaymentProvider().capture(payment.transactionId, parsed.data.amountCents);
-  if (result.status !== "captured") {
+  if (!(await lockDeposit(id))) {
+    return NextResponse.json({ error: "Une autre opération est en cours sur ce dépôt" }, { status: 409 });
+  }
+
+  let captured = false;
+  try {
+    const result = await getPaymentProvider().capture(payment.transactionId, parsed.data.amountCents);
+    captured = result.status === "captured";
+  } catch (error) {
+    console.error("Deposit capture error", error);
+  }
+  if (!captured) {
+    await unlockDeposit(id, "authorized");
     return NextResponse.json({ error: "Impossible de prélever le dépôt" }, { status: 502 });
   }
 
@@ -45,6 +57,12 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   await prisma.reservation.update({
     where: { id },
     data: { depositStatus: "captured", depositAmount: capturedAmount },
+  });
+  await logAudit({
+    action: "deposit_captured",
+    reservationId: id,
+    actor: { type: "admin", id: admin.id },
+    details: { transactionId: payment.transactionId, amountCents: capturedAmount },
   });
 
   return NextResponse.json({ depositStatus: "captured", amountCents: capturedAmount });

@@ -40,8 +40,40 @@ export const RESERVATION_STATUS = [
 ] as const;
 export type ReservationStatus = (typeof RESERVATION_STATUS)[number];
 
-export const DEPOSIT_STATUS = ["none", "authorized", "captured", "released"] as const;
+// none = nothing yet; card_on_file = card saved at booking, hold not placed yet;
+// authorized = hold active; processing = short-lived server lock while a
+// release/capture runs; expired = the hold lapsed before it was released.
+export const DEPOSIT_STATUS = [
+  "none",
+  "card_on_file",
+  "authorized",
+  "processing",
+  "captured",
+  "released",
+  "expired",
+] as const;
 export type DepositStatus = (typeof DEPOSIT_STATUS)[number];
+
+export const DEPOSIT_STATUS_LABEL_FR: Record<DepositStatus, string> = {
+  none: "Aucune carte enregistrée",
+  card_on_file: "Carte enregistrée — retenue à placer avant la remise",
+  authorized: "Retenue active",
+  processing: "En traitement",
+  captured: "Prélevé",
+  released: "Libéré",
+  expired: "Retenue expirée — à renouveler",
+};
+
+export const ADMIN_ROLE = ["owner", "employee"] as const;
+export type AdminRole = (typeof ADMIN_ROLE)[number];
+
+export const INSPECTION_STATUS = ["pending", "accepted", "issue"] as const;
+export type InspectionStatus = (typeof INSPECTION_STATUS)[number];
+
+export const MIN_INSPECTION_PHOTOS = 4;
+export const MAX_INSPECTION_PHOTOS = 20;
+// Conservative fallback when Stripe doesn't report a capture_before time.
+export const DEPOSIT_AUTH_FALLBACK_DAYS = 7;
 
 export const SIGNATURE_STATUS = ["pending", "signed"] as const;
 export type SignatureStatus = (typeof SIGNATURE_STATUS)[number];
@@ -59,11 +91,13 @@ export const PAYMENT_STATUS = [
   "released",
   "failed",
   "refunded",
+  "expired",
 ] as const;
 export type PaymentStatusValue = (typeof PAYMENT_STATUS)[number];
 
 // Flexible-date search window, in days, matching the prototype ("±2 jours").
 export const FLEX_WINDOW_DAYS = 2;
 
-// Security deposit, in cents, matching the prototype's "$250" copy.
-export const DEPOSIT_AMOUNT_CENTS = 25000;
+// Security deposit, in cents: held (never charged) on the saved card before the
+// trailer leaves.
+export const DEPOSIT_AMOUNT_CENTS = 100000;

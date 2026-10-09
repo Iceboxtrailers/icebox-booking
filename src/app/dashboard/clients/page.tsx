@@ -1,7 +1,9 @@
 import { getAllClients } from "@/lib/admin/clients";
 import { ClientsTable } from "@/components/admin/ClientsTable";
+import { requireOwnerPage } from "@/lib/admin-auth";
 
 export default async function ClientsPage() {
+  await requireOwnerPage();
   const clients = await getAllClients();
 
   return (

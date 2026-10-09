@@ -19,7 +19,10 @@ export default auth((req) => {
   // Fleet photos are admin-managed assets, not client-owned documents — the
   // client-session gate below would otherwise bounce admin requests to
   // /login before the route handler's own admin check ever runs.
-  if (req.nextUrl.pathname.startsWith("/api/files/trailers")) {
+  if (
+    req.nextUrl.pathname.startsWith("/api/files/trailers") ||
+    req.nextUrl.pathname.startsWith("/api/files/inspections")
+  ) {
     if (!req.auth?.adminId) {
       return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
     }

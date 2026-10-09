@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getCurrentAdminId } from "@/lib/session";
+import { requireOwner } from "@/lib/admin-auth";
 import { adminReportQuerySchema } from "@/lib/validation";
 import { getReservationsForReport } from "@/lib/admin/reports";
 import { buildRentalReportPdf } from "@/lib/reports/rental-report-pdf";
@@ -16,8 +16,8 @@ function lastDayOfMonth(year: number, month: number): string {
 }
 
 export async function GET(request: Request) {
-  const adminId = await getCurrentAdminId();
-  if (!adminId) return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
+  const ownerGuard = await requireOwner();
+  if (ownerGuard.error) return ownerGuard.error;
 
   const searchParams = Object.fromEntries(new URL(request.url).searchParams);
   const parsed = adminReportQuerySchema.safeParse(searchParams);

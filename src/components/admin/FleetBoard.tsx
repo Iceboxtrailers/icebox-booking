@@ -8,9 +8,11 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { ReservationModal } from "@/components/admin/ReservationModal";
+import { resizeImageForUpload } from "@/lib/client/image";
 import { TrailerInfoModal } from "@/components/admin/TrailerInfoModal";
 import type { FleetBoardData, BoardTrailer } from "@/lib/admin/board";
 import { TRAILER_SIZE, TRAILER_STATUS } from "@/lib/constants";
+import type { AdminRole } from "@/lib/constants";
 
 const MONTH_LABELS_FR = [
   "janvier", "février", "mars", "avril", "mai", "juin",
@@ -38,28 +40,6 @@ type ModalState =
   | { mode: "edit"; reservationId: string }
   | { mode: "create"; trailerId: string; pickupDate: string }
   | null;
-
-// Vercel's Serverless Functions cap the request body at ~4.5 MB, well under
-// what a modern phone photo weighs — resize/recompress in the browser first
-// so uploads actually succeed instead of failing with an opaque 413.
-async function resizeImageForUpload(file: File, maxDimension = 1600, quality = 0.82): Promise<File> {
-  const bitmap = await createImageBitmap(file);
-  const scale = Math.min(1, maxDimension / Math.max(bitmap.width, bitmap.height));
-  const width = Math.round(bitmap.width * scale);
-  const height = Math.round(bitmap.height * scale);
-
-  const canvas = document.createElement("canvas");
-  canvas.width = width;
-  canvas.height = height;
-  const ctx = canvas.getContext("2d");
-  if (!ctx) return file;
-  ctx.drawImage(bitmap, 0, 0, width, height);
-
-  const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/jpeg", quality));
-  if (!blob) return file;
-  const name = file.name.replace(/\.[^.]+$/, "") + ".jpg";
-  return new File([blob], name, { type: "image/jpeg" });
-}
 
 function isoDateForDay(year: number, month: number, day: number): string {
   const mm = String(month).padStart(2, "0");
@@ -91,7 +71,7 @@ function StatCard({ label, value, tone }: { label: string; value: string | numbe
   );
 }
 
-export function FleetBoard({ board }: { board: FleetBoardData }) {
+export function FleetBoard({ board, role }: { board: FleetBoardData; role: AdminRole }) {
   const router = useRouter();
   const { year, month, trailers, monthReservations, fleetSize, availableToday, toConfirmCount, conflictReservationIds } =
     board;
@@ -225,14 +205,16 @@ export function FleetBoard({ board }: { board: FleetBoardData }) {
     <div>
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
         <div className="font-heading text-lg">Calendrier de la flotte</div>
-        <div className="flex flex-wrap gap-2">
-          <Button type="button" onClick={() => setFleetOpen((v) => !v)}>
-            <Settings2 size={14} /> Flotte
-          </Button>
-          <Button type="button" variant="cta" onClick={openBlankCreate}>
-            <Plus size={14} /> Réservation
-          </Button>
-        </div>
+        {role === "owner" && (
+          <div className="flex flex-wrap gap-2">
+            <Button type="button" onClick={() => setFleetOpen((v) => !v)}>
+              <Settings2 size={14} /> Flotte
+            </Button>
+            <Button type="button" variant="cta" onClick={openBlankCreate}>
+              <Plus size={14} /> Réservation
+            </Button>
+          </div>
+        )}
       </div>
 
       <div className="mb-4 grid grid-cols-3 gap-3 sm:w-2/3 lg:w-1/2">
@@ -489,6 +471,7 @@ export function FleetBoard({ board }: { board: FleetBoardData }) {
                           <div
                             key={d}
                             onClick={() =>
+                              role === "owner" &&
                               setModal({
                                 mode: "create",
                                 trailerId: trailer.id,
@@ -639,6 +622,7 @@ export function FleetBoard({ board }: { board: FleetBoardData }) {
           key={modal.mode === "edit" ? modal.reservationId : `create-${modal.trailerId}-${modal.pickupDate}`}
           state={modal}
           trailers={trailerOptions}
+          role={role}
           onClose={() => setModal(null)}
         />
       )}

@@ -29,8 +29,8 @@ export async function confirmReservation(reservationId: string, clientId: string
   if (reservation.contract?.signatureStatus !== "signed") {
     throw new ReservationConfirmError("Le contrat doit être signé");
   }
-  if (reservation.depositStatus !== "authorized") {
-    throw new ReservationConfirmError("Le dépôt doit être autorisé");
+  if (reservation.depositStatus !== "card_on_file" && reservation.depositStatus !== "authorized") {
+    throw new ReservationConfirmError("Une carte doit être enregistrée pour le dépôt");
   }
 
   const start = reservation.pickupDate.toISOString().slice(0, 10);

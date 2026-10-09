@@ -17,9 +17,12 @@ const STATUS_LABEL_FR: Record<string, string> = {
 
 const DEPOSIT_LABEL_FR: Record<string, string> = {
   none: "Aucun dépôt requis",
-  authorized: "Dépôt autorisé",
+  card_on_file: "Carte enregistrée — le dépôt sera retenu avant la remise de la remorque",
+  authorized: "Dépôt retenu (non débité)",
+  processing: "Dépôt en traitement",
   captured: "Dépôt prélevé",
   released: "Dépôt remis",
+  expired: "Retenue expirée — IceBox vous contactera",
 };
 
 export default async function ReservationDetailPage({ params }: { params: Promise<{ id: string }> }) {

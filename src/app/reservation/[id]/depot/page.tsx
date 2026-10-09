@@ -22,7 +22,10 @@ export default async function DepotPage({ params }: { params: Promise<{ id: stri
   return (
     <WizardShell step={stepIndexForSegment("depot")}>
       <Suspense>
-        <DepositForm reservationId={id} initiallyAuthorized={reservation.depositStatus === "authorized"} />
+        <DepositForm
+          reservationId={id}
+          initiallySaved={reservation.depositStatus === "card_on_file" || reservation.depositStatus === "authorized"}
+        />
       </Suspense>
     </WizardShell>
   );

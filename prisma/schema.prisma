@@ -34,6 +34,7 @@ model Client {
   billingProvince      String?
   billingPostalCode    String?
   company              String?
+  stripeCustomerId     String?   @unique
 
   reservations Reservation[]
   documents    Document[]
@@ -47,6 +48,7 @@ model AdminUser {
   id           String   @id @default(cuid())
   username     String   @unique
   passwordHash String
+  role         String   @default("owner") // owner | employee
   createdAt    DateTime @default(now())
 
   @@map("admin_users")
@@ -87,6 +89,10 @@ model Reservation {
   deliveryOption     String @default("pickup") // pickup | delivery
   deliveryDistanceKm Float? // one-way driving distance depot -> usageLocation, set when deliveryOption = delivery
   deliveryFeeCents   Int    @default(0) // delivery + pickup transport, pre-tax, included in totalAmount
+  stripePaymentMethodId String? // card saved at booking, used to place the deposit hold before handoff
+  depositExpiresAt      DateTime? // when the active hold lapses (Stripe capture_before)
+  depositToken          String?   @unique // secure link letting the client re-authorize the hold
+  depositTokenExpiresAt DateTime?
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 
@@ -94,6 +100,7 @@ model Reservation {
   trailer  Trailer?  @relation(fields: [trailerId], references: [id])
   contract Contract?
   payments Payment[]
+  returnInspection ReturnInspection?
 
   @@index([trailerId, pickupDate, returnDate])
   @@map("reservations")
@@ -144,4 +151,38 @@ model Document {
   client Client @relation(fields: [clientId], references: [id])
 
   @@map("documents")
+}
+
+// Return inspection: photos + verdict recorded by staff before the deposit hold
+// is released. photoPaths are private storage keys served only to admins.
+model ReturnInspection {
+  id                  String    @id @default(cuid())
+  reservationId       String    @unique
+  status              String    @default("pending") // pending | accepted | issue
+  notes               String?
+  photoPaths          String[]
+  inspectedByAdminId  String?
+  inspectedAt         DateTime?
+  depositReleasedAt   DateTime?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  reservation Reservation @relation(fields: [reservationId], references: [id])
+
+  @@map("return_inspections")
+}
+
+// Append-only trail of every financial and inspection action. The app only ever
+// inserts into this table — there is deliberately no update/delete code path.
+model AuditLog {
+  id            String   @id @default(cuid())
+  action        String
+  reservationId String?
+  actorType     String // admin | client | system | stripe
+  actorId       String?
+  details       Json?
+  createdAt     DateTime @default(now())
+
+  @@index([reservationId, createdAt])
+  @@map("audit_logs")
 }

@@ -35,8 +35,9 @@ export async function GET(_request: Request, { params }: { params: Promise<{ pat
   const { path: segments } = await params;
   const [kind] = segments;
 
-  if (kind === "trailers") {
-    // Fleet photos are admin-managed assets, not tied to any one client.
+  if (kind === "trailers" || kind === "inspections") {
+    // Fleet photos and return-inspection photos are staff-only assets, never
+    // visible to clients.
     const adminId = await getCurrentAdminId();
     if (!adminId) return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
   } else if (kind === "contracts" || kind === "signatures") {

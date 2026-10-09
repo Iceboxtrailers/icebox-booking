@@ -2,18 +2,20 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import type { AdminRole } from "@/lib/constants";
 
 const TABS = [
-  { href: "/dashboard", label: "Tableau de bord" },
-  { href: "/dashboard/clients", label: "Clients" },
-  { href: "/dashboard/rapports", label: "Rapports" },
+  { href: "/dashboard", label: "Tableau de bord", ownerOnly: false },
+  { href: "/dashboard/clients", label: "Clients", ownerOnly: true },
+  { href: "/dashboard/rapports", label: "Rapports", ownerOnly: true },
+  { href: "/dashboard/employes", label: "Employés", ownerOnly: true },
 ];
 
-export function DashboardNav() {
+export function DashboardNav({ role }: { role: AdminRole }) {
   const pathname = usePathname();
   return (
     <nav className="flex gap-1">
-      {TABS.map((tab) => {
+      {TABS.filter((tab) => role === "owner" || !tab.ownerOnly).map((tab) => {
         const active = tab.href === "/dashboard" ? pathname === "/dashboard" : pathname.startsWith(tab.href);
         return (
           <Link

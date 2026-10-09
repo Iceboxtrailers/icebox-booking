@@ -1,6 +1,8 @@
 import { ReportsForm } from "@/components/admin/ReportsForm";
+import { requireOwnerPage } from "@/lib/admin-auth";
 
-export default function ReportsPage() {
+export default async function ReportsPage() {
+  await requireOwnerPage();
   return (
     <div>
       <h1 className="font-heading mb-6 text-2xl">Rapports</h1>

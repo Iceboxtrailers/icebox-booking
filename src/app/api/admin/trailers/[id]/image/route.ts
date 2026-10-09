@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getCurrentAdminId } from "@/lib/session";
+import { requireOwner } from "@/lib/admin-auth";
 import { getStorage } from "@/lib/providers/storage";
 
 // Vercel's Serverless Functions hard-cap the request body at ~4.5 MB
@@ -15,8 +15,8 @@ const EXT_BY_MIME: Record<string, string> = {
 };
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const adminId = await getCurrentAdminId();
-  if (!adminId) return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
+  const ownerGuard = await requireOwner();
+  if (ownerGuard.error) return ownerGuard.error;
 
   const { id } = await params;
   const trailer = await prisma.trailer.findUnique({ where: { id } });

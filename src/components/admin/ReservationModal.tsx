@@ -7,9 +7,10 @@ import { Button } from "@/components/ui/Button";
 import { Field } from "@/components/ui/Field";
 import { Input } from "@/components/ui/Input";
 import { ClientModal } from "@/components/admin/ClientModal";
+import { DepositInspectionPanel, type PanelChange, type PanelInspection } from "@/components/admin/DepositInspectionPanel";
 import { computeTotalCents } from "@/lib/pricing";
 import { DELIVERY_OPTION_LABEL_FR, RESERVATION_STATUS } from "@/lib/constants";
-import type { DeliveryOption, TrailerSize } from "@/lib/constants";
+import type { AdminRole, DeliveryOption, TrailerSize } from "@/lib/constants";
 
 type ModalState =
   | { mode: "edit"; reservationId: string }
@@ -35,10 +36,12 @@ function addOneDay(iso: string): string {
 export function ReservationModal({
   state,
   trailers,
+  role,
   onClose,
 }: {
   state: ModalState;
   trailers: TrailerOption[];
+  role: AdminRole;
   onClose: () => void;
 }) {
   const router = useRouter();
@@ -77,9 +80,8 @@ export function ReservationModal({
   // (partially) captured once the trailer comes back.
   const [depositStatus, setDepositStatus] = useState<string>("none");
   const [depositAmountCents, setDepositAmountCents] = useState(0);
-  const [capturingFees, setCapturingFees] = useState(false);
-  const [feeAmountDollars, setFeeAmountDollars] = useState("");
-  const [depositActionPending, setDepositActionPending] = useState(false);
+  const [depositExpiresAt, setDepositExpiresAt] = useState<string | null>(null);
+  const [inspection, setInspection] = useState<PanelInspection>(null);
 
   // Create mode: existing-client search vs. quick-create a new one.
   const [clientMode, setClientMode] = useState<"search" | "new">("search");
@@ -132,6 +134,16 @@ export function ReservationModal({
       setContractPdfUrl(data.contract?.pdfUrl ?? null);
       setDepositStatus(data.depositStatus ?? "none");
       setDepositAmountCents(data.depositAmount ?? 0);
+      setDepositExpiresAt(data.depositExpiresAt ?? null);
+      setInspection(
+        data.returnInspection
+          ? {
+              status: data.returnInspection.status,
+              photoPaths: data.returnInspection.photoPaths ?? [],
+              notes: data.returnInspection.notes ?? null,
+            }
+          : null,
+      );
       setLoading(false);
     })();
     return () => {
@@ -158,51 +170,15 @@ export function ReservationModal({
     }
   }
 
-  async function handleReleaseDeposit() {
-    if (state.mode !== "edit") return;
-    setError(null);
-    setDepositActionPending(true);
-    try {
-      const res = await fetch(`/api/admin/reservations/${state.reservationId}/deposit/release`, {
-        method: "POST",
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        setError(data.error ?? "Impossible de libérer le dépôt");
-        return;
-      }
-      setDepositStatus(data.depositStatus);
-    } finally {
-      setDepositActionPending(false);
+  function handlePanelChange(patch: PanelChange) {
+    if (patch.reservationStatus !== undefined) {
+      setStatus(patch.reservationStatus);
+      router.refresh();
     }
-  }
-
-  async function handleCaptureFees() {
-    if (state.mode !== "edit") return;
-    setError(null);
-    const amountCents = feeAmountDollars ? Math.round(parseFloat(feeAmountDollars) * 100) : undefined;
-    if (amountCents !== undefined && (!Number.isFinite(amountCents) || amountCents <= 0)) {
-      setError("Montant invalide");
-      return;
-    }
-    setDepositActionPending(true);
-    try {
-      const res = await fetch(`/api/admin/reservations/${state.reservationId}/deposit/capture`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ amountCents }),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        setError(data.error ?? "Impossible de prélever le dépôt");
-        return;
-      }
-      setDepositStatus(data.depositStatus);
-      if (typeof data.amountCents === "number") setDepositAmountCents(data.amountCents);
-      setCapturingFees(false);
-    } finally {
-      setDepositActionPending(false);
-    }
+    if (patch.depositStatus !== undefined) setDepositStatus(patch.depositStatus);
+    if (patch.depositAmountCents !== undefined) setDepositAmountCents(patch.depositAmountCents);
+    if (patch.depositExpiresAt !== undefined) setDepositExpiresAt(patch.depositExpiresAt);
+    if (patch.inspection !== undefined) setInspection(patch.inspection);
   }
 
   // Live-suggest the total based on the tiered rate table whenever trailer/dates
@@ -405,59 +381,20 @@ export function ReservationModal({
             )}
 
             {state.mode === "edit" && (
-              <div className="mb-3 rounded-lg border border-border-light bg-[#FAFBFB] p-3 text-[13px]">
-                <div className="flex items-center justify-between gap-2">
-                  <div>
-                    <div className="font-medium">Dépôt de sécurité</div>
-                    <div className="text-muted">
-                      {depositStatus === "none" && "Aucun dépôt autorisé."}
-                      {depositStatus === "authorized" &&
-                        `Autorisé — ${(depositAmountCents / 100).toFixed(2)} $`}
-                      {depositStatus === "captured" &&
-                        `Prélevé — ${(depositAmountCents / 100).toFixed(2)} $`}
-                      {depositStatus === "released" && "Libéré."}
-                    </div>
-                  </div>
-                  {depositStatus === "authorized" && (
-                    <div className="flex shrink-0 gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setCapturingFees((v) => !v)}
-                        disabled={depositActionPending}
-                        className="rounded-md border border-border px-2.5 py-1.5 text-[12px] hover:bg-[#EDF2F4] disabled:opacity-50"
-                      >
-                        Ajouter des frais
-                      </button>
-                      <button
-                        type="button"
-                        onClick={handleReleaseDeposit}
-                        disabled={depositActionPending}
-                        className="rounded-md border border-border px-2.5 py-1.5 text-[12px] hover:bg-[#EDF2F4] disabled:opacity-50"
-                      >
-                        {depositActionPending ? "..." : "Retour OK — libérer"}
-                      </button>
-                    </div>
-                  )}
-                </div>
-                {capturingFees && (
-                  <div className="mt-2.5 flex items-center gap-2 border-t border-border-light pt-2.5">
-                    <Input
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      max={depositAmountCents / 100}
-                      placeholder={`Max ${(depositAmountCents / 100).toFixed(2)} $`}
-                      value={feeAmountDollars}
-                      onChange={(e) => setFeeAmountDollars(e.target.value)}
-                      className="flex-1"
-                    />
-                    <Button type="button" variant="cta" onClick={handleCaptureFees} disabled={depositActionPending}>
-                      {depositActionPending ? "..." : "Prélever"}
-                    </Button>
-                  </div>
-                )}
-              </div>
+              <DepositInspectionPanel
+                reservationId={state.reservationId}
+                role={role}
+                reservationStatus={status}
+                returnDate={returnDate}
+                depositStatus={depositStatus}
+                depositAmountCents={depositAmountCents}
+                depositExpiresAt={depositExpiresAt}
+                inspection={inspection}
+                onChange={handlePanelChange}
+              />
             )}
+
+            <fieldset disabled={role === "employee"} className="m-0 min-w-0 border-0 p-0">
 
             {state.mode === "create" && (
               <div className="mb-3">
@@ -671,11 +608,12 @@ export function ReservationModal({
               <input type="checkbox" checked={isTest} onChange={(e) => setIsTest(e.target.checked)} />
               Réservation test (exclue des statistiques)
             </label>
+            </fieldset>
 
             {error && <div className="mb-3 text-[13px] text-red-600">{error}</div>}
 
             <div className="mt-4 flex items-center justify-between gap-2">
-              {state.mode === "edit" ? (
+              {state.mode === "edit" && role === "owner" ? (
                 <button
                   type="button"
                   onClick={handleDelete}
@@ -691,9 +629,11 @@ export function ReservationModal({
                 <Button type="button" onClick={onClose}>
                   Annuler
                 </Button>
-                <Button type="submit" variant="cta" disabled={submitting}>
-                  {submitting ? "..." : "Enregistrer"}
-                </Button>
+                {role === "owner" && (
+                  <Button type="submit" variant="cta" disabled={submitting}>
+                    {submitting ? "..." : "Enregistrer"}
+                  </Button>
+                )}
               </div>
             </div>
           </form>
