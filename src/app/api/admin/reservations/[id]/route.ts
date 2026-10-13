@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/admin-auth";
 import { logAudit } from "@/lib/audit";
 import { hasConflict } from "@/lib/availability";
+import { syncReservationToQuickBooks } from "@/lib/accounting/sync";
 import { adminReservationUpdateSchema } from "@/lib/validation";
 
 const RESERVATION_CLIENT_SELECT = {
@@ -148,6 +149,10 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       contract: { select: { pdfUrl: true, signatureStatus: true } },
     },
   });
+
+  if (rest.status === "confirmed" && existing.status !== "confirmed") {
+    await syncReservationToQuickBooks(id, { actorAdminId: admin.id });
+  }
 
   return NextResponse.json(updated);
 }

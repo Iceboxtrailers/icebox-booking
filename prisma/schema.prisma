@@ -35,6 +35,7 @@ model Client {
   billingPostalCode    String?
   company              String?
   stripeCustomerId     String?   @unique
+  qbCustomerId         String? // QuickBooks Online customer id, set on first invoice sync
 
   reservations Reservation[]
   documents    Document[]
@@ -93,6 +94,11 @@ model Reservation {
   depositExpiresAt      DateTime? // when the active hold lapses (Stripe capture_before)
   depositToken          String?   @unique // secure link letting the client re-authorize the hold
   depositTokenExpiresAt DateTime?
+  qbInvoiceId           String? // QuickBooks invoice id once synced
+  qbInvoiceNumber       String?
+  qbSyncStatus          String    @default("none") // none | syncing | synced | failed | skipped
+  qbSyncError           String?
+  qbSyncedAt            DateTime?
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 
@@ -170,6 +176,26 @@ model ReturnInspection {
   reservation Reservation @relation(fields: [reservationId], references: [id])
 
   @@map("return_inspections")
+}
+
+// Single-row (id "quickbooks") link to the company's QuickBooks Online file.
+// Tokens are stored encrypted (AES-256-GCM, key derived from AUTH_SECRET).
+model AccountingConnection {
+  id                    String    @id // always "quickbooks"
+  realmId               String
+  accessTokenEnc        String
+  refreshTokenEnc       String
+  accessTokenExpiresAt  DateTime
+  refreshTokenExpiresAt DateTime
+  syncFromDate          DateTime // only reservations created on/after this are synced automatically
+  incomeAccountId       String? // income account used when creating the service items
+  taxCodeId             String? // QuickBooks tax code applied to every invoice line (GST/QST)
+  rentalItemId          String?
+  transportItemId       String?
+  connectedAt           DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@map("accounting_connections")
 }
 
 // Append-only trail of every financial and inspection action. The app only ever

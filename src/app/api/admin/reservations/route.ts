@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { requireOwner } from "@/lib/admin-auth";
 import { hasConflict } from "@/lib/availability";
 import { adminReservationCreateSchema } from "@/lib/validation";
+import { syncReservationToQuickBooks } from "@/lib/accounting/sync";
 
 export async function POST(request: Request) {
   const ownerGuard = await requireOwner();
@@ -41,6 +42,8 @@ export async function POST(request: Request) {
       trailer: true,
     },
   });
+
+  await syncReservationToQuickBooks(reservation.id, { actorAdminId: ownerGuard.admin.id });
 
   return NextResponse.json(reservation);
 }

@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { hasConflict } from "@/lib/availability";
 import { getMailer } from "@/lib/email";
 import { confirmationEmail } from "@/lib/email/templates";
+import { syncReservationToQuickBooks } from "@/lib/accounting/sync";
 
 export class ReservationConfirmError extends Error {}
 
@@ -47,6 +48,8 @@ export async function confirmReservation(reservationId: string, clientId: string
     data: { status: "confirmed" },
     include: { client: true, trailer: true, contract: true },
   });
+
+  await syncReservationToQuickBooks(reservationId);
 
   const { subject, html } = confirmationEmail({
     firstName: confirmed.client.firstName,

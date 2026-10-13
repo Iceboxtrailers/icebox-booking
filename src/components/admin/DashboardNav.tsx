@@ -8,6 +8,7 @@ const TABS = [
   { href: "/dashboard", label: "Tableau de bord", ownerOnly: false },
   { href: "/dashboard/clients", label: "Clients", ownerOnly: true },
   { href: "/dashboard/rapports", label: "Rapports", ownerOnly: true },
+  { href: "/dashboard/comptabilite", label: "Comptabilité", ownerOnly: true },
   { href: "/dashboard/employes", label: "Employés", ownerOnly: true },
 ];
 
