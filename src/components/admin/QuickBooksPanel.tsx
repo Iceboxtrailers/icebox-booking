@@ -77,9 +77,14 @@ export function QuickBooksPanel({
     }
   }
 
+  // In-page confirmation: window.confirm() is silently blocked in some embedded browsers.
+  const [confirmingDisconnect, setConfirmingDisconnect] = useState(false);
+
   async function disconnect() {
-    if (!window.confirm("Déconnecter QuickBooks ? Les factures déjà créées restent dans QuickBooks.")) return;
-    await fetch("/api/admin/quickbooks", { method: "DELETE" });
+    setError(null);
+    const res = await fetch("/api/admin/quickbooks", { method: "DELETE" });
+    if (!res.ok) setError("Impossible de déconnecter QuickBooks");
+    setConfirmingDisconnect(false);
     router.refresh();
   }
 
@@ -133,9 +138,30 @@ export function QuickBooksPanel({
             envoyées automatiquement à leur confirmation. {syncedCount} facture{syncedCount > 1 ? "s" : ""} créée
             {syncedCount > 1 ? "s" : ""}.
           </div>
-          <button type="button" onClick={disconnect} className="mt-2 text-[12px] text-red-600 hover:underline">
-            Déconnecter
-          </button>
+          {confirmingDisconnect ? (
+            <div className="mt-2 flex flex-wrap items-center gap-3 text-[12px]">
+              <span className="text-muted">Les factures déjà créées restent dans QuickBooks.</span>
+              <button type="button" onClick={disconnect} className="font-medium text-red-600 hover:underline">
+                Confirmer la déconnexion
+              </button>
+              <button type="button" onClick={() => setConfirmingDisconnect(false)} className="text-muted hover:underline">
+                Annuler
+              </button>
+            </div>
+          ) : (
+            <div className="mt-2 flex flex-wrap gap-4 text-[12px]">
+              <button
+                type="button"
+                onClick={() => (window.location.href = "/api/admin/quickbooks/connect")}
+                className="text-navy hover:underline"
+              >
+                Connecter une autre entreprise
+              </button>
+              <button type="button" onClick={() => setConfirmingDisconnect(true)} className="text-red-600 hover:underline">
+                Déconnecter
+              </button>
+            </div>
+          )}
         </Card>
       )}
 
