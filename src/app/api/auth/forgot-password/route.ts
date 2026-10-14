@@ -29,7 +29,12 @@ export async function POST(request: Request) {
     const origin = new URL(request.url).origin;
     const resetUrl = `${origin}/reinitialiser-mot-de-passe?token=${token}`;
     const { subject, html } = passwordResetEmail({ firstName: client.firstName, resetUrl });
-    await getMailer().send({ to: client.email, subject, html });
+    try {
+      await getMailer().send({ to: client.email, subject, html });
+    } catch (error) {
+      // Same response either way: a failure must not reveal that the account exists.
+      console.error("Password reset email failed", error);
+    }
   }
 
   return NextResponse.json({ ok: true });

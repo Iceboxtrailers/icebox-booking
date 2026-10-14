@@ -59,6 +59,7 @@ export function DepositInspectionPanel({
   const [error, setError] = useState<string | null>(null);
   const [canSendLink, setCanSendLink] = useState(false);
   const [linkUrl, setLinkUrl] = useState<string | null>(null);
+  const [linkNotice, setLinkNotice] = useState<string | null>(null);
   const [needsWaiver, setNeedsWaiver] = useState(false);
   const [capturingFees, setCapturingFees] = useState(false);
   const [feeAmountDollars, setFeeAmountDollars] = useState("");
@@ -102,13 +103,20 @@ export function DepositInspectionPanel({
     });
   }
 
-  async function createLink() {
-    const { res, data } = await call(`${base}/deposit/link`, { method: "POST" });
+  async function createLink(sendEmail = false) {
+    const { res, data } = await call(`${base}/deposit/link`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ sendEmail }),
+    });
     if (!res.ok) {
       setError(data.error ?? "Impossible de créer le lien");
       return;
     }
     setLinkUrl(data.url);
+    setLinkNotice(
+      sendEmail ? (data.emailed ? "Courriel envoyé au client." : (data.emailError ?? "Courriel non envoyé.")) : null,
+    );
   }
 
   async function startRental(extra: { acknowledgeDepositExpiry?: boolean; waiveDeposit?: boolean } = {}) {
@@ -245,9 +253,14 @@ export function DepositInspectionPanel({
             </button>
           )}
           {active && (depositStatus === "none" || canSendLink || depositStatus === "expired" || depositStatus === "authorized") && (
-            <button type="button" className={btn} disabled={pending} onClick={createLink}>
-              Lien de paiement client
-            </button>
+            <>
+              <button type="button" className={btn} disabled={pending} onClick={() => createLink(false)}>
+                Lien de paiement client
+              </button>
+              <button type="button" className={btn} disabled={pending} onClick={() => createLink(true)}>
+                Envoyer le lien par courriel
+              </button>
+            </>
           )}
           {isOwner && depositStatus === "authorized" && (
             <>
@@ -263,7 +276,8 @@ export function DepositInspectionPanel({
 
         {linkUrl && (
           <div className="mt-2 rounded-md border border-border-light bg-white p-2 text-[12px]">
-            <div className="mb-1 text-muted">Envoyez ce lien au client (valide 7 jours) :</div>
+            {linkNotice && <div className="mb-1 font-medium text-navy">{linkNotice}</div>}
+            <div className="mb-1 text-muted">Lien personnel du client (valide 7 jours) :</div>
             <div className="flex items-center gap-2">
               <input readOnly value={linkUrl} className="min-w-0 flex-1 rounded border border-border px-2 py-1" />
               <button
