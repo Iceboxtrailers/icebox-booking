@@ -83,7 +83,10 @@ async function requestTokens(body: URLSearchParams): Promise<TokenResponse> {
     },
     body,
   });
-  if (!res.ok) throw new Error(`Intuit OAuth ${res.status}: ${(await res.text()).slice(0, 200)}`);
+  if (!res.ok) {
+    const tid = res.headers.get("intuit_tid");
+    throw new Error(`Intuit OAuth ${res.status}: ${(await res.text()).slice(0, 200)}${tid ? ` (intuit_tid ${tid})` : ""}`);
+  }
   return (await res.json()) as TokenResponse;
 }
 
@@ -163,6 +166,13 @@ async function qbFetch<T>(path: string, init?: RequestInit, retried = false): Pr
     },
   });
 
+  // intuit_tid identifies this exchange on Intuit's side; logging it lets their
+  // support trace a failing call.
+  const intuitTid = res.headers.get("intuit_tid");
+  console.log(
+    JSON.stringify({ source: "quickbooks", method: init?.method ?? "GET", path: path.split("?")[0], status: res.status, intuit_tid: intuitTid }),
+  );
+
   if (res.status === 401 && !retried) {
     await refreshConnection(CONNECTION_ID);
     return qbFetch<T>(path, init, true);
@@ -178,7 +188,11 @@ async function qbFetch<T>(path: string, init?: RequestInit, retried = false): Pr
     } catch {
       // keep raw text
     }
-    throw new QuickBooksApiError(`QuickBooks ${res.status}: ${message}`, res.status, code);
+    throw new QuickBooksApiError(
+      `QuickBooks ${res.status}: ${message}${intuitTid ? ` (intuit_tid ${intuitTid})` : ""}`,
+      res.status,
+      code,
+    );
   }
   return (await res.json()) as T;
 }
