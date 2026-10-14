@@ -1,6 +1,7 @@
 import { fmt, nights } from "@/lib/dates";
 import { catalogueFor } from "@/lib/catalogue";
 import { RATE_TABLE, TRANSPORT_FEE_PER_TRIP_CENTS, computeTaxBreakdown } from "@/lib/pricing";
+import { DEPOSIT_AMOUNT_CENTS } from "@/lib/constants";
 import type { TrailerSize } from "@/lib/constants";
 
 // Company-side facts from the real IceBox rental contract template —
@@ -156,7 +157,29 @@ export function buildContractLines(p: {
   spacer();
   rule();
 
-  heading("5. Responsabilités du Locataire");
+  heading("5. Dépôt de garantie");
+  body(
+    "Le Locataire fournit, lors de la réservation, une carte de crédit valide. La carte est enregistrée de façon sécurisée par le prestataire de paiement du Locateur; le Locateur ne conserve pas le numéro de la carte."
+  );
+  bullet(
+    `Avant la remise de la remorque, le Locateur place sur cette carte une retenue (préautorisation) de ${money(DEPOSIT_AMOUNT_CENTS)} $ CAD à titre de dépôt de garantie. Il ne s'agit pas d'un prélèvement : le montant est réservé sur la limite de crédit du Locataire.`
+  );
+  bullet(
+    "Le Locataire autorise le Locateur à placer cette retenue et à la renouveler au besoin pendant la durée de la location, une préautorisation expirant normalement après environ sept (7) jours."
+  );
+  bullet(
+    "Après le retour de la remorque et son inspection, si celle-ci est acceptée sans dommage ni somme due, le Locateur libère la retenue. Le délai avant que le montant redevienne disponible dépend de l'émetteur de la carte."
+  );
+  bullet(
+    `Le Locateur peut prélever sur le dépôt, jusqu'à concurrence de ${money(DEPOSIT_AMOUNT_CENTS)} $ CAD, les sommes dues en raison de dommages, du bris ou de la perte de la remorque ou de ses équipements, d'un nettoyage excessif ou de tout montant impayé au titre du présent contrat. L'état de la remorque au retour est documenté par photos et le Locataire en est informé.`
+  );
+  bullet(
+    "Le dépôt ne limite pas la responsabilité du Locataire et ne remplace pas l'assurance exigée à l'article 7. Si les dommages excèdent le dépôt, le Locataire demeure responsable de la différence."
+  );
+  spacer();
+  rule();
+
+  heading("6. Responsabilités du Locataire");
   body("Le Locataire s'engage à :");
   bullet("Utiliser la remorque de manière appropriée et à maintenir son bon état de fonctionnement.");
   bullet("Informer le Locateur immédiatement en cas de bris, perte ou dommage.");
@@ -164,7 +187,7 @@ export function buildContractLines(p: {
   spacer();
   rule();
 
-  heading("6. Assurance");
+  heading("7. Assurance");
   body("Le Locataire doit souscrire et maintenir en vigueur, pendant toute la durée de ce contrat :");
   bullet("Une assurance responsabilité civile automobile avec un montant minimal de 2 000 000 $.");
   bullet(
@@ -187,14 +210,14 @@ export function buildContractLines(p: {
   spacer();
   rule();
 
-  heading("7. Retour des Équipements");
+  heading("8. Retour des Équipements");
   body(
     "Le Locataire s'engage à retourner la remorque à l'adresse du Locateur. La remorque devra être restituée en bon état de propreté et de fonctionnement."
   );
   spacer();
   rule();
 
-  heading("8. Dispositions Générales");
+  heading("9. Dispositions Générales");
   body(
     "Le présent contrat constitue l'intégralité de l'entente entre les parties. Aucune modification de ce contrat ne sera valable sans le consentement écrit mutuel des deux parties."
   );
