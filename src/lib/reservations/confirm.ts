@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { hasConflict } from "@/lib/availability";
-import { getMailer } from "@/lib/email";
+import { getMailer, sendInternalNotice } from "@/lib/email";
 import { confirmationEmail, internalNewReservationEmail } from "@/lib/email/templates";
 import { loadContractAttachment } from "@/lib/email/attachments";
 import { syncReservationToQuickBooks } from "@/lib/accounting/sync";
@@ -101,7 +101,7 @@ export async function confirmReservation(reservationId: string, clientId: string
       deliveryLabel,
       adminUrl: `${siteUrl()}/dashboard`,
     });
-    await mailer.send({ to: "info@iceboxtrailers.ca", subject: internal.subject, html: internal.html });
+    await sendInternalNotice({ subject: internal.subject, html: internal.html });
   } catch (error) {
     console.error("Internal reservation notice failed", error);
   }
