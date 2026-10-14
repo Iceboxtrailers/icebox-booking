@@ -54,6 +54,12 @@ export function SiteFooter() {
             <Link href="/devenir-concessionnaire" className="text-foreground hover:text-navy">
               Devenir concessionnaire
             </Link>
+            <Link href="/confidentialite" className="text-foreground hover:text-navy">
+              Politique de confidentialité
+            </Link>
+            <Link href="/conditions" className="text-foreground hover:text-navy">
+              Conditions d&apos;utilisation
+            </Link>
           </div>
         </div>
       </div>
