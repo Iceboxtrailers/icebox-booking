@@ -14,7 +14,7 @@ export async function GET(request: Request) {
 
   const origin = new URL(request.url).origin;
   const state = randomBytes(24).toString("base64url");
-  const response = NextResponse.redirect(buildAuthorizeUrl(`${origin}/api/admin/quickbooks/callback`, state));
+  const response = NextResponse.redirect(await buildAuthorizeUrl(`${origin}/api/admin/quickbooks/callback`, state));
   response.cookies.set("qb_oauth_state", state, {
     httpOnly: true,
     secure: origin.startsWith("https://"),

@@ -1,9 +1,34 @@
 import { prisma } from "@/lib/prisma";
 import { decryptSecret, encryptSecret } from "@/lib/crypto/secret-box";
 
-const AUTHORIZE_URL = "https://appcenter.intuit.com/connect/oauth2";
-const TOKEN_URL = "https://oauth.platform.intuit.com/oauth2/v1/tokens/bearer";
+// Fallbacks only: the live endpoints come from Intuit's OAuth discovery document.
+const FALLBACK_AUTHORIZE_URL = "https://appcenter.intuit.com/connect/oauth2";
+const FALLBACK_TOKEN_URL = "https://oauth.platform.intuit.com/oauth2/v1/tokens/bearer";
 const MINOR_VERSION = "75";
+
+type OAuthEndpoints = { authorize: string; token: string };
+let cachedEndpoints: OAuthEndpoints | null = null;
+
+async function getOAuthEndpoints(): Promise<OAuthEndpoints> {
+  if (cachedEndpoints) return cachedEndpoints;
+  const discoveryUrl =
+    process.env.QUICKBOOKS_ENVIRONMENT === "production"
+      ? "https://developer.api.intuit.com/.well-known/openid_configuration"
+      : "https://developer.api.intuit.com/.well-known/openid_sandbox_configuration";
+  try {
+    const res = await fetch(discoveryUrl, { headers: { Accept: "application/json" } });
+    if (res.ok) {
+      const doc = (await res.json()) as { authorization_endpoint?: string; token_endpoint?: string };
+      if (doc.authorization_endpoint && doc.token_endpoint) {
+        cachedEndpoints = { authorize: doc.authorization_endpoint, token: doc.token_endpoint };
+        return cachedEndpoints;
+      }
+    }
+  } catch {
+    // fall through to the documented defaults
+  }
+  return { authorize: FALLBACK_AUTHORIZE_URL, token: FALLBACK_TOKEN_URL };
+}
 export const CONNECTION_ID = "quickbooks";
 
 export function quickBooksConfigured(): boolean {
@@ -27,8 +52,9 @@ function apiBase(realmId: string): string {
   return `${host}/v3/company/${realmId}`;
 }
 
-export function buildAuthorizeUrl(redirectUri: string, state: string): string {
+export async function buildAuthorizeUrl(redirectUri: string, state: string): Promise<string> {
   const { id } = clientCredentials();
+  const endpoints = await getOAuthEndpoints();
   const params = new URLSearchParams({
     client_id: id,
     scope: "com.intuit.quickbooks.accounting",
@@ -36,7 +62,7 @@ export function buildAuthorizeUrl(redirectUri: string, state: string): string {
     response_type: "code",
     state,
   });
-  return `${AUTHORIZE_URL}?${params.toString()}`;
+  return `${endpoints.authorize}?${params.toString()}`;
 }
 
 type TokenResponse = {
@@ -48,7 +74,7 @@ type TokenResponse = {
 
 async function requestTokens(body: URLSearchParams): Promise<TokenResponse> {
   const { id, secret } = clientCredentials();
-  const res = await fetch(TOKEN_URL, {
+  const res = await fetch((await getOAuthEndpoints()).token, {
     method: "POST",
     headers: {
       Authorization: `Basic ${Buffer.from(`${id}:${secret}`).toString("base64")}`,
