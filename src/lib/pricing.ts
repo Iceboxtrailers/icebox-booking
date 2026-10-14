@@ -33,16 +33,27 @@ export type PriceBreakdown = { months: number; weeks: number; days: number; tota
 
 // The offer sheet gives flat rates for exactly 1 day / 7 days / 30 days, not
 // a continuous per-day formula. For an arbitrary date range we decompose the
-// night count into month/week/day blocks and price each block at its tier —
-// the same way multi-tier rental pricing commonly works.
+// night count into month/week/day blocks and price each block at its tier.
+// A block never costs more than the next tier up (best price for the client):
+// e.g. 4 days of a 5x10 are billed as one week (400 $), not 4 x 150 $.
 export function priceBreakdown(size: TrailerSize, start: string, end: string): PriceBreakdown {
   const rate = RATE_TABLE[size];
   const totalNights = nights(start, end);
 
-  const months = Math.floor(totalNights / 30);
+  let months = Math.floor(totalNights / 30);
   const afterMonths = totalNights % 30;
-  const weeks = Math.floor(afterMonths / 7);
-  const days = afterMonths % 7;
+  let weeks = Math.floor(afterMonths / 7);
+  let days = afterMonths % 7;
+
+  if (days * rate.dayCents >= rate.weekCents) {
+    weeks += 1;
+    days = 0;
+  }
+  if (weeks * rate.weekCents + days * rate.dayCents >= rate.monthCents) {
+    months += 1;
+    weeks = 0;
+    days = 0;
+  }
 
   const totalCents = months * rate.monthCents + weeks * rate.weekCents + days * rate.dayCents;
   return { months, weeks, days, totalCents };
