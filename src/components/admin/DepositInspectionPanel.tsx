@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { Camera } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { useConfirm } from "@/components/ui/ConfirmDialog";
 import { Input } from "@/components/ui/Input";
 import {
   DEPOSIT_AMOUNT_CENTS,
@@ -55,6 +56,7 @@ export function DepositInspectionPanel({
   const isOwner = role === "owner";
   const active = reservationStatus === "confirmed" || reservationStatus === "in_progress";
 
+  const { confirm, dialog } = useConfirm();
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [canSendLink, setCanSendLink] = useState(false);
@@ -131,7 +133,7 @@ export function DepositInspectionPanel({
       return;
     }
     if (data.code === "deposit_expires_before_return") {
-      if (window.confirm(`${data.error}.\n\nConfirmer la remise malgré tout ?`)) {
+      if (await confirm(`${data.error}.\n\nConfirmer la remise malgré tout ?`, { confirmLabel: "Confirmer la remise" })) {
         await startRental({ ...extra, acknowledgeDepositExpiry: true });
       }
       return;
@@ -160,7 +162,7 @@ export function DepositInspectionPanel({
   }
 
   async function ownerRelease() {
-    if (!window.confirm("Libérer le dépôt sans passer par l'inspection ?")) return;
+    if (!(await confirm("Libérer le dépôt sans passer par l'inspection ?", { confirmLabel: "Libérer le dépôt", danger: true }))) return;
     const { res, data } = await call(`${base}/deposit/release`, { method: "POST" });
     if (!res.ok) {
       setError(data.error ?? "Impossible de libérer le dépôt");
@@ -325,8 +327,8 @@ export function DepositInspectionPanel({
                 type="button"
                 className={btn}
                 disabled={pending}
-                onClick={() => {
-                  if (window.confirm("Confirmer que le dépôt a été pris autrement (virement, comptant) ?")) {
+                onClick={async () => {
+                  if (await confirm("Confirmer que le dépôt a été pris autrement (virement, comptant) ?")) {
                     void startRental({ waiveDeposit: true });
                   }
                 }}
@@ -425,6 +427,7 @@ export function DepositInspectionPanel({
       )}
 
       {error && <div className="text-[13px] text-red-600">{error}</div>}
+      {dialog}
     </div>
   );
 }

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { useConfirm } from "@/components/ui/ConfirmDialog";
 import { Field } from "@/components/ui/Field";
 import { Input } from "@/components/ui/Input";
 import { ClientModal } from "@/components/admin/ClientModal";
@@ -45,6 +46,7 @@ export function ReservationModal({
   onClose: () => void;
 }) {
   const router = useRouter();
+  const { confirm, dialog } = useConfirm();
   const [loading, setLoading] = useState(state.mode === "edit");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -291,7 +293,7 @@ export function ReservationModal({
 
   async function handleDelete() {
     if (state.mode !== "edit") return;
-    if (!window.confirm("Annuler cette réservation ?")) return;
+    if (!(await confirm("Annuler cette réservation ?", { confirmLabel: "Annuler la réservation", cancelLabel: "Retour", danger: true }))) return;
     setDeleting(true);
     setError(null);
     try {
@@ -651,6 +653,7 @@ export function ReservationModal({
         }}
       />
     )}
+    {dialog}
     </>
   );
 }

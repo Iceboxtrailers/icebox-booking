@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
+import { useConfirm } from "@/components/ui/ConfirmDialog";
 import { Field } from "@/components/ui/Field";
 import { Input } from "@/components/ui/Input";
 
@@ -10,6 +11,7 @@ type Employee = { id: string; username: string; createdAt: string; mfaEnabled: b
 
 export function EmployeesManager({ employees }: { employees: Employee[] }) {
   const router = useRouter();
+  const { confirm, dialog } = useConfirm();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -77,7 +79,7 @@ export function EmployeesManager({ employees }: { employees: Employee[] }) {
   }
 
   async function handleDelete(employee: Employee) {
-    if (!window.confirm(`Supprimer le compte « ${employee.username} » ?`)) return;
+    if (!(await confirm(`Supprimer le compte « ${employee.username} » ?`, { confirmLabel: "Supprimer", danger: true }))) return;
     const res = await fetch(`/api/admin/users/${employee.id}`, { method: "DELETE" });
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
@@ -190,6 +192,7 @@ export function EmployeesManager({ employees }: { employees: Employee[] }) {
           {submitting ? "..." : "Créer le compte"}
         </Button>
       </form>
+      {dialog}
     </div>
   );
 }
