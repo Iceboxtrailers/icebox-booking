@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/Button";
 import { Field } from "@/components/ui/Field";
 import { Input } from "@/components/ui/Input";
 
-type Employee = { id: string; username: string; createdAt: string };
+type Employee = { id: string; username: string; createdAt: string; mfaEnabled: boolean };
 
 export function EmployeesManager({ employees }: { employees: Employee[] }) {
   const router = useRouter();
@@ -35,6 +35,22 @@ export function EmployeesManager({ employees }: { employees: Employee[] }) {
     setResettingId(null);
     setNewPassword("");
     setNotice(`Mot de passe de « ${employee.username} » mis à jour.`);
+  }
+
+  const [confirmMfaResetId, setConfirmMfaResetId] = useState<string | null>(null);
+
+  async function handleResetMfa(employee: Employee) {
+    setError(null);
+    setNotice(null);
+    const res = await fetch(`/api/admin/users/${employee.id}/mfa`, { method: "DELETE" });
+    setConfirmMfaResetId(null);
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      setError(data.error ?? "Impossible de réinitialiser la double authentification");
+      return;
+    }
+    setNotice(`Double authentification de « ${employee.username} » réinitialisée.`);
+    router.refresh();
   }
 
   async function handleCreate(e: React.FormEvent) {
@@ -88,8 +104,24 @@ export function EmployeesManager({ employees }: { employees: Employee[] }) {
                 <div>
                   <div className="font-medium">{employee.username}</div>
                   <div className="text-[11px] text-muted">
-                    Créé le {new Date(employee.createdAt).toLocaleDateString("fr-CA")}
+                    Créé le {new Date(employee.createdAt).toLocaleDateString("fr-CA")} · 2FA{" "}
+                    {employee.mfaEnabled ? "activée" : "non activée"}
                   </div>
+                  {employee.mfaEnabled &&
+                    (confirmMfaResetId === employee.id ? (
+                      <div className="mt-1 flex gap-3 text-[11px]">
+                        <button type="button" onClick={() => handleResetMfa(employee)} className="font-medium text-red-600 hover:underline">
+                          Confirmer la réinitialisation
+                        </button>
+                        <button type="button" onClick={() => setConfirmMfaResetId(null)} className="text-muted hover:underline">
+                          Annuler
+                        </button>
+                      </div>
+                    ) : (
+                      <button type="button" onClick={() => setConfirmMfaResetId(employee.id)} className="mt-1 text-[11px] text-navy hover:underline">
+                        Réinitialiser la 2FA (téléphone perdu)
+                      </button>
+                    ))}
                 </div>
                 <div className="flex shrink-0 gap-3">
                   <button

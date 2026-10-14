@@ -16,6 +16,8 @@ function AdminLoginForm() {
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [code, setCode] = useState("");
+  const [needsCode, setNeedsCode] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -24,9 +26,32 @@ function AdminLoginForm() {
     setError(null);
     setSubmitting(true);
     try {
-      const result = await signIn("admin-credentials", { username, password, redirect: false });
+      // Step one: password. The server says whether an authenticator code is also needed.
+      if (!needsCode) {
+        const res = await fetch("/api/admin/auth/precheck", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username, password }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          setError(data.error ?? "Nom d'utilisateur ou mot de passe invalide");
+          return;
+        }
+        if (data.mfaRequired) {
+          setNeedsCode(true);
+          return;
+        }
+      }
+
+      const result = await signIn("admin-credentials", {
+        username,
+        password,
+        code: needsCode ? code : "",
+        redirect: false,
+      });
       if (result?.error) {
-        setError("Nom d'utilisateur ou mot de passe invalide");
+        setError(needsCode ? "Code invalide ou déjà utilisé" : "Nom d'utilisateur ou mot de passe invalide");
         return;
       }
       router.push(callbackUrl);
@@ -43,16 +68,50 @@ function AdminLoginForm() {
           <div className="font-heading text-lg uppercase tracking-wide">Console Admin</div>
         </div>
         <form onSubmit={handleSubmit}>
-          <Field label="Nom d'utilisateur">
-            <Input value={username} onChange={(e) => setUsername(e.target.value)} required />
-          </Field>
-          <Field label="Mot de passe">
-            <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
-          </Field>
+          {!needsCode ? (
+            <>
+              <Field label="Nom d'utilisateur">
+                <Input value={username} onChange={(e) => setUsername(e.target.value)} required />
+              </Field>
+              <Field label="Mot de passe">
+                <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+              </Field>
+            </>
+          ) : (
+            <>
+              <p className="mb-3 text-[13px] text-muted">
+                Entrez le code à 6 chiffres affiché dans votre application d&apos;authentification (ou un code de
+                récupération).
+              </p>
+              <Field label="Code de vérification">
+                <Input
+                  value={code}
+                  onChange={(e) => setCode(e.target.value)}
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  autoFocus
+                  required
+                />
+              </Field>
+            </>
+          )}
           {error && <div className="mb-3 text-[13px] text-red-600">{error}</div>}
           <Button type="submit" variant="cta" disabled={submitting} className="w-full justify-center">
-            {submitting ? "Connexion..." : "Se connecter"}
+            {submitting ? "Connexion..." : needsCode ? "Vérifier" : "Se connecter"}
           </Button>
+          {needsCode && (
+            <button
+              type="button"
+              onClick={() => {
+                setNeedsCode(false);
+                setCode("");
+                setError(null);
+              }}
+              className="mt-3 w-full text-center text-[12px] text-muted hover:underline"
+            >
+              Retour
+            </button>
+          )}
         </form>
       </Card>
     </div>

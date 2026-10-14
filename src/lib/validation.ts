@@ -21,6 +21,11 @@ export const loginSchema = z.object({
 export const adminLoginSchema = z.object({
   username: z.string().trim().min(1, "Nom d'utilisateur requis"),
   password: z.string().min(1, "Mot de passe requis"),
+  code: z.string().trim().optional(),
+});
+
+export const mfaCodeSchema = z.object({
+  code: z.string().trim().min(6, "Code requis").max(20),
 });
 
 export const forgotPasswordSchema = z.object({

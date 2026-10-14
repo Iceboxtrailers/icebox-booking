@@ -10,6 +10,7 @@ const TABS = [
   { href: "/dashboard/rapports", label: "Rapports", ownerOnly: true },
   { href: "/dashboard/comptabilite", label: "Comptabilité", ownerOnly: true },
   { href: "/dashboard/employes", label: "Employés", ownerOnly: true },
+  { href: "/dashboard/securite", label: "Sécurité", ownerOnly: false },
 ];
 
 export function DashboardNav({ role }: { role: AdminRole }) {

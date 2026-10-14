@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { loginSchema, adminLoginSchema } from "@/lib/validation";
 import { authConfig } from "@/lib/auth.config";
+import { verifyAdminLogin } from "@/lib/admin-login";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
@@ -38,21 +39,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       credentials: {
         username: { label: "Nom d'utilisateur", type: "text" },
         password: { label: "Mot de passe", type: "password" },
+        code: { label: "Code de vérification", type: "text" },
       },
       authorize: async (rawCredentials) => {
         const parsed = adminLoginSchema.safeParse(rawCredentials);
         if (!parsed.success) return null;
 
-        // Case-insensitive so "vincentbilodeau" and "VincentBilodeau" are the same login.
-        const admin = await prisma.adminUser.findFirst({
-          where: { username: { equals: parsed.data.username, mode: "insensitive" } },
-        });
-        if (!admin) return null;
+        // Password, lockout and two-factor checks live in one place (case-insensitive username).
+        const result = await verifyAdminLogin(parsed.data);
+        if (!result.ok) return null;
 
-        const passwordOk = await bcrypt.compare(parsed.data.password, admin.passwordHash);
-        if (!passwordOk) return null;
-
-        return { id: admin.id, name: admin.username };
+        return { id: result.admin.id, name: result.admin.username };
       },
     }),
   ],

@@ -52,6 +52,15 @@ model AdminUser {
   role         String   @default("owner") // owner | employee
   createdAt    DateTime @default(now())
 
+  // Two-factor authentication (TOTP). The secret is AES-GCM encrypted at rest.
+  totpSecretEnc        String?
+  totpPendingEnc       String? // secret shown during setup, promoted once a code is verified
+  totpEnabledAt        DateTime?
+  totpLastUsedStep     Int? // last accepted 30 s time step, to reject replayed codes
+  recoveryCodeHashes   String[] @default([])
+  loginFailedAttempts  Int      @default(0)
+  loginLockedUntil     DateTime?
+
   @@map("admin_users")
 }
 
