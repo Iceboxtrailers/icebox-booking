@@ -10,9 +10,11 @@ export function quickBooksConfigured(): boolean {
   return Boolean(process.env.QUICKBOOKS_CLIENT_ID && process.env.QUICKBOOKS_CLIENT_SECRET);
 }
 
+// Trimmed: a stray space or newline from copy-paste into Vercel makes Intuit
+// answer "invalid_client".
 function clientCredentials() {
-  const id = process.env.QUICKBOOKS_CLIENT_ID;
-  const secret = process.env.QUICKBOOKS_CLIENT_SECRET;
+  const id = process.env.QUICKBOOKS_CLIENT_ID?.trim();
+  const secret = process.env.QUICKBOOKS_CLIENT_SECRET?.trim();
   if (!id || !secret) throw new Error("QUICKBOOKS_CLIENT_ID / QUICKBOOKS_CLIENT_SECRET ne sont pas configurés");
   return { id, secret };
 }
