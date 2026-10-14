@@ -170,7 +170,7 @@ export type QbOption = { id: string; name: string };
 
 export async function listIncomeAccounts(): Promise<QbOption[]> {
   const rows = await query<{ Id: string; Name: string }>(
-    "select Id, Name from Account where AccountType = 'Income' and Active = true",
+    "select Id, Name from Account where AccountType = 'Income'",
     "Account",
   );
   return rows.map((r) => ({ id: r.Id, name: r.Name }));
@@ -178,7 +178,7 @@ export async function listIncomeAccounts(): Promise<QbOption[]> {
 
 export async function listTaxCodes(): Promise<QbOption[]> {
   const rows = await query<{ Id: string; Name: string; Taxable?: boolean }>(
-    "select Id, Name, Taxable from TaxCode where Active = true",
+    "select Id, Name, Taxable from TaxCode",
     "TaxCode",
   );
   return rows.filter((r) => r.Taxable !== false).map((r) => ({ id: r.Id, name: r.Name }));
@@ -186,7 +186,7 @@ export async function listTaxCodes(): Promise<QbOption[]> {
 
 async function ensureServiceItem(name: string, incomeAccountId: string): Promise<string> {
   const existing = await query<{ Id: string }>(
-    `select Id from Item where Name = '${escapeQueryValue(name)}' and Active = true`,
+    `select Id from Item where Name = '${escapeQueryValue(name)}'`,
     "Item",
   );
   if (existing[0]) return existing[0].Id;
@@ -227,7 +227,7 @@ export function customerDisplayName(c: Pick<QbCustomerInput, "firstName" | "last
 // different person falls back to "Name (email)".
 export async function findOrCreateCustomer(c: QbCustomerInput): Promise<string> {
   const byEmail = await query<{ Id: string }>(
-    `select Id from Customer where PrimaryEmailAddr = '${escapeQueryValue(c.email)}' and Active = true`,
+    `select Id from Customer where PrimaryEmailAddr = '${escapeQueryValue(c.email)}'`,
     "Customer",
   ).catch(() => []);
   if (byEmail[0]) return byEmail[0].Id;
