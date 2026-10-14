@@ -48,6 +48,13 @@ export default async function AccountingPage({
         }))}
         flash={connected ? "connected" : error ?? null}
       />
+      <p className="mt-6 max-w-xl text-[12px] text-muted">
+        Besoin d&apos;aide avec la liaison QuickBooks ? Écrivez à{" "}
+        <a href="mailto:info@iceboxtrailers.ca" className="text-navy underline">
+          info@iceboxtrailers.ca
+        </a>{" "}
+        ou appelez le 581 889-2093.
+      </p>
     </div>
   );
 }
