@@ -52,7 +52,7 @@ export default async function MaRemorquePage() {
             <span className="flex items-center gap-2 text-foreground">
               <Icon size={15} className="text-muted" /> {label}
             </span>
-            <span className="rounded-full bg-[#F4F6F7] px-2.5 py-1 text-[11px] text-muted">À venir</span>
+            <span className="rounded-full bg-page px-2.5 py-1 text-[11px] text-muted">À venir</span>
           </Card>
         ))}
       </div>

@@ -1,36 +1,67 @@
 @import "tailwindcss";
 
+/* ==========================================================================
+   IceBox design tokens — colors and fonts live here only. Change a value and
+   the whole site follows (pages, wizard, admin console).
+   Logo files: public/brand/*. Never recreate the logo with text.
+   ========================================================================== */
 :root {
   --background: #f4f6f7;
   --foreground: #1b2733;
-  /* IceBox brand palette (from the official charte graphique PDF) */
-  --color-navy: #005f9b; /* PANTONE 107-7 C */
-  --color-cta: #009dde; /* PANTONE 112-7 C */
-  --color-cta-hover: #005f9b; /* PANTONE 107-7 C, reused as the CTA pressed state */
-  --color-tint-40: #9bceef; /* PANTONE 112-7 C 40% */
-  --color-tint-60: #67bbe9; /* PANTONE 112-7 C 60% */
+
+  /* Brand palette (charte graphique: PANTONE P 107-7 C and P 112-7 C).
+     These are the screen RGB values of the official logo files in public/brand;
+     the PDF only gives print specs (Pantone / CMYK). */
+  --color-navy: #005f9b; /* P 107-7 C — links, active states, headings in color */
+  --color-accent: #009dde; /* P 112-7 C — accents and graphic details only */
+  --color-tint-40: #9bceef; /* P 112-7 C 40 % */
+  --color-tint-60: #67bbe9; /* P 112-7 C 60 % */
+
+  /* Primary action (buttons): dark blue + white text = 6.75:1 contrast (WCAG AA).
+     The cyan accent only reaches 3:1 with white text, so it is not used for buttons. */
+  --color-cta: var(--color-navy);
+  --color-cta-hover: #004c7c;
+
+  /* Surfaces and neutrals */
+  --color-page: #f4f6f7; /* page background */
+  --color-subtle: #fafbfb; /* quiet panels */
+  --color-tint: #e4eef4; /* selected / active background (light brand blue) */
+  --color-hover: #edf2f4; /* hover background */
+  --color-body: #3a454e; /* long reading text (contract preview, descriptions) */
   --color-muted: #5f6b75;
   --color-border: #c7d0d6;
   --color-border-light: #dee4e7;
+
+  /* Status */
   --color-success: #4c9a6a;
   --color-warn-bg: #faeeda;
   --color-warn-text: #854f0b;
+  --color-warn-soft: #fff8ec;
+  --color-warn-line: #f0d9b5;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-navy: var(--color-navy);
+  --color-accent: var(--color-accent);
   --color-cta: var(--color-cta);
   --color-cta-hover: var(--color-cta-hover);
   --color-tint-40: var(--color-tint-40);
   --color-tint-60: var(--color-tint-60);
+  --color-page: var(--color-page);
+  --color-subtle: var(--color-subtle);
+  --color-tint: var(--color-tint);
+  --color-hover: var(--color-hover);
+  --color-body: var(--color-body);
   --color-muted: var(--color-muted);
   --color-border: var(--color-border);
   --color-border-light: var(--color-border-light);
   --color-success: var(--color-success);
   --color-warn-bg: var(--color-warn-bg);
   --color-warn-text: var(--color-warn-text);
+  --color-warn-soft: var(--color-warn-soft);
+  --color-warn-line: var(--color-warn-line);
   --font-sans: var(--font-inter);
   --font-heading: var(--font-bungee);
   --font-mono: var(--font-jetbrains-mono);
@@ -42,7 +73,9 @@ body {
   font-family: var(--font-sans), system-ui, sans-serif;
 }
 
-/* Tailwind only auto-generates font-family utilities for sans/serif/mono,
+/* Bungee is the brand display font: big hooks and short titles only (never
+   paragraphs, forms, buttons, dates or prices — those stay in Inter).
+   Tailwind only auto-generates font-family utilities for sans/serif/mono,
    so the brand display font needs its own explicit utility. */
 @utility font-heading {
   font-family: var(--font-heading), system-ui, sans-serif;

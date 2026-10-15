@@ -74,7 +74,7 @@ export function TrailerDateForm({
           type="button"
           onClick={() => setDateRangeType("fixed")}
           className={`rounded-md border px-4 py-2.5 text-[13px] ${
-            dateRangeType === "fixed" ? "border-navy bg-[#E4EEF4]" : "border-border bg-white"
+            dateRangeType === "fixed" ? "border-navy bg-tint" : "border-border bg-white"
           }`}
         >
           Dates fixes
@@ -83,7 +83,7 @@ export function TrailerDateForm({
           type="button"
           onClick={() => setDateRangeType("flexible")}
           className={`rounded-md border px-4 py-2.5 text-[13px] ${
-            dateRangeType === "flexible" ? "border-navy bg-[#E4EEF4]" : "border-border bg-white"
+            dateRangeType === "flexible" ? "border-navy bg-tint" : "border-border bg-white"
           }`}
         >
           Flexible (±{FLEX_WINDOW_DAYS} jours)
@@ -114,7 +114,7 @@ export function TrailerDateForm({
             type="button"
             onClick={() => setDeliveryOption(option)}
             className={`rounded-md border px-4 py-2.5 text-[13px] ${
-              deliveryOption === option ? "border-navy bg-[#E4EEF4]" : "border-border bg-white"
+              deliveryOption === option ? "border-navy bg-tint" : "border-border bg-white"
             }`}
           >
             {DELIVERY_OPTION_LABEL_FR[option]}

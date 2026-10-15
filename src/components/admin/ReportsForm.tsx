@@ -65,7 +65,7 @@ export function ReportsForm() {
                 type="button"
                 onClick={() => setType(opt.value)}
                 className={`rounded-md border px-3 py-1.5 text-[12px] ${
-                  type === opt.value ? "border-navy bg-[#E4EEF4]" : "border-border bg-white"
+                  type === opt.value ? "border-navy bg-tint" : "border-border bg-white"
                 }`}
               >
                 {opt.label}

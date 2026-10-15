@@ -45,7 +45,7 @@ export default function CommentCaMarchePage() {
         {STEPS.map((step, i) => (
           <Card key={step.title} className="p-4">
             <div className="mb-1 flex items-center gap-2">
-              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#E4EEF4] text-[12px] font-medium text-navy">
+              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-tint text-[12px] font-medium text-navy">
                 {i + 1}
               </span>
               <span className="text-sm font-medium">{step.title}</span>

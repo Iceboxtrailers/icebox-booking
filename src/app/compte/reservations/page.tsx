@@ -54,7 +54,7 @@ export default async function ReservationsPage() {
               <div className="text-sm font-medium">
                 Remorque {r.trailer?.size ?? "—"} — {STATUS_LABEL_FR[r.status] ?? r.status}
               </div>
-              <div className="rounded-full bg-[#E4EEF4] px-2.5 py-1 text-[11px] font-medium text-navy">
+              <div className="rounded-full bg-tint px-2.5 py-1 text-[11px] font-medium text-navy">
                 {r.pickupDate ? daysUntilLabel(r.pickupDate) : ""}
               </div>
             </div>
@@ -62,7 +62,7 @@ export default async function ReservationsPage() {
               {r.pickupDate ? fmt(r.pickupDate.toISOString().slice(0, 10)) : "—"} →{" "}
               {r.returnDate ? fmt(r.returnDate.toISOString().slice(0, 10)) : "—"}
             </div>
-            <div className="font-mono mt-1 text-xs">{(r.totalAmount / 100).toFixed(2)} $</div>
+            <div className="tabular-nums mt-1 text-xs">{(r.totalAmount / 100).toFixed(2)} $</div>
           </Card>
         </Link>
       ))}
@@ -79,7 +79,7 @@ export default async function ReservationsPage() {
               {r.pickupDate ? fmt(r.pickupDate.toISOString().slice(0, 10)) : "—"} →{" "}
               {r.returnDate ? fmt(r.returnDate.toISOString().slice(0, 10)) : "—"}
             </div>
-            <div className="font-mono mt-1 text-xs">{(r.totalAmount / 100).toFixed(2)} $</div>
+            <div className="tabular-nums mt-1 text-xs">{(r.totalAmount / 100).toFixed(2)} $</div>
           </Card>
         </Link>
       ))}

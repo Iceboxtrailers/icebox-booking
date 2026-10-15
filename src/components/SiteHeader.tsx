@@ -4,7 +4,8 @@ import { useState } from "react";
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
 import { User, LogOut, ChevronDown } from "lucide-react";
-import { BrandMark } from "@/components/BrandMark";
+import { BrandLogo } from "@/components/BrandLogo";
+import { buttonClassName } from "@/components/ui/Button";
 
 const NAV_ITEMS = [
   { label: "Nos remorques", href: "/#remorques" },
@@ -39,7 +40,7 @@ function OtherServicesMenu({ onNavigate }: { onNavigate?: () => void }) {
               key={item.href}
               href={item.href}
               onClick={onNavigate}
-              className="block px-4 py-2 text-[13px] text-foreground hover:bg-[#F4F6F7] hover:text-navy"
+              className="block px-4 py-2 text-[13px] text-foreground hover:bg-page hover:text-navy"
             >
               {item.label}
             </Link>
@@ -56,9 +57,8 @@ export function SiteHeader() {
   return (
     <header className="border-b border-border-light bg-white">
       <div className="mx-auto flex max-w-5xl items-center gap-6 px-4 py-3">
-        <Link href="/" className="flex items-center gap-2.5">
-          <BrandMark size={32} />
-          <span className="font-heading text-lg uppercase tracking-wide">IceBox</span>
+        <Link href="/" aria-label="IceBox — accueil" className="flex items-center">
+          <BrandLogo height={52} priority />
         </Link>
 
         <nav className="hidden flex-1 items-center gap-5 sm:flex">
@@ -71,11 +71,11 @@ export function SiteHeader() {
         </nav>
 
         <div className="ml-auto flex items-center gap-4">
-          <Link href="/reservation/invite" className="hidden sm:inline">
-            <span className="rounded-md border border-cta bg-cta px-3.5 py-2 text-[13px] font-medium text-white hover:bg-cta-hover">
+          <div className="hidden sm:block">
+            <Link href="/reservation/invite" className={buttonClassName("cta", "sm")}>
               Réserver
-            </span>
-          </Link>
+            </Link>
+          </div>
           {session ? (
             <>
               <Link href="/compte" className="flex items-center gap-1.5 text-[13px] font-medium text-foreground hover:text-navy">

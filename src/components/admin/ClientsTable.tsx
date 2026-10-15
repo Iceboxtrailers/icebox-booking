@@ -16,7 +16,7 @@ const STATUS_LABEL_FR: Record<string, string> = {
 };
 
 const STATUS_TONE: Record<string, string> = {
-  active: "bg-[#E4EEF4] text-navy",
+  active: "bg-tint text-navy",
   suspended: "bg-amber-100 text-amber-800",
   blacklisted: "bg-red-100 text-red-700",
 };
@@ -92,7 +92,7 @@ export function ClientsTable({ clients }: { clients: ClientListItem[] }) {
 
       {creating && (
         <Card className="mb-4 p-4">
-          <div className="mb-2 font-heading text-[13px]">Nouveau client</div>
+          <div className="mb-2 text-[13px] font-semibold">Nouveau client</div>
           <form onSubmit={handleCreate} className="grid grid-cols-2 gap-2">
             <Input
               placeholder="Prénom"
@@ -163,7 +163,7 @@ export function ClientsTable({ clients }: { clients: ClientListItem[] }) {
       <Card className="p-4">
         <div className="space-y-2">
           {filtered.length === 0 && (
-            <div className="rounded-lg border border-border-light bg-[#FAFBFB] p-4 text-center text-[13px] text-muted">
+            <div className="rounded-lg border border-border-light bg-subtle p-4 text-center text-[13px] text-muted">
               Aucun client trouvé.
             </div>
           )}
@@ -172,7 +172,7 @@ export function ClientsTable({ clients }: { clients: ClientListItem[] }) {
               key={c.id}
               type="button"
               onClick={() => setEditingClientId(c.id)}
-              className="flex w-full flex-wrap items-center gap-3 rounded-lg border border-border-light p-3 text-left text-[13px] hover:bg-[#F4F6F7]"
+              className="flex w-full flex-wrap items-center gap-3 rounded-lg border border-border-light p-3 text-left text-[13px] hover:bg-page"
             >
               <div className="min-w-[160px]">
                 <div className="font-medium">

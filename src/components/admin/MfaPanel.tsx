@@ -70,7 +70,7 @@ export function MfaPanel({ enabled }: { enabled: boolean }) {
           fonctionne <strong>une seule fois</strong> si vous perdez votre téléphone. Ils ne seront plus jamais
           affichés.
         </p>
-        <div className="mb-3 grid grid-cols-2 gap-2 rounded-md border border-border-light bg-[#FAFBFB] p-3 font-mono text-[13px]">
+        <div className="mb-3 grid grid-cols-2 gap-2 rounded-md border border-border-light bg-subtle p-3 font-mono text-[13px]">
           {recoveryCodes.map((c) => (
             <div key={c}>{c}</div>
           ))}

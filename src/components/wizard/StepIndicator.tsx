@@ -8,7 +8,7 @@ export function StepIndicator({ currentStep }: { currentStep: number }) {
         <div
           key={label}
           className={`flex items-center gap-1.5 text-[11px] ${
-            i === currentStep ? "text-navy" : i < currentStep ? "text-success" : "text-[#9AA5AB]"
+            i === currentStep ? "text-navy" : i < currentStep ? "text-success" : "text-muted"
           }`}
         >
           <span
@@ -17,12 +17,12 @@ export function StepIndicator({ currentStep }: { currentStep: number }) {
                 ? "bg-navy text-white"
                 : i < currentStep
                   ? "bg-success text-white"
-                  : "bg-[#E4E8EA] text-[#7A848A]"
+                  : "bg-border-light text-muted"
             }`}
           >
             {i < currentStep ? <Check size={12} /> : i + 1}
           </span>
-          {i < WIZARD_STEPS.length - 1 && <span className="h-px w-3.5 bg-[#D8DEE2]" />}
+          {i < WIZARD_STEPS.length - 1 && <span className="h-px w-3.5 bg-border" />}
         </div>
       ))}
     </div>

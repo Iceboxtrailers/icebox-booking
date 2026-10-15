@@ -25,7 +25,7 @@ export type PanelChange = {
 };
 
 const btn =
-  "rounded-md border border-border px-2.5 py-1.5 text-[12px] hover:bg-[#EDF2F4] disabled:opacity-50";
+  "rounded-md border border-border px-2.5 py-1.5 text-[12px] hover:bg-hover disabled:opacity-50";
 
 function fmtDate(iso: string) {
   return new Date(iso).toLocaleString("fr-CA", { dateStyle: "medium", timeStyle: "short" });
@@ -229,7 +229,7 @@ export function DepositInspectionPanel({
 
   return (
     <div className="mb-3 space-y-3">
-      <div className="rounded-lg border border-border-light bg-[#FAFBFB] p-3 text-[13px]">
+      <div className="rounded-lg border border-border-light bg-subtle p-3 text-[13px]">
         <div className="font-medium">Dépôt de sécurité</div>
         <div className="text-muted">
           {DEPOSIT_STATUS_LABEL_FR[depositStatus as DepositStatus] ?? depositStatus}
@@ -237,7 +237,7 @@ export function DepositInspectionPanel({
             ` — ${(depositAmountCents / 100).toFixed(2)} $`}
         </div>
         {depositStatus === "authorized" && depositExpiresAt && (
-          <div className={expiresBeforeReturn ? "text-[#8a5a1c]" : "text-muted"}>
+          <div className={expiresBeforeReturn ? "text-warn-text" : "text-muted"}>
             Expire le {fmtDate(depositExpiresAt)}
             {expiresBeforeReturn && " — avant le retour : renouvellement requis pendant la location"}
           </div>
@@ -313,7 +313,7 @@ export function DepositInspectionPanel({
       </div>
 
       {reservationStatus === "confirmed" && (
-        <div className="rounded-lg border border-border-light bg-[#FAFBFB] p-3 text-[13px]">
+        <div className="rounded-lg border border-border-light bg-subtle p-3 text-[13px]">
           <div className="font-medium">Remise de la remorque</div>
           <div className="mb-2 text-muted">
             La retenue du dépôt doit être active avant que la remorque ne parte.
@@ -341,7 +341,7 @@ export function DepositInspectionPanel({
       )}
 
       {(active || inspectionStatus !== "pending" || reservationStatus === "completed") && (
-        <div className="rounded-lg border border-border-light bg-[#FAFBFB] p-3 text-[13px]">
+        <div className="rounded-lg border border-border-light bg-subtle p-3 text-[13px]">
           <div className="font-medium">Inspection au retour</div>
 
           {inspectionStatus === "accepted" || reservationStatus === "completed" ? (
@@ -393,7 +393,7 @@ export function DepositInspectionPanel({
               />
 
               {inspectionStatus === "issue" && !isOwner && (
-                <div className="mb-2 text-[12px] text-[#8a5a1c]">
+                <div className="mb-2 text-[12px] text-warn-text">
                   Un problème a été signalé : le propriétaire doit décider (frais ou acceptation du retour).
                 </div>
               )}

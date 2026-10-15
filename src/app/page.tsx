@@ -1,6 +1,7 @@
 import { MarketingLayout } from "@/components/MarketingLayout";
 import { Hero } from "@/components/Hero";
 import { Card } from "@/components/ui/Card";
+import { buttonClassName } from "@/components/ui/Button";
 import { CATALOGUE } from "@/lib/catalogue";
 import { RATE_TABLE, TRANSPORT_FEE_PER_TRIP_CENTS, TRANSPORT_FEE_PER_KM_BEYOND_CENTS } from "@/lib/pricing";
 
@@ -26,7 +27,7 @@ export default function HomePage() {
               <div className="mb-1 text-sm font-medium">
                 {item.size} — {tag.headline}
               </div>
-              <div className="font-mono text-xs text-muted">
+              <div className="tabular-nums text-xs text-muted">
                 {tag.temp} • {item.tempRangeLabel} • dès {money(RATE_TABLE[item.size].dayCents)} $/jour
               </div>
             </Card>
@@ -45,7 +46,7 @@ export default function HomePage() {
         <section id="tarification" className="mt-4 scroll-mt-6">
           <div className="mb-6 overflow-x-auto rounded-lg border border-border-light">
             <table className="w-full text-left text-[13px]">
-              <thead className="bg-[#FAFBFB] text-muted">
+              <thead className="bg-subtle text-muted">
                 <tr>
                   <th className="px-4 py-2.5 font-medium">Période</th>
                   {CATALOGUE.map((item) => (
@@ -59,7 +60,7 @@ export default function HomePage() {
                 <tr className="border-t border-border-light">
                   <td className="px-4 py-2.5 text-muted">Jour (24 heures)</td>
                   {CATALOGUE.map((item) => (
-                    <td key={item.size} className="px-4 py-2.5 font-mono">
+                    <td key={item.size} className="px-4 py-2.5 tabular-nums">
                       {money(RATE_TABLE[item.size].dayCents)} $
                     </td>
                   ))}
@@ -67,7 +68,7 @@ export default function HomePage() {
                 <tr className="border-t border-border-light">
                   <td className="px-4 py-2.5 text-muted">Semaine (7 jours)</td>
                   {CATALOGUE.map((item) => (
-                    <td key={item.size} className="px-4 py-2.5 font-mono">
+                    <td key={item.size} className="px-4 py-2.5 tabular-nums">
                       {money(RATE_TABLE[item.size].weekCents)} $
                     </td>
                   ))}
@@ -75,7 +76,7 @@ export default function HomePage() {
                 <tr className="border-t border-border-light">
                   <td className="px-4 py-2.5 text-muted">Mois (30 jours)</td>
                   {CATALOGUE.map((item) => (
-                    <td key={item.size} className="px-4 py-2.5 font-mono">
+                    <td key={item.size} className="px-4 py-2.5 tabular-nums">
                       {money(RATE_TABLE[item.size].monthCents)} $
                     </td>
                   ))}
@@ -99,14 +100,14 @@ export default function HomePage() {
         </section>
       </details>
 
-      <section className="mt-8 flex flex-col items-center justify-between gap-3 rounded-xl border border-[#F0D9B5] bg-[#FFF8EC] p-5 text-center sm:flex-row sm:text-left">
+      <section className="mt-8 flex flex-col items-center justify-between gap-3 rounded-xl border border-warn-line bg-warn-soft p-5 text-center sm:flex-row sm:text-left">
         <div>
-          <div className="font-heading text-base">🚨 Besoin d&apos;une remorque aujourd&apos;hui ?</div>
+          <div className="text-[15px] font-semibold">🚨 Besoin d&apos;une remorque aujourd&apos;hui ?</div>
           <div className="text-[13px] text-muted">Service d&apos;urgence disponible 24/7.</div>
         </div>
         <a
           href="tel:+15818892093"
-          className="shrink-0 rounded-md border border-cta bg-cta px-4 py-2.5 text-[13px] font-medium text-white hover:bg-cta-hover"
+          className={buttonClassName("cta", "md", "shrink-0")}
         >
           Appelez-nous → 581 889-2093
         </a>

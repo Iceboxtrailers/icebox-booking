@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/Button";
 function UploadBox({ label, file, onSet }: { label: string; file: File | null; onSet: (f: File | null) => void }) {
   return (
     <label className="mb-2.5 flex cursor-pointer items-center gap-3 rounded-lg border border-dashed border-border p-3.5">
-      <Upload size={18} color="#5F6B75" />
+      <Upload size={18} className="text-muted" />
       <div className="flex-1">
         <div className="text-[13px] font-medium">{label}</div>
         <div className="text-xs text-muted">{file ? file.name : "Cliquez pour choisir un fichier"}</div>

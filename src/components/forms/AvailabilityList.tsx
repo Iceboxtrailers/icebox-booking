@@ -82,7 +82,7 @@ export function AvailabilityList({
         <Sparkles size={13} /> Meilleur tarif appliqué automatiquement
       </div>
 
-      <div className="mb-3.5 rounded-lg border border-border-light bg-[#FAFBFB] p-3.5">
+      <div className="mb-3.5 rounded-lg border border-border-light bg-subtle p-3.5">
         <button
           type="button"
           onClick={() => setHelperOpen((v) => !v)}
@@ -99,7 +99,7 @@ export function AvailabilityList({
                   type="button"
                   onClick={() => setTempNeed("refrigerated")}
                   className={`rounded-md border px-3 py-1.5 text-[12px] ${
-                    tempNeed === "refrigerated" ? "border-navy bg-[#E4EEF4]" : "border-border bg-white"
+                    tempNeed === "refrigerated" ? "border-navy bg-tint" : "border-border bg-white"
                   }`}
                 >
                   Entre 2 °C et 15 °C (réfrigéré)
@@ -108,7 +108,7 @@ export function AvailabilityList({
                   type="button"
                   onClick={() => setTempNeed("frozen")}
                   className={`rounded-md border px-3 py-1.5 text-[12px] ${
-                    tempNeed === "frozen" ? "border-navy bg-[#E4EEF4]" : "border-border bg-white"
+                    tempNeed === "frozen" ? "border-navy bg-tint" : "border-border bg-white"
                   }`}
                 >
                   Sous 0 °C, jusqu&apos;à -18 °C (congelé)
@@ -124,7 +124,7 @@ export function AvailabilityList({
                     type="button"
                     onClick={() => setVolumeNeed("small")}
                     className={`rounded-md border px-3 py-1.5 text-[12px] ${
-                      volumeNeed === "small" ? "border-navy bg-[#E4EEF4]" : "border-border bg-white"
+                      volumeNeed === "small" ? "border-navy bg-tint" : "border-border bg-white"
                     }`}
                   >
                     Petit volume — événements, traiteurs, commerces
@@ -133,7 +133,7 @@ export function AvailabilityList({
                     type="button"
                     onClick={() => setVolumeNeed("large")}
                     className={`rounded-md border px-3 py-1.5 text-[12px] ${
-                      volumeNeed === "large" ? "border-navy bg-[#E4EEF4]" : "border-border bg-white"
+                      volumeNeed === "large" ? "border-navy bg-tint" : "border-border bg-white"
                     }`}
                   >
                     Grand volume — industries, distribution
@@ -143,7 +143,7 @@ export function AvailabilityList({
             )}
 
             {recommendedSize && (
-              <div className="rounded-md bg-[#E4EEF4] p-2.5 text-[12px] text-navy">
+              <div className="rounded-md bg-tint p-2.5 text-[12px] text-navy">
                 Nous recommandons la remorque <strong>{recommendedSize}</strong>
                 {!candidates.some((c) => c.size === recommendedSize) &&
                   " — mais elle n'est pas disponible pour ces dates."}
@@ -154,7 +154,7 @@ export function AvailabilityList({
       </div>
 
       {candidates.length === 0 && (
-        <div className="mb-3.5 rounded-lg border border-border-light bg-[#FAFBFB] p-3.5 text-[13px] text-foreground">
+        <div className="mb-3.5 rounded-lg border border-border-light bg-subtle p-3.5 text-[13px] text-foreground">
           Aucune disponibilité trouvée pour ces dates. Communiquez directement avec IceBox pour vérifier les
           options : <a href="mailto:info@iceboxtrailers.ca" className="text-navy underline">info@iceboxtrailers.ca</a>{" "}
           ou par téléphone au <a href="tel:+15818892093" className="text-navy underline">581 889-2093</a>. Vous
@@ -177,7 +177,7 @@ export function AvailabilityList({
               <div className="flex items-center gap-1.5 text-sm font-medium">
                 Remorque {c.size} <span className="text-xs font-normal text-muted">({c.tempRangeLabel})</span>
                 {recommendedSize === c.size && (
-                  <span className="rounded-full bg-[#E4EEF4] px-2 py-0.5 text-[10px] font-medium text-navy">
+                  <span className="rounded-full bg-tint px-2 py-0.5 text-[10px] font-medium text-navy">
                     Recommandée pour vous
                   </span>
                 )}
@@ -187,8 +187,8 @@ export function AvailabilityList({
               </div>
             </div>
             <div className="text-right">
-              <div className="font-mono font-medium">{((c.totalCents + deliveryFeeCents) / 100).toFixed(2)} $</div>
-              <div className="font-mono text-[10px] text-muted">
+              <div className="tabular-nums font-medium">{((c.totalCents + deliveryFeeCents) / 100).toFixed(2)} $</div>
+              <div className="tabular-nums text-[10px] text-muted">
                 {(computeTaxBreakdown(c.totalCents + deliveryFeeCents).totalWithTaxCents / 100).toFixed(2)} $ taxes
                 incl.
               </div>
@@ -201,11 +201,11 @@ export function AvailabilityList({
       {error && <div className="mb-3 text-[13px] text-red-600">{error}</div>}
 
       {deliveryFeeCents > 0 && (
-        <div className="mb-3 flex items-center gap-1.5 rounded-lg border border-border-light bg-[#FAFBFB] p-3 text-[12px] text-foreground">
+        <div className="mb-3 flex items-center gap-1.5 rounded-lg border border-border-light bg-subtle p-3 text-[12px] text-foreground">
           <Truck size={14} className="shrink-0 text-navy" />
           <span>
             Transport inclus dans les prix ci-dessus :{" "}
-            <strong className="font-mono">{(deliveryFeeCents / 100).toFixed(2)} $</strong>
+            <strong className="tabular-nums">{(deliveryFeeCents / 100).toFixed(2)} $</strong>
             {deliveryDistanceKm !== null &&
               ` (${deliveryDistanceKm} km depuis Lévis, ${deliveryTrips} trajet${deliveryTrips > 1 ? "s" : ""})`}
             .

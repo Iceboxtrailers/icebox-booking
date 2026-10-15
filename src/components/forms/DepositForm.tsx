@@ -65,7 +65,7 @@ function CardForm({ reservationId, onSaved }: { reservationId: string; onSaved: 
 
   return (
     <form onSubmit={handleSubmit}>
-      <div className="mb-3.5 rounded-lg border border-border-light bg-[#FAFBFB] p-4">
+      <div className="mb-3.5 rounded-lg border border-border-light bg-subtle p-4">
         <PaymentElement />
       </div>
       {error && <div className="mb-3 text-[13px] text-red-600">{error}</div>}
@@ -133,7 +133,7 @@ export function DepositForm({
 
       {!saved &&
         (!PUBLISHABLE_KEY ? (
-          <div className="mb-3.5 rounded-lg border border-border-light bg-[#FAFBFB] p-4 text-[13px] text-muted">
+          <div className="mb-3.5 rounded-lg border border-border-light bg-subtle p-4 text-[13px] text-muted">
             Le paiement en ligne n&apos;est pas encore configuré. Communiquez avec IceBox pour finaliser votre
             réservation.
           </div>
@@ -146,7 +146,7 @@ export function DepositForm({
         ))}
 
       {saved && (
-        <div className="mb-3.5 rounded-lg border border-border-light bg-[#FAFBFB] p-4 text-[13px] text-foreground">
+        <div className="mb-3.5 rounded-lg border border-border-light bg-subtle p-4 text-[13px] text-foreground">
           Carte enregistrée. Aucun montant n&apos;a été débité.
         </div>
       )}

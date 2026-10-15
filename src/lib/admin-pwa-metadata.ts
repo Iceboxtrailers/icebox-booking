@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { BRAND } from "@/lib/brand";
 
 // Shared by /dashboard and /admin/login so "Add to Home Screen" picks up the
 // admin-specific manifest/icon regardless of which of the two pages the
@@ -18,5 +19,5 @@ export const adminPwaMetadata: Metadata = {
 };
 
 export const adminPwaViewport: Viewport = {
-  themeColor: "#005f9b",
+  themeColor: BRAND.navy,
 };

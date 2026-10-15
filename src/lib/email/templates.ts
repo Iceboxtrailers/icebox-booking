@@ -1,5 +1,7 @@
 import { fmt } from "@/lib/dates";
+import { BRAND } from "@/lib/brand";
 import { DEPOSIT_AMOUNT_CENTS } from "@/lib/constants";
+import { siteUrl } from "@/lib/site";
 
 // Everything a visitor types (names, messages) goes through this before it is put
 // into an email, so nobody can inject markup or links into a message we send.
@@ -13,10 +15,20 @@ export function escapeHtml(value: string): string {
 }
 
 const money = (cents: number) => (cents / 100).toFixed(2);
+
+// Email clients ignore web fonts and stylesheets, so styles are inline and the font is a
+// plain reading font; the brand shows through the real logo, the blue and the button.
+const heading = (text: string) => `<h2 style="color: ${BRAND.navy}; margin: 20px 0 8px;">${text}</h2>`;
+const buttonLink = (url: string, label: string) =>
+  `<p><a href="${url}" style="display: inline-block; padding: 10px 18px; background: ${BRAND.navy}; color: #ffffff; text-decoration: none; border-radius: 6px; font-weight: bold;">${label}</a></p>`;
+
 const wrap = (inner: string) => `
-  <div style="font-family: Arial, Helvetica, sans-serif; color: #1B2733; max-width: 560px; line-height: 1.5;">
+  <div style="font-family: Arial, Helvetica, sans-serif; color: ${BRAND.text}; max-width: 560px; line-height: 1.5;">
+    <div style="padding-bottom: 12px; border-bottom: 3px solid ${BRAND.navy};">
+      <img src="${siteUrl()}/brand/logo-lockup.png" alt="IceBox — Remorque réfrigérée" width="72" height="73" style="display: block; border: 0;">
+    </div>
     ${inner}
-    <p style="margin-top: 24px; font-size: 12px; color: #6B7A86;">
+    <p style="margin-top: 24px; font-size: 12px; color: ${BRAND.muted};">
       Remorques Réfrigérées ICEBOX Inc. — 1005 rue du Parc-Industriel, Lévis (Québec) G6Z 1C5<br>
       581 889-2093 — info@iceboxtrailers.ca
     </p>
@@ -32,7 +44,7 @@ export function confirmationEmail(p: {
 }) {
   const subject = "Confirmation de votre réservation — IceBox";
   const html = wrap(`
-    <h2>Réservation confirmée</h2>
+    ${heading("Réservation confirmée")}
     <p>Bonjour ${escapeHtml(p.firstName)},</p>
     <p>Votre réservation est confirmée :</p>
     <ul>
@@ -51,10 +63,10 @@ export function confirmationEmail(p: {
 export function passwordResetEmail(p: { firstName: string; resetUrl: string }) {
   const subject = "Réinitialisation de votre mot de passe — IceBox";
   const html = wrap(`
-    <h2>Réinitialisation de mot de passe</h2>
+    ${heading("Réinitialisation de mot de passe")}
     <p>Bonjour ${escapeHtml(p.firstName)},</p>
-    <p>Cliquez sur le lien ci-dessous pour choisir un nouveau mot de passe. Ce lien expire dans 1 heure.</p>
-    <p><a href="${p.resetUrl}">Réinitialiser mon mot de passe</a></p>
+    <p>Cliquez sur le bouton ci-dessous pour choisir un nouveau mot de passe. Ce lien expire dans 1 heure.</p>
+    ${buttonLink(p.resetUrl, "Réinitialiser mon mot de passe")}
     <p>Si vous n'avez pas demandé cette réinitialisation, ignorez ce courriel.</p>`);
   return { subject, html };
 }
@@ -62,10 +74,10 @@ export function passwordResetEmail(p: { firstName: string; resetUrl: string }) {
 export function depositLinkEmail(p: { firstName: string; link: string; expiresOn: string }) {
   const subject = "Dépôt de sécurité à confirmer avant la remise — IceBox";
   const html = wrap(`
-    <h2>Dépôt de sécurité</h2>
+    ${heading("Dépôt de sécurité")}
     <p>Bonjour ${escapeHtml(p.firstName)},</p>
     <p>Pour préparer la remise de votre remorque, un dépôt de sécurité de ${money(DEPOSIT_AMOUNT_CENTS)} $ doit être retenu sur votre carte. Rien n'est débité : la retenue est libérée après le retour conforme de la remorque.</p>
-    <p><a href="${p.link}" style="display:inline-block;padding:10px 16px;background:#1E78B4;color:#fff;text-decoration:none;border-radius:6px;">Confirmer le dépôt</a></p>
+    ${buttonLink(p.link, "Confirmer le dépôt")}
     <p style="font-size: 13px;">Ce lien est personnel et valide jusqu'au ${fmt(p.expiresOn)}.</p>`);
   return { subject, html };
 }
@@ -83,7 +95,7 @@ export function internalNewReservationEmail(p: {
 }) {
   const subject = `Nouvelle réservation — ${p.clientName} (${fmt(p.start)} → ${fmt(p.end)})`;
   const html = wrap(`
-    <h2>Nouvelle réservation confirmée</h2>
+    ${heading("Nouvelle réservation confirmée")}
     <ul>
       <li><strong>Client :</strong> ${escapeHtml(p.clientName)} — ${escapeHtml(p.clientEmail)} — ${escapeHtml(p.clientPhone)}</li>
       <li><strong>Remorque :</strong> ${escapeHtml(p.trailerSize)}</li>
@@ -91,14 +103,14 @@ export function internalNewReservationEmail(p: {
       <li><strong>Livraison :</strong> ${p.deliveryLabel ? escapeHtml(p.deliveryLabel) : "Ramassage au dépôt"}</li>
       <li><strong>Montant :</strong> ${money(p.totalCents)} $ (avant taxes)</li>
     </ul>
-    <p><a href="${p.adminUrl}">Ouvrir la console</a></p>`);
+    ${buttonLink(p.adminUrl, "Ouvrir la console")}`);
   return { subject, html };
 }
 
 export function contactRequestEmail(p: { topic: string; name: string; email: string; phone?: string; message: string }) {
   const subject = `IceBox — Nouvelle demande (${p.topic.replace(/[\r\n]+/g, " ")})`;
   const html = wrap(`
-    <h2>Nouvelle demande — ${escapeHtml(p.topic)}</h2>
+    ${heading(`Nouvelle demande — ${escapeHtml(p.topic)}`)}
     <p><strong>Nom :</strong> ${escapeHtml(p.name)}</p>
     <p><strong>Courriel :</strong> ${escapeHtml(p.email)}</p>
     ${p.phone ? `<p><strong>Téléphone :</strong> ${escapeHtml(p.phone)}</p>` : ""}

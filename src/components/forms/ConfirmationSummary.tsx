@@ -18,7 +18,7 @@ export function ConfirmationSummary({
 }) {
   return (
     <div className="py-5 text-center">
-      <CheckCircle2 size={42} color="#4C9A6A" className="mx-auto" />
+      <CheckCircle2 size={42} className="mx-auto text-success" />
       <div className="font-heading mt-2.5 mb-1 text-lg">Réservation confirmée</div>
       <div className="mb-4 text-[13px] text-muted">
         Remorque {trailerSize} du {fmt(start)} au {fmt(end)} pour {firstName} {lastName}.

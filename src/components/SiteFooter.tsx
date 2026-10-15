@@ -1,12 +1,13 @@
 import Link from "next/link";
 import { Phone, Mail, MapPin } from "lucide-react";
+import { BrandLogo } from "@/components/BrandLogo";
 
 export function SiteFooter() {
   return (
     <footer className="mt-12 border-t border-border-light bg-white">
       <div className="mx-auto grid max-w-5xl gap-8 px-4 py-8 sm:grid-cols-3">
         <div>
-          <div className="font-heading mb-2 text-sm uppercase tracking-wide">IceBox</div>
+          <BrandLogo height={72} className="mb-2" />
           <div className="text-[12px] text-muted">Remorques Réfrigérées ICEBOX Inc.</div>
           <div className="mt-1 flex items-start gap-1.5 text-[12px] text-muted">
             <MapPin size={13} className="mt-0.5 shrink-0" />

@@ -9,7 +9,7 @@ function StatCard({ label, value, sub }: { label: string; value: string; sub?: s
   return (
     <Card className="p-4">
       <div className="mb-1 text-[11px] uppercase tracking-wide text-muted">{label}</div>
-      <div className="font-heading text-2xl">{value}</div>
+      <div className="text-2xl font-semibold">{value}</div>
       {sub && <div className="mt-0.5 text-[11px] text-muted">{sub}</div>}
     </Card>
   );

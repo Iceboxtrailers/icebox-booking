@@ -48,7 +48,7 @@ export function TrailerInfoModal({
             <span className="font-mono">{trailer.plate}</span>
           </div>
         )}
-        <div className="text-[13px] leading-relaxed text-[#3A454E]">
+        <div className="text-[13px] leading-relaxed text-body">
           {trailer.description || "Aucune description."}
         </div>
       </div>

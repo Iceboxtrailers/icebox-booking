@@ -24,7 +24,7 @@ export function DashboardNav({ role }: { role: AdminRole }) {
             key={tab.href}
             href={tab.href}
             className={`rounded-md px-3 py-1.5 text-[13px] font-medium ${
-              active ? "bg-[#E4EEF4] text-navy" : "text-muted hover:bg-[#EDF2F4] hover:text-foreground"
+              active ? "bg-tint text-navy" : "text-muted hover:bg-hover hover:text-foreground"
             }`}
           >
             {tab.label}

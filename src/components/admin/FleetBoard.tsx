@@ -62,11 +62,11 @@ function useIsNarrow(breakpointPx: number): boolean {
 
 function StatCard({ label, value, tone }: { label: string; value: string | number; tone?: "warn" | "danger" }) {
   const valueClass =
-    tone === "warn" ? "text-[#8a5a1c]" : tone === "danger" ? "text-red-600" : "text-foreground";
+    tone === "warn" ? "text-warn-text" : tone === "danger" ? "text-red-600" : "text-foreground";
   return (
     <Card className="p-3">
       <div className="text-[11px] uppercase tracking-wide text-muted">{label}</div>
-      <div className={`font-heading mt-0.5 text-xl ${valueClass}`}>{value}</div>
+      <div className={`mt-0.5 text-xl font-semibold ${valueClass}`}>{value}</div>
     </Card>
   );
 }
@@ -229,7 +229,7 @@ export function FleetBoard({ board, role }: { board: FleetBoardData; role: Admin
 
       {fleetOpen && (
         <Card className="mb-4 p-4">
-          <div className="mb-2 font-heading text-[13px]">Gestion de la flotte</div>
+          <div className="mb-2 text-[13px] font-semibold">Gestion de la flotte</div>
           {fleetError && <div className="mb-2 text-[13px] text-red-600">{fleetError}</div>}
           <div className="space-y-2">
             {trailers.map((t, i) => (
@@ -351,18 +351,18 @@ export function FleetBoard({ board, role }: { board: FleetBoardData; role: Admin
 
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <div className="font-heading text-[15px]">
+          <div className="text-[15px] font-semibold">
             {MONTH_LABELS_FR[month - 1]} {year}
           </div>
           <Link
             href={`/dashboard?year=${prevYear}&month=${prevMonth}`}
-            className="rounded-md border border-border px-2.5 py-1 text-[13px] hover:bg-[#EDF2F4]"
+            className="rounded-md border border-border px-2.5 py-1 text-[13px] hover:bg-hover"
           >
             ←
           </Link>
           <Link
             href={`/dashboard?year=${nextYear}&month=${nextMonth}`}
-            className="rounded-md border border-border px-2.5 py-1 text-[13px] hover:bg-[#EDF2F4]"
+            className="rounded-md border border-border px-2.5 py-1 text-[13px] hover:bg-hover"
           >
             →
           </Link>
@@ -371,7 +371,7 @@ export function FleetBoard({ board, role }: { board: FleetBoardData; role: Admin
           <button
             type="button"
             onClick={() => setView("agenda")}
-            className={`flex items-center gap-1 px-2.5 py-1.5 text-[13px] ${view === "agenda" ? "bg-[#E4EEF4] text-navy" : "bg-white"}`}
+            className={`flex items-center gap-1 px-2.5 py-1.5 text-[13px] ${view === "agenda" ? "bg-tint text-navy" : "bg-white"}`}
           >
             <List size={14} /> Agenda
           </button>
@@ -379,7 +379,7 @@ export function FleetBoard({ board, role }: { board: FleetBoardData; role: Admin
             <button
               type="button"
               onClick={() => setView("grille")}
-              className={`flex items-center gap-1 border-l border-border px-2.5 py-1.5 text-[13px] ${view === "grille" ? "bg-[#E4EEF4] text-navy" : "bg-white"}`}
+              className={`flex items-center gap-1 border-l border-border px-2.5 py-1.5 text-[13px] ${view === "grille" ? "bg-tint text-navy" : "bg-white"}`}
             >
               <LayoutGrid size={14} /> Grille
             </button>
@@ -401,7 +401,7 @@ export function FleetBoard({ board, role }: { board: FleetBoardData; role: Admin
                     className="text-center text-[10px] font-medium"
                     style={{
                       color: dow === 0 || dow === 6 ? "#B5732A" : "var(--color-muted)",
-                      background: isToday ? "#E4EEF4" : "transparent",
+                      background: isToday ? "var(--color-tint)" : "transparent",
                       borderRadius: 4,
                       padding: "2px 0",
                     }}
@@ -443,7 +443,7 @@ export function FleetBoard({ board, role }: { board: FleetBoardData; role: Admin
                   }}
                 >
                   <div
-                    className="flex cursor-pointer items-center gap-2 overflow-hidden py-1.5 pr-2 text-[12px] hover:bg-[#F4F6F7]"
+                    className="flex cursor-pointer items-center gap-2 overflow-hidden py-1.5 pr-2 text-[12px] hover:bg-page"
                     onClick={() => setInfoTrailer(trailer)}
                     title="Voir la fiche de la remorque"
                   >
@@ -481,7 +481,7 @@ export function FleetBoard({ board, role }: { board: FleetBoardData; role: Admin
                             style={{
                               height: "100%",
                               borderRight: "1px solid #F3F5F6",
-                              background: dow === 0 || dow === 6 ? "#FAFBFB" : "transparent",
+                              background: dow === 0 || dow === 6 ? "var(--color-subtle)" : "transparent",
                               cursor: "pointer",
                             }}
                           />
@@ -550,7 +550,7 @@ export function FleetBoard({ board, role }: { board: FleetBoardData; role: Admin
         </div>
         <div className="space-y-2">
           {filteredReservations.length === 0 && (
-            <div className="rounded-lg border border-border-light bg-[#FAFBFB] p-4 text-center text-[13px] text-muted">
+            <div className="rounded-lg border border-border-light bg-subtle p-4 text-center text-[13px] text-muted">
               Aucune réservation ce mois-ci.
             </div>
           )}
@@ -597,7 +597,7 @@ export function FleetBoard({ board, role }: { board: FleetBoardData; role: Admin
                     <button
                       type="button"
                       onClick={() => quickConfirm(r.id)}
-                      className="flex items-center gap-1 rounded-md border border-border px-2 py-1 text-[12px] hover:bg-[#EDF2F4]"
+                      className="flex items-center gap-1 rounded-md border border-border px-2 py-1 text-[12px] hover:bg-hover"
                     >
                       <Check size={12} /> Confirmer
                     </button>
@@ -605,12 +605,12 @@ export function FleetBoard({ board, role }: { board: FleetBoardData; role: Admin
                   <button
                     type="button"
                     onClick={() => setModal({ mode: "edit", reservationId: r.id })}
-                    className="rounded-md border border-border px-2 py-1 text-[12px] hover:bg-[#EDF2F4]"
+                    className="rounded-md border border-border px-2 py-1 text-[12px] hover:bg-hover"
                   >
                     Modifier
                   </button>
                 </div>
-                {r.note && <div className="basis-full pl-[22px] text-[12px] text-[#8a5a1c]">{r.note}</div>}
+                {r.note && <div className="basis-full pl-[22px] text-[12px] text-warn-text">{r.note}</div>}
               </div>
             );
           })}

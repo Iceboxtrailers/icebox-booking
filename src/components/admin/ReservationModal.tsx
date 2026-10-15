@@ -335,7 +335,7 @@ export function ReservationModal({
         ) : (
           <form onSubmit={handleSubmit}>
             {state.mode === "edit" && clientDisplay && (
-              <div className="mb-3 flex items-center justify-between gap-2 rounded-lg border border-border-light bg-[#FAFBFB] p-3 text-[13px]">
+              <div className="mb-3 flex items-center justify-between gap-2 rounded-lg border border-border-light bg-subtle p-3 text-[13px]">
                 <div>
                   <div className="font-medium">
                     {clientDisplay.firstName} {clientDisplay.lastName}
@@ -347,7 +347,7 @@ export function ReservationModal({
                 <button
                   type="button"
                   onClick={() => setEditingClient(true)}
-                  className="shrink-0 rounded-md border border-border px-2.5 py-1.5 text-[12px] hover:bg-[#EDF2F4]"
+                  className="shrink-0 rounded-md border border-border px-2.5 py-1.5 text-[12px] hover:bg-hover"
                 >
                   Modifier
                 </button>
@@ -355,7 +355,7 @@ export function ReservationModal({
             )}
 
             {state.mode === "edit" && (
-              <div className="mb-3 flex items-center justify-between gap-2 rounded-lg border border-border-light bg-[#FAFBFB] p-3 text-[13px]">
+              <div className="mb-3 flex items-center justify-between gap-2 rounded-lg border border-border-light bg-subtle p-3 text-[13px]">
                 <div>
                   <div className="font-medium">Contrat de location</div>
                   {contractPdfUrl ? (
@@ -375,7 +375,7 @@ export function ReservationModal({
                   type="button"
                   onClick={handleGenerateContract}
                   disabled={generatingContract}
-                  className="shrink-0 rounded-md border border-border px-2.5 py-1.5 text-[12px] hover:bg-[#EDF2F4] disabled:opacity-50"
+                  className="shrink-0 rounded-md border border-border px-2.5 py-1.5 text-[12px] hover:bg-hover disabled:opacity-50"
                 >
                   {generatingContract ? "..." : contractPdfUrl ? "Régénérer le PDF" : "Générer le contrat (PDF)"}
                 </button>
@@ -405,7 +405,7 @@ export function ReservationModal({
                     type="button"
                     onClick={() => setClientMode("search")}
                     className={`rounded-md border px-3 py-1.5 text-[12px] ${
-                      clientMode === "search" ? "border-navy bg-[#E4EEF4]" : "border-border bg-white"
+                      clientMode === "search" ? "border-navy bg-tint" : "border-border bg-white"
                     }`}
                   >
                     Client existant
@@ -414,7 +414,7 @@ export function ReservationModal({
                     type="button"
                     onClick={() => setClientMode("new")}
                     className={`rounded-md border px-3 py-1.5 text-[12px] ${
-                      clientMode === "new" ? "border-navy bg-[#E4EEF4]" : "border-border bg-white"
+                      clientMode === "new" ? "border-navy bg-tint" : "border-border bg-white"
                     }`}
                   >
                     Nouveau client
@@ -441,7 +441,7 @@ export function ReservationModal({
                               setSelectedClient(c);
                               setClientResults([]);
                             }}
-                            className="block w-full border-b border-border-light px-3 py-2 text-left text-[13px] last:border-b-0 hover:bg-[#F4F6F7]"
+                            className="block w-full border-b border-border-light px-3 py-2 text-left text-[13px] last:border-b-0 hover:bg-page"
                           >
                             {c.firstName} {c.lastName} <span className="text-muted">— {c.email}</span>
                           </button>
@@ -561,7 +561,7 @@ export function ReservationModal({
             </div>
 
             {delivery && (
-              <div className="mb-3 rounded-md border border-border-light bg-[#FAFBFB] p-3 text-[12px]">
+              <div className="mb-3 rounded-md border border-border-light bg-subtle p-3 text-[12px]">
                 <div className="font-medium">{DELIVERY_OPTION_LABEL_FR[delivery.option]}</div>
                 <div className="text-muted">{delivery.address}</div>
                 <div className="text-muted">
