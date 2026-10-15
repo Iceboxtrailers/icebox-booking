@@ -1,41 +1,7 @@
 import { MarketingLayout } from "@/components/MarketingLayout";
+import { FAQ_ITEMS } from "@/lib/faq";
 
 export const metadata = { title: "FAQ — IceBox" };
-
-const FAQ_ITEMS = [
-  {
-    q: "Dois-je créer un compte pour réserver ?",
-    a: "Non. Vous pouvez réserver en donnant seulement votre nom, courriel et téléphone — aucun mot de passe requis.",
-  },
-  {
-    q: "Quelles tailles de remorques offrez-vous ?",
-    a: "Une 5x10 (2 °C à +15 °C), idéale pour petits volumes, événements et commerces, et une 6x12 (-18 °C à +15 °C), pour les grands volumes, événements, industries et distribution.",
-  },
-  {
-    q: "Qu'est-ce que le dépôt de sécurité ?",
-    a: "Vous enregistrez votre carte à la réservation (rien n'est débité). Un dépôt de 1 000 $ est ensuite retenu sur cette carte juste avant la remise de la remorque — il n'est jamais débité, seulement retenu, et il est libéré après l'inspection du retour. Pour les locations de plus de 7 jours, la retenue peut devoir être renouvelée.",
-  },
-  {
-    q: "Quels documents dois-je fournir ?",
-    a: "Un permis de conduire et une preuve d'assurance. Vous pouvez aussi passer cette étape en ligne et la compléter en succursale.",
-  },
-  {
-    q: "Quelle assurance dois-je avoir ?",
-    a: "Une assurance responsabilité civile automobile et une assurance responsabilité civile générale des entreprises, chacune d'un minimum de 2 000 000 $, avec l'avenant F.A.Q. n° 27 pour les dommages au véhicule loué.",
-  },
-  {
-    q: "Offrez-vous la livraison ?",
-    a: "Oui — des frais de transport s'appliquent par trajet, avec un montant additionnel au kilomètre au-delà de 50 km du point de service.",
-  },
-  {
-    q: "Comment puis-je payer ?",
-    a: "En ligne par carte de crédit, Apple Pay ou Google Pay selon votre appareil.",
-  },
-  {
-    q: "J'ai besoin d'une remorque aujourd'hui, que faire ?",
-    a: "Appelez-nous directement — nous offrons un service d'urgence disponible 24/7 au 581 889-2093.",
-  },
-];
 
 export default function FaqPage() {
   return (
