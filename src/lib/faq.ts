@@ -43,7 +43,7 @@ export const FAQ_ITEMS: FaqItem[] = [
   },
   {
     q: "Comment puis-je payer ?",
-    a: "En ligne par carte de crédit, Apple Pay ou Google Pay selon votre appareil.",
+    a: "La location se paie à la réception de la remorque, par virement Interac. Le montant total, taxes comprises, figure dans votre contrat. En ligne, votre carte de crédit sert uniquement au dépôt de sécurité de 1 000 $ : il est seulement retenu, jamais débité, et libéré après le retour de la remorque. Pour toute question sur le paiement, appelez-nous au 581 889-2093.",
   },
   {
     q: "J'ai besoin d'une remorque aujourd'hui, que faire ?",
