@@ -18,6 +18,9 @@ const money = (cents: number) => (cents / 100).toFixed(2);
 
 // Email clients ignore web fonts and stylesheets, so styles are inline and the font is a
 // plain reading font; the brand shows through the real logo, the blue and the button.
+// public/brand/logo-lockup.png is 744 x 753 px; shown at 120 px wide it stays sharp on high-density screens.
+const LOGO_WIDTH = 120;
+const LOGO_HEIGHT = 121;
 const heading = (text: string) => `<h2 style="color: ${BRAND.navy}; margin: 20px 0 8px;">${text}</h2>`;
 const buttonLink = (url: string, label: string) =>
   `<p><a href="${url}" style="display: inline-block; padding: 10px 18px; background: ${BRAND.navy}; color: #ffffff; text-decoration: none; border-radius: 6px; font-weight: bold;">${label}</a></p>`;
@@ -25,7 +28,7 @@ const buttonLink = (url: string, label: string) =>
 const wrap = (inner: string) => `
   <div style="font-family: Arial, Helvetica, sans-serif; color: ${BRAND.text}; max-width: 560px; line-height: 1.5;">
     <div style="padding-bottom: 12px; border-bottom: 3px solid ${BRAND.navy};">
-      <img src="${siteUrl()}/brand/logo-lockup.png" alt="IceBox — Remorque réfrigérée" width="72" height="73" style="display: block; border: 0;">
+      <img src="${siteUrl()}/brand/logo-lockup.png" alt="IceBox — Remorque réfrigérée" width="${LOGO_WIDTH}" height="${LOGO_HEIGHT}" style="display: block; border: 0;">
     </div>
     ${inner}
     <p style="margin-top: 24px; font-size: 12px; color: ${BRAND.muted};">
