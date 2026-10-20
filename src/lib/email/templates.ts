@@ -68,7 +68,7 @@ export function passwordResetEmail(p: { firstName: string; resetUrl: string }) {
   const html = wrap(`
     ${heading("Réinitialisation de mot de passe")}
     <p>Bonjour ${escapeHtml(p.firstName)},</p>
-    <p>Cliquez sur le bouton ci-dessous pour choisir un nouveau mot de passe. Ce lien expire dans 1 heure.</p>
+    <p>Cliquez sur le bouton ci-dessous pour choisir votre mot de passe. Ce lien expire dans 1 heure.</p>
     ${buttonLink(p.resetUrl, "Réinitialiser mon mot de passe")}
     <p>Si vous n'avez pas demandé cette réinitialisation, ignorez ce courriel.</p>`);
   return { subject, html };

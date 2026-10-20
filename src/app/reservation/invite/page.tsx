@@ -19,8 +19,34 @@ function GuestReservationForm() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [sendingLink, setSendingLink] = useState(false);
+  const [linkNotice, setLinkNotice] = useState<string | null>(null);
 
   const set = (k: keyof typeof form, v: string) => setForm((f) => ({ ...f, [k]: v }));
+
+  // A guest account is created with a random password nobody sees, so a returning guest
+  // has no password to type. Proving the email is theirs (a link sent to it) is the safe
+  // way in: signing in without a password would expose that client's documents and contracts.
+  async function handleSendLink() {
+    setError(null);
+    setSendingLink(true);
+    try {
+      const res = await fetch("/api/auth/forgot-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: form.email }),
+      });
+      if (!res.ok) {
+        setError("Impossible d'envoyer le courriel pour le moment. Réessayez dans un instant.");
+        return;
+      }
+      setLinkNotice(
+        `Un courriel vient d'être envoyé à ${form.email}. Ouvrez le lien qu'il contient pour choisir un mot de passe, puis revenez vous connecter ici. Si rien n'arrive dans quelques minutes, vérifiez vos courriels indésirables ou appelez-nous au 581 889-2093.`,
+      );
+    } finally {
+      setSendingLink(false);
+    }
+  }
 
   function goToNewReservation() {
     const pickupDate = searchParams.get("pickupDate");
@@ -140,8 +166,9 @@ function GuestReservationForm() {
         {step === "login" && (
           <>
             <div className="mb-4 text-[13px] text-muted">
-              Vous avez déjà loué chez IceBox ! Nous avons retrouvé vos informations — entrez votre mot de passe
-              pour continuer.
+              Ce courriel est déjà enregistré chez IceBox, par exemple si vous avez déjà loué ou commencé une
+              réservation sans compte. Entrez votre mot de passe pour continuer, ou recevez un lien par courriel
+              pour en choisir un.
             </div>
             <form onSubmit={handleLoginSubmit}>
               <Field label="Courriel">
@@ -161,14 +188,32 @@ function GuestReservationForm() {
                 {submitting ? "Connexion..." : "Se connecter et continuer"}
               </Button>
             </form>
-            <div className="mt-3 flex justify-between text-[12px]">
-              <button type="button" onClick={() => setStep("email")} className="text-muted underline">
-                Ce n&apos;est pas moi
-              </button>
-              <a href="/mot-de-passe-oublie" className="text-navy underline">
-                Mot de passe oublié ?
-              </a>
-            </div>
+            {linkNotice ? (
+              <div className="mt-4 rounded-md border border-border-light bg-subtle p-3 text-[13px]">{linkNotice}</div>
+            ) : (
+              <div className="mt-4 border-t border-border-light pt-3 text-[13px] text-muted">
+                Pas de mot de passe, ou vous l&apos;avez oublié ?{" "}
+                <button
+                  type="button"
+                  onClick={handleSendLink}
+                  disabled={sendingLink}
+                  className="text-navy underline disabled:opacity-60"
+                >
+                  {sendingLink ? "Envoi..." : "Recevoir un lien par courriel"}
+                </button>
+              </div>
+            )}
+            <button
+              type="button"
+              onClick={() => {
+                setLinkNotice(null);
+                setError(null);
+                setStep("email");
+              }}
+              className="mt-3 text-[12px] text-muted underline"
+            >
+              Ce n&apos;est pas moi
+            </button>
           </>
         )}
 
