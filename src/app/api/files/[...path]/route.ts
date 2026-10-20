@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentAdmin } from "@/lib/admin-auth";
 import { getCurrentClientId } from "@/lib/session";
+import { logAudit } from "@/lib/audit";
 import { getStorage } from "@/lib/providers/storage";
 
 const MIME_BY_EXT: Record<string, string> = {
@@ -66,13 +67,20 @@ export async function GET(_request: Request, { params }: { params: Promise<{ pat
       }
     }
   } else {
-    const clientId = await getCurrentClientId();
-    if (!clientId) {
-      return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
-    }
-    const owned = await isOwnedByClient(segments, clientId);
-    if (!owned) {
-      return NextResponse.json({ error: "Introuvable" }, { status: 404 });
+    // Documents (licence, insurance proof): the client who uploaded them, or staff, who check them at
+    // handoff. Every time staff open one it is written to the audit log.
+    const admin = await getCurrentAdmin();
+    if (admin) {
+      await logAudit({ action: "document_viewed", actor: { type: "admin", id: admin.id }, details: { path: segments.join("/") } });
+    } else {
+      const clientId = await getCurrentClientId();
+      if (!clientId) {
+        return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
+      }
+      const owned = await isOwnedByClient(segments, clientId);
+      if (!owned) {
+        return NextResponse.json({ error: "Introuvable" }, { status: 404 });
+      }
     }
   }
 

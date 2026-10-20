@@ -29,10 +29,14 @@ export default auth((req) => {
     return;
   }
 
-  // Staff are a party to every contract, so an admin session alone should
-  // reach these — same reasoning as /api/files/trailers above. The route
-  // handler still checks ownership for the client-session fallback path.
-  if (req.nextUrl.pathname.startsWith("/api/files/contracts") || req.nextUrl.pathname.startsWith("/api/files/signatures")) {
+  // Staff are a party to every contract, and they check the licence and insurance proof of the people
+  // they hand a trailer to, so an admin session alone should reach these — same reasoning as
+  // /api/files/trailers above. The route handler still checks ownership for the client-session fallback path.
+  if (
+    req.nextUrl.pathname.startsWith("/api/files/contracts") ||
+    req.nextUrl.pathname.startsWith("/api/files/signatures") ||
+    req.nextUrl.pathname.startsWith("/api/files/documents")
+  ) {
     if (!req.auth?.adminId && !req.auth?.clientId) {
       return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
     }

@@ -5,6 +5,7 @@ import { logAudit } from "@/lib/audit";
 import { hasConflict, withTrailerLock } from "@/lib/availability";
 import { holdsSlot } from "@/lib/constants";
 import { syncReservationToQuickBooks } from "@/lib/accounting/sync";
+import { getClientDocuments } from "@/lib/admin/documents";
 import { adminReservationUpdateSchema } from "@/lib/validation";
 
 const RESERVATION_CLIENT_SELECT = {
@@ -31,7 +32,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   });
   if (!reservation) return NextResponse.json({ error: "Introuvable" }, { status: 404 });
 
-  return NextResponse.json(reservation);
+  return NextResponse.json({ ...reservation, documents: await getClientDocuments(reservation.clientId) });
 }
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {

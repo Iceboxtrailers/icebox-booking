@@ -7,8 +7,10 @@ import { Button } from "@/components/ui/Button";
 import { useConfirm } from "@/components/ui/ConfirmDialog";
 import { Field } from "@/components/ui/Field";
 import { Input } from "@/components/ui/Input";
+import { ClientDocumentsPanel } from "@/components/admin/ClientDocumentsPanel";
 import { ClientModal } from "@/components/admin/ClientModal";
 import { DepositInspectionPanel, type PanelChange, type PanelInspection } from "@/components/admin/DepositInspectionPanel";
+import type { ClientDocument } from "@/lib/admin/documents";
 import { computeTotalCents } from "@/lib/pricing";
 import { DELIVERY_OPTION_LABEL_FR, RESERVATION_STATUS } from "@/lib/constants";
 import type { AdminRole, DeliveryOption, TrailerSize } from "@/lib/constants";
@@ -85,6 +87,9 @@ export function ReservationModal({
   const [depositExpiresAt, setDepositExpiresAt] = useState<string | null>(null);
   const [inspection, setInspection] = useState<PanelInspection>(null);
 
+  // Edit mode: the licence and insurance proof the client uploaded, checked by staff.
+  const [documents, setDocuments] = useState<ClientDocument[]>([]);
+
   // Create mode: existing-client search vs. quick-create a new one.
   const [clientMode, setClientMode] = useState<"search" | "new">("search");
   const [clientQuery, setClientQuery] = useState("");
@@ -133,6 +138,7 @@ export function ReservationModal({
           : null,
       );
       setClientDisplay(data.client);
+      setDocuments(data.documents ?? []);
       setContractPdfUrl(data.contract?.pdfUrl ?? null);
       setDepositStatus(data.depositStatus ?? "none");
       setDepositAmountCents(data.depositAmount ?? 0);
@@ -381,6 +387,8 @@ export function ReservationModal({
                 </button>
               </div>
             )}
+
+            {state.mode === "edit" && <ClientDocumentsPanel documents={documents} reservationId={state.reservationId} />}
 
             {state.mode === "edit" && (
               <DepositInspectionPanel

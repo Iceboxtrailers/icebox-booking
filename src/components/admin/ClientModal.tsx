@@ -5,6 +5,8 @@ import { X } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Field } from "@/components/ui/Field";
 import { Input } from "@/components/ui/Input";
+import { ClientDocumentsPanel } from "@/components/admin/ClientDocumentsPanel";
+import type { ClientDocument } from "@/lib/admin/documents";
 import { CLIENT_STATUS } from "@/lib/constants";
 
 const STATUS_LABEL_FR: Record<string, string> = {
@@ -54,6 +56,7 @@ export function ClientModal({
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState<ClientForm>(BLANK);
+  const [documents, setDocuments] = useState<ClientDocument[]>([]);
 
   useEffect(() => {
     let cancelled = false;
@@ -78,6 +81,7 @@ export function ClientModal({
         status: data.status ?? "active",
         internalNote: data.internalNote ?? "",
       });
+      setDocuments(data.documents ?? []);
       setLoading(false);
     })();
     return () => {
@@ -128,6 +132,8 @@ export function ClientModal({
           <div className="text-[13px] text-muted">Chargement...</div>
         ) : (
           <form onSubmit={handleSubmit}>
+            <ClientDocumentsPanel documents={documents} />
+
             <div className="grid grid-cols-2 gap-3">
               <Field label="Prénom">
                 <Input value={form.firstName} onChange={(e) => set("firstName", e.target.value)} required />

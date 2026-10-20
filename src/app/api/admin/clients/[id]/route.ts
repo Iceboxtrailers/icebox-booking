@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireOwner } from "@/lib/admin-auth";
 import { adminClientUpdateSchema } from "@/lib/validation";
+import { getClientDocuments } from "@/lib/admin/documents";
 
 const CLIENT_DETAIL_SELECT = {
   id: true,
@@ -28,7 +29,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   const client = await prisma.client.findUnique({ where: { id }, select: CLIENT_DETAIL_SELECT });
   if (!client) return NextResponse.json({ error: "Introuvable" }, { status: 404 });
 
-  return NextResponse.json(client);
+  return NextResponse.json({ ...client, documents: await getClientDocuments(id) });
 }
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {

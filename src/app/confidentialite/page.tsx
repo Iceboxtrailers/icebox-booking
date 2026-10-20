@@ -44,7 +44,7 @@ const SECTIONS: { title: string; body: string[] }[] = [
   {
     title: "6. Sécurité",
     body: [
-      "Les échanges avec le site sont chiffrés (HTTPS). Les documents d'identité sont stockés dans un espace privé accessible uniquement au personnel autorisé. L'accès à la console de gestion est protégé par des comptes individuels et des droits limités selon le rôle. Les actions financières sont consignées dans un journal d'audit.",
+      "Les échanges avec le site sont chiffrés (HTTPS). Les documents d'identité sont stockés dans un espace privé accessible uniquement au personnel autorisé. L'accès à la console de gestion est protégé par des comptes individuels et des droits limités selon le rôle. Les actions financières, ainsi que chaque consultation de vos documents (permis, assurance) par notre personnel, sont consignées dans un journal d'audit.",
     ],
   },
   {
@@ -71,7 +71,7 @@ export default function PrivacyPage() {
   return (
     <MarketingLayout>
       <h1 className="font-heading mb-2 text-2xl">Politique de confidentialité</h1>
-      <p className="mb-6 text-[12px] text-muted">Dernière mise à jour : 14 octobre 2026</p>
+      <p className="mb-6 text-[12px] text-muted">Dernière mise à jour : 20 octobre 2026</p>
       <div className="max-w-2xl space-y-6 text-[14px] leading-relaxed text-foreground">
         {SECTIONS.map((section) => (
           <section key={section.title}>

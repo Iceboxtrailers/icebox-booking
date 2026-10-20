@@ -89,6 +89,18 @@ export type SignatureStatus = (typeof SIGNATURE_STATUS)[number];
 export const DOCUMENT_TYPE = ["license", "insurance"] as const;
 export type DocumentType = (typeof DOCUMENT_TYPE)[number];
 
+export const DOCUMENT_TYPE_LABEL_FR: Record<DocumentType, string> = {
+  license: "Permis de conduire",
+  insurance: "Preuve d'assurance",
+};
+
+// Staff check each uploaded document against the person at handoff.
+export const VERIFICATION_STATUS_LABEL_FR: Record<VerificationStatus, string> = {
+  pending: "À vérifier",
+  verified: "Vérifié",
+  rejected: "Refusé",
+};
+
 export const PAYMENT_TYPE = ["deposit", "rental", "refund"] as const;
 export type PaymentType = (typeof PAYMENT_TYPE)[number];
 
