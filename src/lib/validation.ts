@@ -4,17 +4,28 @@ import { CLIENT_STATUS, RESERVATION_STATUS, TRAILER_SIZE, TRAILER_STATUS } from 
 const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Date invalide");
 const isoTime = z.string().regex(/^\d{2}:\d{2}$/, "Heure invalide");
 
+// Emails are stored and looked up in lower case, so "Test@x.com" and "test@x.com" are one person.
+const emailField = z.string().trim().toLowerCase().email("Courriel invalide");
+
 export const signupSchema = z.object({
   firstName: z.string().trim().min(1, "Prénom requis"),
   lastName: z.string().trim().min(1, "Nom requis"),
-  email: z.string().trim().email("Courriel invalide"),
+  email: emailField,
   phone: z.string().trim().min(7, "Téléphone invalide"),
   password: z.string().min(8, "Le mot de passe doit contenir au moins 8 caractères"),
   marketingOptIn: z.boolean().optional(),
 });
 
+// Booking without an account: contact details only, no password.
+export const guestStartSchema = z.object({
+  firstName: z.string().trim().min(1, "Prénom requis"),
+  lastName: z.string().trim().min(1, "Nom requis"),
+  email: emailField,
+  phone: z.string().trim().min(7, "Téléphone invalide"),
+});
+
 export const loginSchema = z.object({
-  email: z.string().trim().email("Courriel invalide"),
+  email: emailField,
   password: z.string().min(1, "Mot de passe requis"),
 });
 
@@ -29,7 +40,7 @@ export const mfaCodeSchema = z.object({
 });
 
 export const forgotPasswordSchema = z.object({
-  email: z.string().trim().email("Courriel invalide"),
+  email: emailField,
 });
 
 export const resetPasswordSchema = z.object({
@@ -41,7 +52,7 @@ export const updateAccountSchema = z.object({
   firstName: z.string().trim().min(1, "Prénom requis"),
   lastName: z.string().trim().min(1, "Nom requis"),
   company: z.string().trim().optional(),
-  email: z.string().trim().email("Courriel invalide"),
+  email: emailField,
   phone: z.string().trim().min(7, "Téléphone invalide"),
   billingAddress: z.string().trim().optional(),
   billingCity: z.string().trim().optional(),
@@ -151,7 +162,7 @@ export const adminClientCreateSchema = z.object({
   firstName: z.string().trim().min(1, "Prénom requis"),
   lastName: z.string().trim().min(1, "Nom requis"),
   company: z.string().trim().optional(),
-  email: z.string().trim().email("Courriel invalide"),
+  email: emailField,
   phone: z.string().trim().min(7, "Téléphone invalide"),
   billingAddress: z.string().trim().optional(),
   billingCity: z.string().trim().optional(),
@@ -163,7 +174,7 @@ export const adminClientUpdateSchema = z.object({
   firstName: z.string().trim().min(1, "Prénom requis").optional(),
   lastName: z.string().trim().min(1, "Nom requis").optional(),
   company: z.string().trim().optional(),
-  email: z.string().trim().email("Courriel invalide").optional(),
+  email: emailField.optional(),
   phone: z.string().trim().min(7, "Téléphone invalide").optional(),
   billingAddress: z.string().trim().optional(),
   billingCity: z.string().trim().optional(),

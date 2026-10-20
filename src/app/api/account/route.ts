@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getCurrentClientId } from "@/lib/session";
+import { getCurrentAccountId } from "@/lib/session";
 import { updateAccountSchema } from "@/lib/validation";
 
 export async function PATCH(request: Request) {
-  const clientId = await getCurrentClientId();
+  const clientId = await getCurrentAccountId();
   if (!clientId) return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
 
   const body = await request.json().catch(() => null);
@@ -13,8 +13,11 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Requête invalide" }, { status: 400 });
   }
 
-  const existing = await prisma.client.findUnique({ where: { email: parsed.data.email } });
-  if (existing && existing.id !== clientId) {
+  const existing = await prisma.client.findFirst({
+    where: { email: parsed.data.email, hasAccount: true, NOT: { id: clientId } },
+    select: { id: true },
+  });
+  if (existing) {
     return NextResponse.json({ error: "Un compte existe déjà avec ce courriel" }, { status: 409 });
   }
 

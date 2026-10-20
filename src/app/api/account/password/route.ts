@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
-import { getCurrentClientId } from "@/lib/session";
+import { getCurrentAccountId } from "@/lib/session";
 import { changePasswordSchema } from "@/lib/validation";
 
 export async function POST(request: Request) {
-  const clientId = await getCurrentClientId();
+  const clientId = await getCurrentAccountId();
   if (!clientId) return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
 
   const body = await request.json().catch(() => null);

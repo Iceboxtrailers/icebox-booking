@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { getCurrentClientId } from "@/lib/session";
+import { getCurrentAccountId } from "@/lib/session";
 import { Card } from "@/components/ui/Card";
 import { fmt, nights } from "@/lib/dates";
 import { priceBreakdown, computeTaxBreakdown } from "@/lib/pricing";
@@ -27,7 +27,7 @@ const DEPOSIT_LABEL_FR: Record<string, string> = {
 
 export default async function ReservationDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const clientId = await getCurrentClientId();
+  const clientId = await getCurrentAccountId();
   if (!clientId) notFound();
 
   const reservation = await prisma.reservation.findUnique({

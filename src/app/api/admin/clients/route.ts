@@ -3,30 +3,14 @@ import { randomBytes } from "node:crypto";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { requireOwner } from "@/lib/admin-auth";
+import { CLIENT_LIST_SELECT, getAllClients } from "@/lib/admin/clients";
 import { adminClientCreateSchema } from "@/lib/validation";
-
-const CLIENT_LIST_SELECT = {
-  id: true,
-  firstName: true,
-  lastName: true,
-  company: true,
-  email: true,
-  phone: true,
-  status: true,
-  billingCity: true,
-  billingProvince: true,
-  createdAt: true,
-  _count: { select: { reservations: true } },
-} as const;
 
 export async function GET() {
   const ownerGuard = await requireOwner();
   if (ownerGuard.error) return ownerGuard.error;
 
-  const clients = await prisma.client.findMany({
-    select: CLIENT_LIST_SELECT,
-    orderBy: { lastName: "asc" },
-  });
+  const clients = await getAllClients();
 
   return NextResponse.json(clients);
 }
@@ -41,18 +25,21 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Requête invalide" }, { status: 400 });
   }
 
-  const existing = await prisma.client.findUnique({ where: { email: parsed.data.email } });
+  // An existing record (guest booking or earlier entry) is reused, not duplicated.
+  const existing = await prisma.client.findFirst({
+    where: { email: { equals: parsed.data.email, mode: "insensitive" } },
+    select: { id: true },
+  });
   if (existing) {
-    return NextResponse.json({ error: "Un compte existe déjà avec ce courriel" }, { status: 409 });
+    return NextResponse.json({ error: "Ce client existe déjà : recherchez-le par son courriel" }, { status: 409 });
   }
 
-  // Walk-in/phone bookings don't set their own password — a random,
-  // never-shown one satisfies the schema; "mot de passe oublié" gets the
-  // client into their own portal later if they ever want it.
+  // Walk-in/phone bookings are admin-only records: no login, no password anyone knows.
+  // The random hash only satisfies the schema.
   const passwordHash = await bcrypt.hash(randomBytes(32).toString("hex"), 10);
 
   const client = await prisma.client.create({
-    data: { ...parsed.data, passwordHash },
+    data: { ...parsed.data, passwordHash, hasAccount: false },
     select: CLIENT_LIST_SELECT,
   });
 

@@ -24,9 +24,8 @@ function GuestReservationForm() {
 
   const set = (k: keyof typeof form, v: string) => setForm((f) => ({ ...f, [k]: v }));
 
-  // A guest account is created with a random password nobody sees, so a returning guest
-  // has no password to type. Proving the email is theirs (a link sent to it) is the safe
-  // way in: signing in without a password would expose that client's documents and contracts.
+  // For the owner of a real account who has no password at hand: proving the email is theirs
+  // (a link sent to it) is the safe way in. Guests never come through here, they have no account.
   async function handleSendLink() {
     setError(null);
     setSendingLink(true);
@@ -100,28 +99,25 @@ function GuestReservationForm() {
     setError(null);
     setSubmitting(true);
     try {
-      // No password field shown to the guest — generate one behind the scenes
-      // so a Client row (required by the reservation schema) can still exist.
-      // They can set a real password later via "mot de passe oublié" if they
-      // ever want to revisit /compte.
-      const generatedPassword = crypto.randomUUID();
-      const res = await fetch("/api/auth/signup", {
+      // No account is created: the server keeps these details for this booking only (visible to
+      // IceBox staff) and gives back a one-time token for a short session limited to this booking.
+      const res = await fetch("/api/guest/start", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...form, password: generatedPassword }),
+        body: JSON.stringify(form),
       });
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
+      if (res.status === 409 && data.code === "account_exists") {
+        setStep("login");
+        return;
+      }
       if (!res.ok) {
         setError(data.error ?? "Impossible de continuer");
         return;
       }
-      const signInResult = await signIn("credentials", {
-        email: form.email,
-        password: generatedPassword,
-        redirect: false,
-      });
+      const signInResult = await signIn("guest-session", { token: data.token, redirect: false });
       if (signInResult?.error) {
-        setError("Impossible de continuer. Essayez de vous connecter.");
+        setError("Impossible de continuer. Veuillez réessayer.");
         return;
       }
       goToNewReservation();
@@ -141,8 +137,8 @@ function GuestReservationForm() {
         {step === "email" && (
           <>
             <div className="mb-4 text-[13px] text-muted">
-              Entrez votre courriel pour commencer — aucun mot de passe requis si c&apos;est votre première
-              location.
+              Entrez votre courriel pour commencer. Aucun compte ni mot de passe n&apos;est nécessaire pour
+              réserver.
             </div>
             <form onSubmit={handleEmailSubmit}>
               <Field label="Courriel">
@@ -166,9 +162,8 @@ function GuestReservationForm() {
         {step === "login" && (
           <>
             <div className="mb-4 text-[13px] text-muted">
-              Ce courriel est déjà enregistré chez IceBox, par exemple si vous avez déjà loué ou commencé une
-              réservation sans compte. Entrez votre mot de passe pour continuer, ou recevez un lien par courriel
-              pour en choisir un.
+              Un compte existe déjà avec ce courriel. Entrez votre mot de passe pour continuer, ou recevez un lien
+              par courriel pour en choisir un.
             </div>
             <form onSubmit={handleLoginSubmit}>
               <Field label="Courriel">
@@ -220,7 +215,8 @@ function GuestReservationForm() {
         {step === "details" && (
           <>
             <div className="mb-4 text-[13px] text-muted">
-              Première location chez IceBox — complétez vos coordonnées pour continuer.
+              Complétez vos coordonnées pour continuer. Aucun compte n&apos;est créé : votre réservation est
+              enregistrée seulement dans notre système, et vous recevez votre contrat par courriel.
             </div>
             <form onSubmit={handleDetailsSubmit}>
               <div className="grid grid-cols-2 gap-3">

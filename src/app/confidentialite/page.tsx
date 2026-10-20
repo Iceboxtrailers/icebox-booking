@@ -17,7 +17,8 @@ const SECTIONS: { title: string; body: string[] }[] = [
       "Documents : permis de conduire et preuve d'assurance, que vous nous transmettez avec votre consentement explicite.",
       "Contrat : votre nom de signataire, votre signature électronique, la date et l'adresse IP au moment de la signature.",
       "Paiement : votre carte est saisie directement chez notre fournisseur de paiement (Stripe). IceBox ne voit ni ne conserve votre numéro de carte complet.",
-      "Compte : votre mot de passe est conservé sous forme chiffrée irréversible.",
+      "Réservation sans compte : aucun compte n'est créé. Vos renseignements sont enregistrés pour cette seule réservation, visibles seulement par le personnel autorisé d'IceBox. Vous n'avez pas d'espace en ligne pour les consulter : votre contrat et votre confirmation vous sont envoyés par courriel.",
+      "Compte (facultatif) : si vous créez un compte, votre mot de passe est conservé sous forme chiffrée irréversible.",
     ],
   },
   {

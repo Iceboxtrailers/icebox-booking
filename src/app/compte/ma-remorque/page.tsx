@@ -1,5 +1,6 @@
+import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { getCurrentClientId } from "@/lib/session";
+import { getCurrentAccountId } from "@/lib/session";
 import { Card } from "@/components/ui/Card";
 import { fmt } from "@/lib/dates";
 import { Thermometer, Zap, DoorClosed, History, Clock } from "lucide-react";
@@ -13,9 +14,10 @@ const TELEMETRY_FIELDS = [
 ];
 
 export default async function MaRemorquePage() {
-  const clientId = await getCurrentClientId();
+  const clientId = await getCurrentAccountId();
+  if (!clientId) redirect("/login?callbackUrl=/compte/ma-remorque");
   const reservation = await prisma.reservation.findFirst({
-    where: { clientId: clientId!, status: { in: ["confirmed", "in_progress"] } },
+    where: { clientId, status: { in: ["confirmed", "in_progress"] } },
     include: { trailer: true },
     orderBy: { pickupDate: "asc" },
   });

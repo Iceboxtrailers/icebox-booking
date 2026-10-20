@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { loginSchema, adminLoginSchema } from "@/lib/validation";
 import { authConfig } from "@/lib/auth.config";
 import { verifyAdminLogin } from "@/lib/admin-login";
+import { hashGuestToken } from "@/lib/guest";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
@@ -18,8 +19,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const parsed = loginSchema.safeParse(rawCredentials);
         if (!parsed.success) return null;
 
-        const client = await prisma.client.findUnique({
-          where: { email: parsed.data.email },
+        // Only real accounts sign in with a password; guest records have none.
+        const client = await prisma.client.findFirst({
+          where: { email: parsed.data.email, hasAccount: true },
         });
         if (!client || client.status !== "active") return null;
 
@@ -31,6 +33,32 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           email: client.email,
           name: `${client.firstName} ${client.lastName}`,
         };
+      },
+    }),
+    // Booking without an account: exchanges the one-time token from /api/guest/start for a
+    // short session (see GUEST_SESSION_MS) limited to that single booking record.
+    Credentials({
+      id: "guest-session",
+      name: "Invité",
+      credentials: { token: { label: "Jeton", type: "text" } },
+      authorize: async (rawCredentials) => {
+        const token = typeof rawCredentials?.token === "string" ? rawCredentials.token : "";
+        if (token.length < 20) return null;
+
+        const tokenHash = hashGuestToken(token);
+        const client = await prisma.client.findFirst({
+          where: { hasAccount: false, status: "active", resetTokenHash: tokenHash, resetTokenExpiresAt: { gt: new Date() } },
+        });
+        if (!client) return null;
+
+        // Single use: only the request that clears the token gets the session.
+        const { count } = await prisma.client.updateMany({
+          where: { id: client.id, resetTokenHash: tokenHash },
+          data: { resetTokenHash: null, resetTokenExpiresAt: null },
+        });
+        if (count !== 1) return null;
+
+        return { id: client.id, email: client.email, name: `${client.firstName} ${client.lastName}` };
       },
     }),
     Credentials({

@@ -1,5 +1,5 @@
 import { notFound, redirect } from "next/navigation";
-import { getCurrentClientId } from "@/lib/session";
+import { auth } from "@/lib/auth";
 import { WizardShell } from "@/components/wizard/WizardShell";
 import { ConfirmationSummary } from "@/components/forms/ConfirmationSummary";
 import { stepIndexForSegment } from "@/lib/wizard";
@@ -7,7 +7,8 @@ import { confirmReservation, ReservationConfirmError } from "@/lib/reservations/
 
 export default async function ConfirmationPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const clientId = await getCurrentClientId();
+  const session = await auth();
+  const clientId = session?.clientId;
   if (!clientId) redirect(`/login?callbackUrl=/reservation/${id}/confirmation`);
 
   let reservation;
@@ -35,6 +36,7 @@ export default async function ConfirmationPage({ params }: { params: Promise<{ i
         trailerSize={reservation.trailer.size}
         start={reservation.pickupDate.toISOString().slice(0, 10)}
         end={reservation.returnDate.toISOString().slice(0, 10)}
+        guest={Boolean(session?.guest)}
       />
     </WizardShell>
   );

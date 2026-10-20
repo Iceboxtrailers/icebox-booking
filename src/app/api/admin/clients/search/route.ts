@@ -9,7 +9,7 @@ export async function GET(request: Request) {
   const q = new URL(request.url).searchParams.get("q")?.trim() ?? "";
   if (q.length < 2) return NextResponse.json([]);
 
-  const clients = await prisma.client.findMany({
+  const rows = await prisma.client.findMany({
     where: {
       OR: [
         { firstName: { contains: q, mode: "insensitive" } },
@@ -17,10 +17,26 @@ export async function GET(request: Request) {
         { email: { contains: q, mode: "insensitive" } },
       ],
     },
-    select: { id: true, firstName: true, lastName: true, email: true, phone: true },
-    take: 10,
+    select: { id: true, firstName: true, lastName: true, email: true, phone: true, hasAccount: true, createdAt: true },
+    take: 60,
     orderBy: { lastName: "asc" },
   });
+
+  // One person who booked several times has several admin-only records with the same email:
+  // show the oldest one only (the record staff may have filled in).
+  const seen = new Set<string>();
+  const clients = [...rows]
+    .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())
+    .filter((row) => {
+      if (row.hasAccount) return true;
+      const key = row.email.toLowerCase();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    })
+    .sort((a, b) => a.lastName.localeCompare(b.lastName, "fr", { sensitivity: "base" }))
+    .slice(0, 10)
+    .map(({ id, firstName, lastName, email, phone }) => ({ id, firstName, lastName, email, phone }));
 
   return NextResponse.json(clients);
 }

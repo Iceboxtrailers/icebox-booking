@@ -1,13 +1,15 @@
 import { redirect } from "next/navigation";
 import { ReactNode } from "react";
-import { getCurrentClientId } from "@/lib/session";
+import { auth } from "@/lib/auth";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { AccountTabs } from "@/components/AccountTabs";
 
 export default async function CompteLayout({ children }: { children: ReactNode }) {
-  const clientId = await getCurrentClientId();
-  if (!clientId) redirect("/login?callbackUrl=/compte");
+  const session = await auth();
+  // A booking without an account has no client area.
+  if (session?.guest) redirect("/");
+  if (!session?.clientId) redirect("/login?callbackUrl=/compte");
 
   return (
     <div className="flex min-h-screen flex-col">

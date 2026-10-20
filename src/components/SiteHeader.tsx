@@ -78,10 +78,12 @@ export function SiteHeader() {
           </div>
           {session ? (
             <>
-              <Link href="/compte" className="flex items-center gap-1.5 text-[13px] font-medium text-foreground hover:text-navy">
-                <User size={16} />
-                Mon compte
-              </Link>
+              {!session.guest && (
+                <Link href="/compte" className="flex items-center gap-1.5 text-[13px] font-medium text-foreground hover:text-navy">
+                  <User size={16} />
+                  Mon compte
+                </Link>
+              )}
               <button
                 onClick={() => signOut({ callbackUrl: "/" })}
                 className="flex items-center gap-1.5 text-[13px] font-medium text-foreground hover:text-navy"

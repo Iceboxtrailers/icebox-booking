@@ -2,6 +2,7 @@ import Link from "next/link";
 import { CheckCircle2 } from "lucide-react";
 import { fmt } from "@/lib/dates";
 import { Button } from "@/components/ui/Button";
+import { GuestDoneButton } from "@/components/forms/GuestDoneButton";
 
 export function ConfirmationSummary({
   firstName,
@@ -9,12 +10,15 @@ export function ConfirmationSummary({
   trailerSize,
   start,
   end,
+  guest = false,
 }: {
   firstName: string;
   lastName: string;
   trailerSize: string;
   start: string;
   end: string;
+  /** booking without an account: no client area to go back to */
+  guest?: boolean;
 }) {
   return (
     <div className="py-5 text-center">
@@ -26,11 +30,21 @@ export function ConfirmationSummary({
       <div className="mx-auto mb-5 max-w-sm text-[12px] text-muted">
         Un courriel de confirmation avec copie du contrat signé vous a été envoyé.
       </div>
-      <Link href="/compte/reservations">
-        <Button type="button" variant="cta">
-          Retourner à l&apos;espace client
-        </Button>
-      </Link>
+      {guest ? (
+        <>
+          <div className="mx-auto mb-5 max-w-sm text-[12px] text-muted">
+            Aucun compte n&apos;a été créé : conservez ce courriel, il contient votre contrat. Pour toute question,
+            appelez-nous au 581 889-2093.
+          </div>
+          <GuestDoneButton />
+        </>
+      ) : (
+        <Link href="/compte/reservations">
+          <Button type="button" variant="cta">
+            Retourner à l&apos;espace client
+          </Button>
+        </Link>
+      )}
     </div>
   );
 }

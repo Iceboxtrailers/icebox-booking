@@ -15,11 +15,20 @@ datasource db {
 // aren't needed). Valid values are enforced in src/lib/constants.ts and
 // validated with zod in src/lib/validation.ts.
 
+// A Client row is either a real account (hasAccount = true: can log in, unique email) or an
+// admin-only record (hasAccount = false) for a guest booking or a booking typed in by staff:
+// no login, no password reset, never reused by another booking, so nobody can reach another
+// person's history by typing their email. Guest records may share an email.
+//
+// Uniqueness of the email among real accounts is a PARTIAL unique index created in the migration
+// 20261020120000_guest_bookings_no_profile (clients_email_account_key, WHERE "hasAccount" = true).
+// Prisma cannot express it: if a future `prisma migrate dev` proposes to drop it, do not accept.
 model Client {
   id                   String    @id @default(cuid())
   firstName            String
   lastName             String
-  email                String    @unique
+  email                String
+  hasAccount           Boolean   @default(true)
   phone                String
   passwordHash         String
   createdAt            DateTime  @default(now())
@@ -40,6 +49,7 @@ model Client {
   reservations Reservation[]
   documents    Document[]
 
+  @@index([email])
   @@map("clients")
 }
 

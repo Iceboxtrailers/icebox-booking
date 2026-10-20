@@ -188,6 +188,12 @@ export function ClientsTable({ clients }: { clients: ClientListItem[] }) {
               </div>
               <div className="ml-auto flex items-center gap-2">
                 <span className="text-muted">{c._count.reservations} réservation(s)</span>
+                <span
+                  className="rounded-full border border-border-light px-2 py-0.5 text-[11px] text-muted"
+                  title={c.hasAccount ? "Compte qui peut se connecter" : "Dossier visible seulement dans l'administration"}
+                >
+                  {c.hasAccount ? "Compte" : "Dossier"}
+                </span>
                 <span className={`rounded-full px-2 py-0.5 text-[11px] ${STATUS_TONE[c.status] ?? ""}`}>
                   {STATUS_LABEL_FR[c.status] ?? c.status}
                 </span>

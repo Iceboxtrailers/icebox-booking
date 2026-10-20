@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { getCurrentClientId } from "@/lib/session";
+import { redirect } from "next/navigation";
+import { getCurrentAccountId } from "@/lib/session";
 import { getRentalHistory } from "@/lib/queries/rental-history";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -23,8 +24,9 @@ function daysUntilLabel(pickupDate: Date): string {
 }
 
 export default async function ReservationsPage() {
-  const clientId = await getCurrentClientId();
-  const reservations = await getRentalHistory(clientId!);
+  const clientId = await getCurrentAccountId();
+  if (!clientId) redirect("/login?callbackUrl=/compte/reservations");
+  const reservations = await getRentalHistory(clientId);
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);

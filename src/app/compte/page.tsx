@@ -1,11 +1,13 @@
+import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { getCurrentClientId } from "@/lib/session";
+import { getCurrentAccountId } from "@/lib/session";
 import { AccountProfileForm } from "@/components/forms/AccountProfileForm";
 import { ChangePasswordForm } from "@/components/forms/ChangePasswordForm";
 
 export default async function ComptePage() {
-  const clientId = await getCurrentClientId();
-  const client = await prisma.client.findUniqueOrThrow({ where: { id: clientId! } });
+  const clientId = await getCurrentAccountId();
+  if (!clientId) redirect("/login?callbackUrl=/compte");
+  const client = await prisma.client.findUniqueOrThrow({ where: { id: clientId } });
 
   return (
     <div>

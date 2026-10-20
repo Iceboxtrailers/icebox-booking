@@ -101,3 +101,7 @@ export const FLEX_WINDOW_DAYS = 2;
 // Security deposit, in cents: held (never charged) on the saved card before the
 // trailer leaves.
 export const DEPOSIT_AMOUNT_CENTS = 100000;
+
+// A guest (booking without an account) stays signed in this long to finish the booking,
+// then the session stops working. Enforced in the session callback (auth.config.ts).
+export const GUEST_SESSION_MS = 6 * 60 * 60 * 1000;

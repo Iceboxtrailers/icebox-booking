@@ -42,10 +42,18 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Requête invalide" }, { status: 400 });
   }
 
+  // The email must be unique among real accounts only; admin-only records may share one.
   if (parsed.data.email) {
-    const existing = await prisma.client.findUnique({ where: { email: parsed.data.email } });
-    if (existing && existing.id !== id) {
-      return NextResponse.json({ error: "Un compte existe déjà avec ce courriel" }, { status: 409 });
+    const current = await prisma.client.findUnique({ where: { id }, select: { hasAccount: true } });
+    if (!current) return NextResponse.json({ error: "Introuvable" }, { status: 404 });
+    if (current.hasAccount) {
+      const taken = await prisma.client.findFirst({
+        where: { email: parsed.data.email, hasAccount: true, NOT: { id } },
+        select: { id: true },
+      });
+      if (taken) {
+        return NextResponse.json({ error: "Un compte existe déjà avec ce courriel" }, { status: 409 });
+      }
     }
   }
 

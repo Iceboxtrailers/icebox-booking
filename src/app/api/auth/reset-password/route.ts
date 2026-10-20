@@ -13,7 +13,7 @@ export async function POST(request: Request) {
 
   const resetTokenHash = createHash("sha256").update(parsed.data.token).digest("hex");
   const client = await prisma.client.findFirst({
-    where: { resetTokenHash, resetTokenExpiresAt: { gt: new Date() } },
+    where: { resetTokenHash, resetTokenExpiresAt: { gt: new Date() }, hasAccount: true },
   });
   if (!client) {
     return NextResponse.json({ error: "Ce lien de réinitialisation est invalide ou expiré" }, { status: 400 });

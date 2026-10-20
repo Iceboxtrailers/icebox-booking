@@ -14,7 +14,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Requête invalide" }, { status: 400 });
   }
 
-  const client = await prisma.client.findUnique({ where: { email: parsed.data.email } });
+  // Only real accounts can reset a password: guest records have none and are never reachable by email.
+  const client = await prisma.client.findFirst({ where: { email: parsed.data.email, hasAccount: true } });
 
   // Always respond the same way whether or not the email exists, so this
   // endpoint can't be used to check which emails have accounts.
