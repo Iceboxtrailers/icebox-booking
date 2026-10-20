@@ -98,6 +98,7 @@ export function FleetBoard({ board, role }: { board: FleetBoardData; role: Admin
   const [modal, setModal] = useState<ModalState>(null);
   const [infoTrailer, setInfoTrailer] = useState<BoardTrailer | null>(null);
   const [fleetError, setFleetError] = useState<string | null>(null);
+  const [confirmError, setConfirmError] = useState<string | null>(null);
   const [newTrailer, setNewTrailer] = useState({ name: "", size: TRAILER_SIZE[0] as string });
   const [savingTrailer, setSavingTrailer] = useState(false);
   const [uploadingImageFor, setUploadingImageFor] = useState<string | null>(null);
@@ -193,11 +194,18 @@ export function FleetBoard({ board, role }: { board: FleetBoardData; role: Admin
   }
 
   async function quickConfirm(reservationId: string) {
-    await fetch(`/api/admin/reservations/${reservationId}`, {
+    setConfirmError(null);
+    const res = await fetch(`/api/admin/reservations/${reservationId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status: "confirmed" }),
     });
+    if (!res.ok) {
+      // e.g. another booking was confirmed for the same trailer and dates in the meantime
+      const body = await res.json().catch(() => ({}));
+      setConfirmError(body.error ?? "Impossible de confirmer cette réservation");
+      return;
+    }
     router.refresh();
   }
 
@@ -226,6 +234,10 @@ export function FleetBoard({ board, role }: { board: FleetBoardData; role: Admin
           tone={conflictReservationIds.length > 0 ? "danger" : undefined}
         />
       </div>
+
+      {confirmError && (
+        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-[13px] text-red-700">{confirmError}</div>
+      )}
 
       {fleetOpen && (
         <Card className="mb-4 p-4">

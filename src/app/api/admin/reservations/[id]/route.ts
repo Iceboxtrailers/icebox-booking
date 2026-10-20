@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/admin-auth";
 import { logAudit } from "@/lib/audit";
-import { hasConflict } from "@/lib/availability";
+import { hasConflict, withTrailerLock } from "@/lib/availability";
+import { holdsSlot } from "@/lib/constants";
 import { syncReservationToQuickBooks } from "@/lib/accounting/sync";
 import { adminReservationUpdateSchema } from "@/lib/validation";
 
@@ -120,35 +121,50 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   const nextPickup = pickupDate ? new Date(`${pickupDate}T00:00:00Z`) : existing.pickupDate;
   const nextReturn = returnDate ? new Date(`${returnDate}T00:00:00Z`) : existing.returnDate;
 
-  if (nextTrailerId && nextPickup && nextReturn && (trailerId || pickupDate || returnDate)) {
-    const start = nextPickup.toISOString().slice(0, 10);
-    const end = nextReturn.toISOString().slice(0, 10);
-    const conflicting = await hasConflict(nextTrailerId, start, end, id);
-    if (conflicting) {
-      return NextResponse.json(
-        { error: "Cette remorque est déjà réservée pour ces dates" },
-        { status: 409 }
-      );
-    }
-  }
+  // Only a booking that holds its trailer can clash with another one: unfinished (pending) and cancelled
+  // bookings block nobody. So the check runs when the result holds the trailer and either it starts holding
+  // it now (confirming a pending booking, reopening a cancelled one) or its trailer or dates change.
+  const nextStatus = rest.status ?? existing.status;
+  const startsHolding = holdsSlot(nextStatus) && !holdsSlot(existing.status);
+  const mustCheck = Boolean(
+    nextTrailerId && nextPickup && nextReturn && holdsSlot(nextStatus) && (startsHolding || trailerId || pickupDate || returnDate),
+  );
 
-  const updated = await prisma.reservation.update({
-    where: { id },
-    data: {
-      ...rest,
-      ...(trailerId ? { trailerId } : {}),
-      ...(pickupDate ? { pickupDate: nextPickup } : {}),
-      ...(returnDate ? { returnDate: nextReturn } : {}),
-      ...(note !== undefined ? { note: note || null } : {}),
-      ...(pickupTime !== undefined ? { pickupTime: pickupTime || null } : {}),
-      ...(returnTime !== undefined ? { returnTime: returnTime || null } : {}),
-    },
-    include: {
-      client: { select: RESERVATION_CLIENT_SELECT },
-      trailer: true,
-      contract: { select: { pdfUrl: true, signatureStatus: true } },
-    },
-  });
+  const applyUpdate = (db: Pick<typeof prisma, "reservation">) =>
+    db.reservation.update({
+      where: { id },
+      data: {
+        ...rest,
+        ...(trailerId ? { trailerId } : {}),
+        ...(pickupDate ? { pickupDate: nextPickup } : {}),
+        ...(returnDate ? { returnDate: nextReturn } : {}),
+        ...(note !== undefined ? { note: note || null } : {}),
+        ...(pickupTime !== undefined ? { pickupTime: pickupTime || null } : {}),
+        ...(returnTime !== undefined ? { returnTime: returnTime || null } : {}),
+      },
+      include: {
+        client: { select: RESERVATION_CLIENT_SELECT },
+        trailer: true,
+        contract: { select: { pdfUrl: true, signatureStatus: true } },
+      },
+    });
+
+  let updated;
+  if (mustCheck) {
+    // Checked and written with the trailer locked, so a client finishing a booking at the same moment
+    // cannot take the same dates.
+    const start = nextPickup!.toISOString().slice(0, 10);
+    const end = nextReturn!.toISOString().slice(0, 10);
+    updated = await withTrailerLock(nextTrailerId!, async (tx) => {
+      if (await hasConflict(nextTrailerId!, start, end, id, tx)) return null;
+      return applyUpdate(tx);
+    });
+    if (!updated) {
+      return NextResponse.json({ error: "Cette remorque est déjà réservée pour ces dates" }, { status: 409 });
+    }
+  } else {
+    updated = await applyUpdate(prisma);
+  }
 
   if (rest.status === "confirmed" && existing.status !== "confirmed") {
     await syncReservationToQuickBooks(id, { actorAdminId: admin.id });

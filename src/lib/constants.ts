@@ -40,6 +40,14 @@ export const RESERVATION_STATUS = [
 ] as const;
 export type ReservationStatus = (typeof RESERVATION_STATUS)[number];
 
+// A booking keeps its trailer off the market only once it is confirmed: contract signed and card saved
+// for the deposit (or entered by staff). An unfinished booking (pending) never blocks anyone: the first
+// client to finish gets the trailer. Cancelled bookings never block.
+export const SLOT_HOLDING_STATUSES = ["confirmed", "in_progress", "completed"] as const;
+export function holdsSlot(status: string): boolean {
+  return (SLOT_HOLDING_STATUSES as readonly string[]).includes(status);
+}
+
 // none = nothing yet; card_on_file = card saved at booking, hold not placed yet;
 // authorized = hold active; processing = short-lived server lock while a
 // release/capture runs; expired = the hold lapsed before it was released.

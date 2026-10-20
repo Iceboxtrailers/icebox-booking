@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
 import { requireOwner } from "@/lib/admin-auth";
-import { hasConflict } from "@/lib/availability";
+import { hasConflict, withTrailerLock } from "@/lib/availability";
 import { adminReservationCreateSchema } from "@/lib/validation";
 import { syncReservationToQuickBooks } from "@/lib/accounting/sync";
 
@@ -18,30 +17,33 @@ export async function POST(request: Request) {
   const { clientId, trailerId, pickupDate, returnDate, totalAmount, status, note, pickupTime, returnTime, isTest } =
     parsed.data;
 
-  const conflicting = await hasConflict(trailerId, pickupDate, returnDate);
-  if (conflicting) {
+  // Checked and written with the trailer locked: a client finishing a booking at the same moment cannot
+  // take the same dates.
+  const reservation = await withTrailerLock(trailerId, async (tx) => {
+    if (await hasConflict(trailerId, pickupDate, returnDate, undefined, tx)) return null;
+    return tx.reservation.create({
+      data: {
+        clientId,
+        trailerId,
+        pickupDate: new Date(`${pickupDate}T00:00:00Z`),
+        returnDate: new Date(`${returnDate}T00:00:00Z`),
+        totalAmount,
+        status: status ?? "confirmed",
+        dateRangeType: "fixed",
+        note: note || null,
+        pickupTime: pickupTime || null,
+        returnTime: returnTime || null,
+        isTest: isTest ?? false,
+      },
+      include: {
+        client: { select: { id: true, firstName: true, lastName: true, email: true, phone: true } },
+        trailer: true,
+      },
+    });
+  });
+  if (!reservation) {
     return NextResponse.json({ error: "Cette remorque est déjà réservée pour ces dates" }, { status: 409 });
   }
-
-  const reservation = await prisma.reservation.create({
-    data: {
-      clientId,
-      trailerId,
-      pickupDate: new Date(`${pickupDate}T00:00:00Z`),
-      returnDate: new Date(`${returnDate}T00:00:00Z`),
-      totalAmount,
-      status: status ?? "confirmed",
-      dateRangeType: "fixed",
-      note: note || null,
-      pickupTime: pickupTime || null,
-      returnTime: returnTime || null,
-      isTest: isTest ?? false,
-    },
-    include: {
-      client: { select: { id: true, firstName: true, lastName: true, email: true, phone: true } },
-      trailer: true,
-    },
-  });
 
   await syncReservationToQuickBooks(reservation.id, { actorAdminId: ownerGuard.admin.id });
 

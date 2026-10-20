@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { SLOT_HOLDING_STATUSES } from "@/lib/constants";
 import type { TrailerSize } from "@/lib/constants";
 
 export type BoardTrailer = {
@@ -58,8 +59,10 @@ export async function getFleetBoardData(year: number, month: number): Promise<Fl
       include: { client: true },
       orderBy: { pickupDate: "asc" },
     }),
+    // Occupancy and conflicts only count bookings that hold their trailer (confirmed or later); the grid
+    // above still shows the unfinished ones, faded, to track demand.
     prisma.reservation.findMany({
-      where: { status: { not: "cancelled" }, trailerId: { not: null } },
+      where: { status: { in: [...SLOT_HOLDING_STATUSES] }, trailerId: { not: null } },
       select: { id: true, trailerId: true, pickupDate: true, returnDate: true },
     }),
     // Pending reservations whose pickup date has already passed no longer

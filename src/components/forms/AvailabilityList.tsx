@@ -212,6 +212,11 @@ export function AvailabilityList({
         </div>
       )}
 
+      <div className="mb-3 text-[11px] text-muted">
+        Une remorque est réservée pour vous à la fin de la réservation, une fois le contrat signé et la carte enregistrée :
+        la première personne qui termine l&apos;obtient.
+      </div>
+
       <div className="mb-4 text-[11px] text-muted">
         Prix avant taxes.{" "}
         {deliveryFeeCents === 0 && "Des frais de transport s'ajoutent si vous choisissez la livraison. "}

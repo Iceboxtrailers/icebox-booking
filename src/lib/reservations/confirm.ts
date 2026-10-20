@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { hasConflict } from "@/lib/availability";
+import { hasConflict, withTrailerLock } from "@/lib/availability";
 import { getMailer, sendInternalNotice } from "@/lib/email";
 import { confirmationEmail, internalNewReservationEmail } from "@/lib/email/templates";
 import { loadContractAttachment } from "@/lib/email/attachments";
@@ -9,11 +9,22 @@ import { siteUrl } from "@/lib/site";
 import { DELIVERY_OPTION_LABEL_FR } from "@/lib/constants";
 import type { DeliveryOption } from "@/lib/constants";
 
-export class ReservationConfirmError extends Error {}
+export class ReservationConfirmError extends Error {
+  // "slot_taken": another client confirmed this trailer for these dates first.
+  constructor(
+    message: string,
+    readonly code?: "slot_taken",
+  ) {
+    super(message);
+  }
+}
 
 // Re-validates everything the wizard already checked step-by-step, in case
 // state changed since (e.g. another booking took the slot meanwhile), then
 // finalizes the reservation and sends the confirmation email.
+//
+// An unfinished booking never holds a trailer: the first client to get here with a signed contract and
+// a saved card is the one who gets it.
 export async function confirmReservation(reservationId: string, clientId: string) {
   const reservation = await prisma.reservation.findUnique({
     where: { id: reservationId },
@@ -37,7 +48,7 @@ export async function confirmReservation(reservationId: string, clientId: string
     throw new ReservationConfirmError("Sélectionnez d'abord une remorque et des dates");
   }
   if (reservation.trailer.status !== "available") {
-    throw new ReservationConfirmError("Cette remorque n'est plus disponible, veuillez recommencer la sélection");
+    throw new ReservationConfirmError("Cette remorque n'est plus disponible.", "slot_taken");
   }
   if (reservation.contract?.signatureStatus !== "signed") {
     throw new ReservationConfirmError("Le contrat doit être signé");
@@ -48,18 +59,30 @@ export async function confirmReservation(reservationId: string, clientId: string
 
   const start = reservation.pickupDate.toISOString().slice(0, 10);
   const end = reservation.returnDate.toISOString().slice(0, 10);
-  const conflicting = await hasConflict(reservation.trailerId!, start, end, reservation.id);
-  if (conflicting) {
-    throw new ReservationConfirmError(
-      "Cette remorque n'est plus disponible pour ces dates, veuillez recommencer la sélection"
-    );
-  }
+  // The check and the write happen together with the trailer locked, so two clients finishing at the same
+  // moment cannot both get it: the second one finds the first one's confirmed booking and is turned away.
+  const trailerId = reservation.trailer.id;
+  const moved = await withTrailerLock(trailerId, async (tx) => {
+    if (await hasConflict(trailerId, start, end, reservation.id, tx)) {
+      throw new ReservationConfirmError(
+        "Cette remorque vient d'être réservée par quelqu'un d'autre pour ces dates.",
+        "slot_taken",
+      );
+    }
+    // Only the request that moves it out of "pending" does the follow-up work below, so a second tab
+    // or a double click does not send the emails twice.
+    const { count } = await tx.reservation.updateMany({
+      where: { id: reservationId, status: "pending" },
+      data: { status: "confirmed" },
+    });
+    return count === 1;
+  });
 
-  const confirmed = await prisma.reservation.update({
+  const confirmed = await prisma.reservation.findUniqueOrThrow({
     where: { id: reservationId },
-    data: { status: "confirmed" },
     include: { client: true, trailer: true, contract: true },
   });
+  if (!moved) return confirmed;
 
   await syncReservationToQuickBooks(reservationId);
 
