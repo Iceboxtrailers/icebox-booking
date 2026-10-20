@@ -4,6 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Upload } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { FormError } from "@/components/forms/FormError";
+import { apiErrorMessage } from "@/lib/api-client";
 
 function UploadBox({ label, file, onSet }: { label: string; file: File | null; onSet: (f: File | null) => void }) {
   return (
@@ -39,10 +41,7 @@ export function DocumentUpload({ reservationId }: { reservationId: string }) {
     body.set("consent", "true");
     body.set("file", file);
     const res = await fetch("/api/documents/upload", { method: "POST", body });
-    if (!res.ok) {
-      const data = await res.json().catch(() => ({}));
-      throw new Error(data.error ?? "Échec du téléversement");
-    }
+    if (!res.ok) throw new Error(await apiErrorMessage(res, "Échec du téléversement"));
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -79,7 +78,7 @@ export function DocumentUpload({ reservationId }: { reservationId: string }) {
         autorisé.
       </label>
 
-      {error && <div className="mt-3 text-[13px] text-red-600">{error}</div>}
+      <FormError message={error} className="mt-3" />
 
       <div className="mt-2 text-[12px] text-muted">
         Vous préférez le faire en succursale ?{" "}

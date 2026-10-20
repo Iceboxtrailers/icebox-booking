@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { CheckCircle2, Sparkles, Truck } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { FormError } from "@/components/forms/FormError";
+import { apiErrorMessage } from "@/lib/api-client";
 import { fmt } from "@/lib/dates";
 import { computeTaxBreakdown } from "@/lib/pricing";
 import type { AvailabilityCandidate } from "@/lib/availability";
@@ -62,8 +64,7 @@ export function AvailabilityList({
         }),
       });
       if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        setError(data.error ?? "Impossible d'enregistrer votre sélection");
+        setError(await apiErrorMessage(res, "Impossible d'enregistrer votre sélection"));
         return;
       }
       router.push(`/reservation/${reservationId}/documents`);
@@ -197,7 +198,7 @@ export function AvailabilityList({
         );
       })}
 
-      {error && <div className="mb-3 text-[13px] text-red-600">{error}</div>}
+      <FormError message={error} />
 
       {deliveryFeeCents > 0 && (
         <div className="mb-3 flex items-center gap-1.5 rounded-lg border border-border-light bg-subtle p-3 text-[12px] text-foreground">

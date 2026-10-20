@@ -6,6 +6,8 @@ import { loadStripe, type Stripe } from "@stripe/stripe-js";
 import { Elements, PaymentElement, useElements, useStripe } from "@stripe/react-stripe-js";
 import { ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { FormError } from "@/components/forms/FormError";
+import { apiErrorMessage } from "@/lib/api-client";
 import { DEPOSIT_AMOUNT_CENTS } from "@/lib/constants";
 
 const PUBLISHABLE_KEY = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
@@ -21,10 +23,7 @@ async function confirmOnServer(reservationId: string, setupIntentId: string) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ setupIntentId }),
   });
-  if (!res.ok) {
-    const data = await res.json().catch(() => ({}));
-    throw new Error(data.error ?? "Impossible d'enregistrer la carte");
-  }
+  if (!res.ok) throw new Error(await apiErrorMessage(res, "Impossible d'enregistrer la carte"));
 }
 
 function CardForm({ reservationId, onSaved }: { reservationId: string; onSaved: () => void }) {
@@ -68,7 +67,7 @@ function CardForm({ reservationId, onSaved }: { reservationId: string; onSaved: 
       <div className="mb-3.5 rounded-lg border border-border-light bg-subtle p-4">
         <PaymentElement />
       </div>
-      {error && <div className="mb-3 text-[13px] text-red-600">{error}</div>}
+      <FormError message={error} />
       <Button type="submit" variant="cta" disabled={!stripe || submitting}>
         {submitting ? "..." : "Enregistrer ma carte"}
       </Button>
@@ -111,8 +110,7 @@ export function DepositForm({
     (async () => {
       const res = await fetch(`/api/deposits/${reservationId}/setup`, { method: "POST" });
       if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        setError(data.error ?? "Impossible de préparer le paiement");
+        setError(await apiErrorMessage(res, "Impossible de préparer le paiement"));
         return;
       }
       const data = await res.json();
@@ -151,7 +149,7 @@ export function DepositForm({
         </div>
       )}
 
-      {error && <div className="mb-3 text-[13px] text-red-600">{error}</div>}
+      <FormError message={error} />
 
       <div className="mt-4 flex justify-between">
         <Button type="button" onClick={() => router.back()}>

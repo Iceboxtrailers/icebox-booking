@@ -6,6 +6,8 @@ import { RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Field } from "@/components/ui/Field";
 import { Input } from "@/components/ui/Input";
+import { FormError } from "@/components/forms/FormError";
+import { apiErrorMessage } from "@/lib/api-client";
 import type { ContractLine } from "@/lib/providers/signature/contract-text";
 
 export function SignaturePad({
@@ -47,6 +49,8 @@ export function SignaturePad({
       if (res.ok) {
         const data = await res.json();
         setPdfUrl(data.pdfUrl);
+      } else {
+        setError(await apiErrorMessage(res, "Impossible de préparer le contrat"));
       }
     })();
   }, [pdfUrl, reservationId]);
@@ -104,8 +108,7 @@ export function SignaturePad({
         body: JSON.stringify({ signerName, signatureImageBase64 }),
       });
       if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        setError(data.error ?? "Impossible d'enregistrer la signature");
+        setError(await apiErrorMessage(res, "Impossible d'enregistrer la signature"));
         return;
       }
       router.push(`/reservation/${reservationId}/depot`);
@@ -191,7 +194,7 @@ export function SignaturePad({
         </Button>
       </div>
 
-      {error && <div className="mt-3 text-[13px] text-red-600">{error}</div>}
+      <FormError message={error} className="mt-3" />
 
       <div className="mt-4 flex justify-between">
         <Button type="button" onClick={() => router.back()}>

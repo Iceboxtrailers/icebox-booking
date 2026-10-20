@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { Field } from "@/components/ui/Field";
 import { Input } from "@/components/ui/Input";
+import { FormError } from "@/components/forms/FormError";
+import { apiErrorMessage } from "@/lib/api-client";
 import { addDays, fmt } from "@/lib/dates";
 import { DELIVERY_OPTION, DELIVERY_OPTION_LABEL_FR, FLEX_WINDOW_DAYS, deliveryTrips } from "@/lib/constants";
 import type { DateRangeType, DeliveryOption } from "@/lib/constants";
@@ -56,8 +58,7 @@ export function TrailerDateForm({
         }),
       });
       if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        setError(data.error ?? "Impossible d'enregistrer");
+        setError(await apiErrorMessage(res, "Impossible d'enregistrer"));
         return;
       }
       router.push(`/reservation/${reservationId}/disponibilites`);
@@ -140,7 +141,7 @@ export function TrailerDateForm({
         />
       </Field>
 
-      {error && <div className="mb-3 text-[13px] text-red-600">{error}</div>}
+      <FormError message={error} />
 
       <div className="mt-4 flex justify-between">
         <Button type="button" onClick={() => router.push("/")}>
