@@ -1,7 +1,12 @@
 import Link from "next/link";
 import { MarketingLayout } from "@/components/MarketingLayout";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata = { title: "Conditions d'utilisation — IceBox" };
+export const metadata = pageMetadata({
+  title: "Conditions d'utilisation — IceBox",
+  path: "/conditions",
+  description: "Conditions d'utilisation du site de réservation de remorques réfrigérées IceBox.",
+});
 
 const SECTIONS: { title: string; body: string[] }[] = [
   {

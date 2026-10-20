@@ -2,8 +2,13 @@ import Link from "next/link";
 import { MarketingLayout } from "@/components/MarketingLayout";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata = { title: "Comment ça marche — IceBox" };
+export const metadata = pageMetadata({
+  title: "Comment ça marche — IceBox",
+  path: "/comment-ca-marche",
+  description: "Louez une remorque réfrigérée IceBox en ligne, sans compte : dates, choix de la remorque, documents, contrat signé à l'écran et dépôt de sécurité.",
+});
 
 const STEPS = [
   {

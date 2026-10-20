@@ -1,9 +1,12 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { ReactNode } from "react";
 import { auth } from "@/lib/auth";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { AccountTabs } from "@/components/AccountTabs";
+
+export const metadata: Metadata = { robots: { index: false, follow: false } };
 
 export default async function CompteLayout({ children }: { children: ReactNode }) {
   const session = await auth();

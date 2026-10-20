@@ -1,8 +1,13 @@
 import { Mail, Phone, MapPin } from "lucide-react";
 import { MarketingLayout } from "@/components/MarketingLayout";
 import { LeadContactForm } from "@/components/forms/LeadContactForm";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata = { title: "Contact — IceBox" };
+export const metadata = pageMetadata({
+  title: "Contact — IceBox",
+  path: "/contact",
+  description: "Une question sur une réservation, nos remorques ou nos services ? Écrivez à IceBox ou appelez le 581 889-2093.",
+});
 
 export default function ContactPage() {
   return (

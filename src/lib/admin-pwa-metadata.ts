@@ -7,6 +7,7 @@ import { BRAND } from "@/lib/brand";
 // logged-out /dashboard visit to /admin/login before layout.tsx ever runs).
 export const adminPwaMetadata: Metadata = {
   title: "IceBox Admin",
+  robots: { index: false, follow: false },
   manifest: "/dashboard.webmanifest",
   appleWebApp: {
     capable: true,

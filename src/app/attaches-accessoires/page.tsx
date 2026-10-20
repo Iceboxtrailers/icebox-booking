@@ -1,7 +1,12 @@
 import { MarketingLayout } from "@/components/MarketingLayout";
 import { LeadContactForm } from "@/components/forms/LeadContactForm";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata = { title: "Attaches & accessoires — IceBox" };
+export const metadata = pageMetadata({
+  title: "Attaches & accessoires — IceBox",
+  path: "/attaches-accessoires",
+  description: "Attaches de remorque, accessoires d'alimentation électrique et équipement complémentaire pour votre location IceBox : écrivez-nous, nous vous conseillerons.",
+});
 
 export default function AttachesAccessoiresPage() {
   return (

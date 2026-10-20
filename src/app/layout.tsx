@@ -3,6 +3,8 @@ import { Inter, Bungee, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { SessionProviderWrapper } from "@/components/SessionProviderWrapper";
 import { Tracker } from "@/components/Tracker";
+import { SITE_DESCRIPTION, SITE_TITLE } from "@/lib/seo";
+import { indexingAllowed, siteUrl } from "@/lib/site";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -25,8 +27,11 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "IceBox — Location de remorques réfrigérées et congelées",
-  description: "Réservez une remorque réfrigérée ou congelée en ligne, au Québec.",
+  metadataBase: new URL(siteUrl()),
+  title: SITE_TITLE,
+  description: SITE_DESCRIPTION,
+  // Closed to search engines until SITE_INDEXABLE=1 (see src/lib/site.ts).
+  robots: indexingAllowed() ? { index: true, follow: true } : { index: false, follow: false },
 };
 
 export default function RootLayout({

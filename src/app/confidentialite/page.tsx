@@ -1,6 +1,11 @@
 import { MarketingLayout } from "@/components/MarketingLayout";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata = { title: "Politique de confidentialité — IceBox" };
+export const metadata = pageMetadata({
+  title: "Politique de confidentialité — IceBox",
+  path: "/confidentialite",
+  description: "Comment IceBox recueille, utilise et protège vos renseignements personnels, conformément à la Loi 25 du Québec.",
+});
 
 const SECTIONS: { title: string; body: string[] }[] = [
   {

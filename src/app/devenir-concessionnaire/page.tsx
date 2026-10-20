@@ -1,7 +1,12 @@
 import { MarketingLayout } from "@/components/MarketingLayout";
 import { LeadContactForm } from "@/components/forms/LeadContactForm";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata = { title: "Devenir concessionnaire — IceBox" };
+export const metadata = pageMetadata({
+  title: "Devenir concessionnaire — IceBox",
+  path: "/devenir-concessionnaire",
+  description: "Offrez les remorques réfrigérées IceBox à votre clientèle : territoire, conditions et disponibilité de flotte. Écrivez-nous pour en discuter.",
+});
 
 export default function DevenirConcessionnairePage() {
   return (

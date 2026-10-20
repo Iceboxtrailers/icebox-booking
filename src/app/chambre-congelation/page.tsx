@@ -1,7 +1,12 @@
 import { MarketingLayout } from "@/components/MarketingLayout";
 import { LeadContactForm } from "@/components/forms/LeadContactForm";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata = { title: "Chambre de congélation sur mesure — IceBox" };
+export const metadata = pageMetadata({
+  title: "Chambre de congélation sur mesure — IceBox",
+  path: "/chambre-congelation",
+  description: "IceBox conçoit des chambres de congélation sur mesure, installées à demeure, souvent dans des restaurants et des commerces alimentaires.",
+});
 
 export default function ChambreCongelationPage() {
   return (

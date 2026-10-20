@@ -6,12 +6,17 @@ import { HowItWorks } from "@/components/home/HowItWorks";
 import { FaqHighlights } from "@/components/home/FaqHighlights";
 import { OtherServices } from "@/components/home/OtherServices";
 import { buttonClassName } from "@/components/ui/Button";
+import { JsonLd } from "@/components/JsonLd";
+import { SITE_DESCRIPTION, SITE_TITLE, businessJsonLd, pageMetadata } from "@/lib/seo";
+
+export const metadata = pageMetadata({ title: SITE_TITLE, description: SITE_DESCRIPTION, path: "/" });
 
 // Order of the page: what you can rent and for which need (hero + models + interior),
 // how it works, the questions that can block a booking, then the quieter secondary services.
 export default function HomePage() {
   return (
     <MarketingLayout>
+      <JsonLd data={businessJsonLd()} />
       <Hero />
       <ModelsSection />
       <InteriorSection />

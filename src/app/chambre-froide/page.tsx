@@ -1,7 +1,12 @@
 import { MarketingLayout } from "@/components/MarketingLayout";
 import { LeadContactForm } from "@/components/forms/LeadContactForm";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata = { title: "Chambre froide sur mesure — IceBox" };
+export const metadata = pageMetadata({
+  title: "Chambre froide sur mesure — IceBox",
+  path: "/chambre-froide",
+  description: "IceBox conçoit des chambres froides sur mesure, installées à demeure, souvent dans des restaurants et des commerces alimentaires.",
+});
 
 export default function ChambreFroidePage() {
   return (
