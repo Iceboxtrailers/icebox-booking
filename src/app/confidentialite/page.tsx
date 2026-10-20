@@ -19,6 +19,7 @@ const SECTIONS: { title: string; body: string[] }[] = [
       "Paiement : votre carte est saisie directement chez notre fournisseur de paiement (Stripe). IceBox ne voit ni ne conserve votre numéro de carte complet.",
       "Réservation sans compte : aucun compte n'est créé. Vos renseignements sont enregistrés pour cette seule réservation, visibles seulement par le personnel autorisé d'IceBox. Vous n'avez pas d'espace en ligne pour les consulter : votre contrat et votre confirmation vous sont envoyés par courriel.",
       "Compte (facultatif) : si vous créez un compte, votre mot de passe est conservé sous forme chiffrée irréversible.",
+      "Mesure d'audience anonyme : pour savoir combien de personnes visitent le site et où elles s'arrêtent, nous comptons les pages vues sans témoin (cookie) et sans rien enregistrer sur votre appareil. Nous gardons la page vue, le type d'appareil, le pays ou la province, le site d'où vous venez et une empreinte aléatoire qui change chaque jour (calculée à partir de votre adresse IP et de votre navigateur avec une clé secrète; votre adresse IP n'est pas conservée). Cette empreinte ne permet pas de vous identifier, de vous suivre d'un jour à l'autre ni de vous relier à une réservation. Ces données sont supprimées après 400 jours. Nous respectons l'option « Ne pas me suivre » et le signal Global Privacy Control de votre navigateur : si vous les activez, rien n'est compté.",
     ],
   },
   {

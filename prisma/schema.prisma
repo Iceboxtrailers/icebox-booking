@@ -53,6 +53,27 @@ model Client {
   @@map("clients")
 }
 
+// Anonymous audience measurement (admin "Trafic" page): no cookie, no name, no email and no link
+// to any booking or client. `visitor` is a hash that changes every day (HMAC of day + IP + browser
+// with a server secret; the IP itself is never stored), so it can count a visit but cannot follow
+// a person from one day to the next.
+model TrafficEvent {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  day       String // YYYY-MM-DD, Québec time
+  visitor   String // daily-rotating hash, 16 hex characters
+  name      String // pageview | search_dates
+  path      String // normalised public page path: no ids, no query string
+  source    String? // utm_source or referrer host; null = direct or internal navigation
+  device    String // mobile | tablet | desktop
+  country   String? // two-letter country code, from the hosting platform
+  region    String? // province or state code, from the hosting platform
+
+  @@index([createdAt])
+  @@index([day, visitor])
+  @@map("traffic_events")
+}
+
 // Internal staff login for /dashboard — deliberately separate from Client,
 // no shared table or session identity between the two.
 model AdminUser {

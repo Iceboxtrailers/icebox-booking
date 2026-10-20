@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, Bungee, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { SessionProviderWrapper } from "@/components/SessionProviderWrapper";
+import { Tracker } from "@/components/Tracker";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -40,6 +41,7 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         <SessionProviderWrapper>{children}</SessionProviderWrapper>
+        <Tracker />
       </body>
     </html>
   );

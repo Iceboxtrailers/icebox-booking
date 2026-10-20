@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { ArrowRight, Snowflake, Zap, Truck, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { trackEvent } from "@/lib/track-client";
 
 const FEATURES = [
   { icon: Snowflake, label: "Jusqu'à -18 °C" },
@@ -21,6 +22,7 @@ export function Hero() {
 
   function handleSearch(e: React.FormEvent) {
     e.preventDefault();
+    trackEvent("search_dates");
     const params = new URLSearchParams();
     if (pickupDate) params.set("pickupDate", pickupDate);
     if (returnDate) params.set("returnDate", returnDate);
