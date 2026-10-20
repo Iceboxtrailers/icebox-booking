@@ -77,6 +77,12 @@ export function QuickBooksPanel({
     }
   }
 
+  // The connect route answers with a redirect to Intuit, so it takes a full page navigation, not a router push.
+  function connect() {
+    // eslint-disable-next-line @next/next/no-location-assign-relative-destination
+    window.location.href = "/api/admin/quickbooks/connect";
+  }
+
   // In-page confirmation: window.confirm() is silently blocked in some embedded browsers.
   const [confirmingDisconnect, setConfirmingDisconnect] = useState(false);
 
@@ -121,7 +127,7 @@ export function QuickBooksPanel({
             Mode : <strong>{environment === "production" ? "production" : "essai (sandbox)"}</strong>. Vous serez
             redirigé vers Intuit pour autoriser l&apos;accès à votre compte.
           </p>
-          <Button type="button" variant="cta" onClick={() => (window.location.href = "/api/admin/quickbooks/connect")}>
+          <Button type="button" variant="cta" onClick={connect}>
             Connecter QuickBooks
           </Button>
         </Card>
@@ -152,7 +158,7 @@ export function QuickBooksPanel({
             <div className="mt-2 flex flex-wrap gap-4 text-[12px]">
               <button
                 type="button"
-                onClick={() => (window.location.href = "/api/admin/quickbooks/connect")}
+                onClick={connect}
                 className="text-navy hover:underline"
               >
                 Connecter une autre entreprise
