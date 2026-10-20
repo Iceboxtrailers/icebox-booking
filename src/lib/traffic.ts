@@ -1,4 +1,5 @@
 import { createHmac } from "node:crypto";
+import { quebecDay } from "@/lib/dates";
 import { WIZARD_SEGMENTS } from "@/lib/wizard";
 
 // Anonymous audience measurement. What is stored (see TrafficEvent in the schema) can count
@@ -80,10 +81,8 @@ export function trafficSource(referrer: string | undefined, utmSource: string | 
   }
 }
 
-// Calendar day in Québec time (YYYY-MM-DD): the visitor hash and the reports use the same day.
-export function quebecDay(date: Date = new Date()): string {
-  return new Intl.DateTimeFormat("en-CA", { timeZone: "America/Toronto", year: "numeric", month: "2-digit", day: "2-digit" }).format(date);
-}
+// The visitor hash and the reports use the Québec calendar day.
+export { quebecDay };
 
 export function visitorHash(secret: string, day: string, ip: string, userAgent: string): string {
   return createHmac("sha256", secret).update(`${day}|${ip}|${userAgent}`).digest("hex").slice(0, 16);

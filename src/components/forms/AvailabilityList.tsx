@@ -59,7 +59,6 @@ export function AvailabilityList({
           trailerId: chosen.trailerId,
           pickupDate: chosen.windowStart,
           returnDate: chosen.windowEnd,
-          totalAmount: chosen.totalCents,
         }),
       });
       if (!res.ok) {

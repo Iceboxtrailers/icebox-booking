@@ -6,6 +6,9 @@ import { passwordResetEmail } from "@/lib/email/templates";
 import { forgotPasswordSchema } from "@/lib/validation";
 
 const TOKEN_TTL_MS = 60 * 60 * 1000; // 1 hour
+// A new link is not sent while the last one is under a minute old: nobody can use this form to
+// flood someone's inbox with reset emails.
+const RESEND_COOLDOWN_MS = 60 * 1000;
 
 export async function POST(request: Request) {
   const body = await request.json().catch(() => null);
@@ -19,7 +22,9 @@ export async function POST(request: Request) {
 
   // Always respond the same way whether or not the email exists, so this
   // endpoint can't be used to check which emails have accounts.
-  if (client) {
+  const sentJustNow =
+    client?.resetTokenExpiresAt && client.resetTokenExpiresAt.getTime() - Date.now() > TOKEN_TTL_MS - RESEND_COOLDOWN_MS;
+  if (client && !sentJustNow) {
     const token = randomBytes(32).toString("hex");
     const resetTokenHash = createHash("sha256").update(token).digest("hex");
     await prisma.client.update({

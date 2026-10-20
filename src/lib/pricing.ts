@@ -29,6 +29,9 @@ export const URGENCY_FEE_PER_KM_CENTS = 125;
 export const URGENCY_FEE_PER_HOUR_CENTS = 10000;
 export const URGENCY_MIN_HOURS = 3;
 
+// Longer rentals are arranged directly with IceBox, not through the online wizard.
+export const MAX_ONLINE_RENTAL_NIGHTS = 365;
+
 export type PriceBreakdown = { months: number; weeks: number; days: number; totalCents: number };
 
 // The offer sheet gives flat rates for exactly 1 day / 7 days / 30 days, not

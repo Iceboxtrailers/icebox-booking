@@ -5,28 +5,33 @@ const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Date invalide");
 const isoTime = z.string().regex(/^\d{2}:\d{2}$/, "Heure invalide");
 
 // Emails are stored and looked up in lower case, so "Test@x.com" and "test@x.com" are one person.
-const emailField = z.string().trim().toLowerCase().email("Courriel invalide");
+const emailField = z.string().trim().toLowerCase().max(254, "Courriel invalide").email("Courriel invalide");
+
+// Ceilings for text typed on public and client forms: nobody needs a 4 MB first name.
+const personName = (label: string) => z.string().trim().min(1, `${label} requis`).max(80, `${label} trop long`);
+const phoneField = z.string().trim().min(7, "Téléphone invalide").max(40, "Téléphone invalide");
+const passwordField = z.string().min(8, "Le mot de passe doit contenir au moins 8 caractères").max(200, "Mot de passe trop long");
 
 export const signupSchema = z.object({
-  firstName: z.string().trim().min(1, "Prénom requis"),
-  lastName: z.string().trim().min(1, "Nom requis"),
+  firstName: personName("Prénom"),
+  lastName: personName("Nom"),
   email: emailField,
-  phone: z.string().trim().min(7, "Téléphone invalide"),
-  password: z.string().min(8, "Le mot de passe doit contenir au moins 8 caractères"),
+  phone: phoneField,
+  password: passwordField,
   marketingOptIn: z.boolean().optional(),
 });
 
 // Booking without an account: contact details only, no password.
 export const guestStartSchema = z.object({
-  firstName: z.string().trim().min(1, "Prénom requis"),
-  lastName: z.string().trim().min(1, "Nom requis"),
+  firstName: personName("Prénom"),
+  lastName: personName("Nom"),
   email: emailField,
-  phone: z.string().trim().min(7, "Téléphone invalide"),
+  phone: phoneField,
 });
 
 export const loginSchema = z.object({
   email: emailField,
-  password: z.string().min(1, "Mot de passe requis"),
+  password: z.string().min(1, "Mot de passe requis").max(200, "Mot de passe trop long"),
 });
 
 export const adminLoginSchema = z.object({
@@ -44,25 +49,25 @@ export const forgotPasswordSchema = z.object({
 });
 
 export const resetPasswordSchema = z.object({
-  token: z.string().min(1),
-  password: z.string().min(8, "Le mot de passe doit contenir au moins 8 caractères"),
+  token: z.string().min(1).max(200),
+  password: passwordField,
 });
 
 export const updateAccountSchema = z.object({
-  firstName: z.string().trim().min(1, "Prénom requis"),
-  lastName: z.string().trim().min(1, "Nom requis"),
-  company: z.string().trim().optional(),
+  firstName: personName("Prénom"),
+  lastName: personName("Nom"),
+  company: z.string().trim().max(120).optional(),
   email: emailField,
-  phone: z.string().trim().min(7, "Téléphone invalide"),
-  billingAddress: z.string().trim().optional(),
-  billingCity: z.string().trim().optional(),
-  billingProvince: z.string().trim().optional(),
-  billingPostalCode: z.string().trim().optional(),
+  phone: phoneField,
+  billingAddress: z.string().trim().max(200).optional(),
+  billingCity: z.string().trim().max(100).optional(),
+  billingProvince: z.string().trim().max(60).optional(),
+  billingPostalCode: z.string().trim().max(20).optional(),
 });
 
 export const changePasswordSchema = z.object({
-  currentPassword: z.string().min(1, "Mot de passe actuel requis"),
-  newPassword: z.string().min(8, "Le mot de passe doit contenir au moins 8 caractères"),
+  currentPassword: z.string().min(1, "Mot de passe actuel requis").max(200, "Mot de passe trop long"),
+  newPassword: passwordField,
 });
 
 export const selectTrailerSchema = z.object({
@@ -191,9 +196,9 @@ export const adminReportQuerySchema = z.discriminatedUnion("type", [
 ]);
 
 export const contactSchema = z.object({
-  topic: z.string().trim().min(1),
-  name: z.string().trim().min(1, "Nom requis"),
-  email: z.string().trim().email("Courriel invalide"),
-  phone: z.string().trim().optional(),
-  message: z.string().trim().min(1, "Message requis"),
+  topic: z.string().trim().min(1).max(80),
+  name: personName("Nom"),
+  email: z.string().trim().max(254, "Courriel invalide").email("Courriel invalide"),
+  phone: z.string().trim().max(40).optional(),
+  message: z.string().trim().min(1, "Message requis").max(5000, "Message trop long (5 000 caractères au maximum)"),
 });

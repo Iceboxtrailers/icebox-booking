@@ -8,11 +8,12 @@ import { Card } from "@/components/ui/Card";
 import { Field } from "@/components/ui/Field";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
+import { safeRedirectPath } from "@/lib/safe-redirect";
 
 function AdminLoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
+  const callbackUrl = safeRedirectPath(searchParams.get("callbackUrl"), "/dashboard");
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");

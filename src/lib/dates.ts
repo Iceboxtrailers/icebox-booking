@@ -13,6 +13,11 @@ export function fmt(iso: string | null | undefined): string {
   return d.toLocaleDateString("fr-CA", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
 }
 
+// Today's calendar date in Québec time (YYYY-MM-DD), whatever the server's time zone.
+export function quebecDay(date: Date = new Date()): string {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "America/Toronto", year: "numeric", month: "2-digit", day: "2-digit" }).format(date);
+}
+
 export function nights(a: string | null | undefined, b: string | null | undefined): number {
   if (!a || !b) return 0;
   const start = new Date(`${a}T00:00:00Z`).getTime();

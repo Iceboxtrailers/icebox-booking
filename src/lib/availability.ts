@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { addDays, nights } from "@/lib/dates";
+import { addDays, nights, quebecDay } from "@/lib/dates";
 import { computeTotalCents } from "@/lib/pricing";
 import { catalogueFor } from "@/lib/catalogue";
 import { TRAILER_SIZE } from "@/lib/constants";
@@ -63,7 +63,9 @@ export async function searchAvailability(input: {
   excludeReservationId?: string;
 }): Promise<AvailabilityCandidate[]> {
   const sizes = input.size ? [input.size] : TRAILER_SIZE;
-  const windows = buildWindows(input.dateRangeType, input.start, input.end, input.flexWindowDays);
+  // A flexible window that starts before today is not a real option.
+  const today = quebecDay();
+  const windows = buildWindows(input.dateRangeType, input.start, input.end, input.flexWindowDays).filter((w) => w.start >= today);
   const candidates: AvailabilityCandidate[] = [];
 
   for (const size of sizes) {

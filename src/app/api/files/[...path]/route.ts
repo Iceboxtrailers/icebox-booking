@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getCurrentClientId, getCurrentAdminId } from "@/lib/session";
+import { getCurrentAdmin } from "@/lib/admin-auth";
+import { getCurrentClientId } from "@/lib/session";
 import { getStorage } from "@/lib/providers/storage";
 
 const MIME_BY_EXT: Record<string, string> = {
@@ -10,6 +11,21 @@ const MIME_BY_EXT: Record<string, string> = {
   jpeg: "image/jpeg",
   webp: "image/webp",
 };
+
+// How many path segments each kind of stored file has (see the routes that save them):
+//   documents/<clientId>/<file>   contracts/<file>   signatures/<file>
+//   trailers/<file>               inspections/<reservationId>/<file>
+const SEGMENTS_BY_KIND: Record<string, number> = { documents: 3, contracts: 2, signatures: 2, trailers: 2, inspections: 3 };
+const SAFE_SEGMENT = /^[A-Za-z0-9][A-Za-z0-9._-]*$/;
+
+// Only paths of a known shape are looked up: no "..", no empty or odd segments, so a path can
+// never be steered to a file the ownership check below did not look at.
+function hasKnownShape(segments: string[]): boolean {
+  return (
+    SEGMENTS_BY_KIND[segments[0]] === segments.length &&
+    segments.every((segment) => SAFE_SEGMENT.test(segment) && !segment.includes(".."))
+  );
+}
 
 async function isOwnedByClient(segments: string[], clientId: string): Promise<boolean> {
   const [kind, second] = segments;
@@ -33,17 +49,17 @@ async function isOwnedByClient(segments: string[], clientId: string): Promise<bo
 
 export async function GET(_request: Request, { params }: { params: Promise<{ path: string[] }> }) {
   const { path: segments } = await params;
+  if (!hasKnownShape(segments)) return NextResponse.json({ error: "Fichier introuvable" }, { status: 404 });
   const [kind] = segments;
 
+  // The staff member is looked up in the database, so a removed account loses access at once.
   if (kind === "trailers" || kind === "inspections") {
     // Fleet photos and return-inspection photos are staff-only assets, never
     // visible to clients.
-    const adminId = await getCurrentAdminId();
-    if (!adminId) return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
+    if (!(await getCurrentAdmin())) return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
   } else if (kind === "contracts" || kind === "signatures") {
     // Staff are a party to every contract, so any signed-in admin can view them.
-    const adminId = await getCurrentAdminId();
-    if (!adminId) {
+    if (!(await getCurrentAdmin())) {
       const clientId = await getCurrentClientId();
       if (!clientId || !(await isOwnedByClient(segments, clientId))) {
         return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
@@ -60,13 +76,19 @@ export async function GET(_request: Request, { params }: { params: Promise<{ pat
     }
   }
 
-  const ext = segments[segments.length - 1].split(".").pop() ?? "";
+  const ext = segments[segments.length - 1].split(".").pop()?.toLowerCase() ?? "";
   const contentType = MIME_BY_EXT[ext] ?? "application/octet-stream";
 
   try {
     const data = await getStorage().read(segments.join("/"));
     return new NextResponse(new Uint8Array(data), {
-      headers: { "Content-Type": contentType },
+      headers: {
+        "Content-Type": contentType,
+        "Content-Disposition": contentType === "application/octet-stream" ? "attachment" : "inline",
+        // Private documents: never shared by a cache, never reinterpreted by the browser.
+        "Cache-Control": "private, no-store",
+        "X-Content-Type-Options": "nosniff",
+      },
     });
   } catch {
     return NextResponse.json({ error: "Fichier introuvable" }, { status: 404 });

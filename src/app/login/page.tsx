@@ -8,11 +8,12 @@ import { Card } from "@/components/ui/Card";
 import { Field } from "@/components/ui/Field";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
+import { safeRedirectPath } from "@/lib/safe-redirect";
 
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get("callbackUrl") || "/reservation/new";
+  const callbackUrl = safeRedirectPath(searchParams.get("callbackUrl"), "/reservation/new");
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

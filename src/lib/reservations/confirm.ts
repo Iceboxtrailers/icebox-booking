@@ -29,8 +29,15 @@ export async function confirmReservation(reservationId: string, clientId: string
   if (reservation.status !== "pending") {
     throw new ReservationConfirmError("Cette réservation n'est plus modifiable");
   }
+  // A session can outlive a suspension: the account is checked again here, as at sign-in.
+  if (reservation.client.status !== "active") {
+    throw new ReservationConfirmError("Cette réservation ne peut pas être confirmée en ligne. Communiquez avec IceBox au 581 889-2093.");
+  }
   if (!reservation.trailer || !reservation.pickupDate || !reservation.returnDate) {
     throw new ReservationConfirmError("Sélectionnez d'abord une remorque et des dates");
+  }
+  if (reservation.trailer.status !== "available") {
+    throw new ReservationConfirmError("Cette remorque n'est plus disponible, veuillez recommencer la sélection");
   }
   if (reservation.contract?.signatureStatus !== "signed") {
     throw new ReservationConfirmError("Le contrat doit être signé");
