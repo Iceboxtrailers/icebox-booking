@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentClientId } from "@/lib/session";
 import { getSignatureProvider } from "@/lib/providers/signature";
+import { RATE_RULES, rejectIfOverLimit } from "@/lib/rate-limit";
 
 export async function POST(_request: Request, { params }: { params: Promise<{ reservationId: string }> }) {
   const clientId = await getCurrentClientId();
@@ -12,6 +13,8 @@ export async function POST(_request: Request, { params }: { params: Promise<{ re
   if (!reservation || reservation.clientId !== clientId) {
     return NextResponse.json({ error: "Introuvable" }, { status: 404 });
   }
+  const limited = await rejectIfOverLimit(RATE_RULES.contract, clientId);
+  if (limited) return limited;
   if (reservation.status !== "pending") {
     return NextResponse.json({ error: "Cette réservation n'est plus modifiable" }, { status: 409 });
   }

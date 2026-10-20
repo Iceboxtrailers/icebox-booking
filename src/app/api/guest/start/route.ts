@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { guestStartSchema } from "@/lib/validation";
 import { GUEST_START_LIMIT, GUEST_TOKEN_TTL_MS, hashGuestToken, newGuestToken } from "@/lib/guest";
+import { RATE_RULES, clientIp, rejectIfOverLimit } from "@/lib/rate-limit";
 
 // Starts a booking without an account: creates an admin-only record for this booking and
 // returns a one-time token the browser exchanges for a short session (provider "guest-session").
@@ -14,6 +15,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Requête invalide" }, { status: 400 });
   }
   const { firstName, lastName, email, phone } = parsed.data;
+
+  const limited = await rejectIfOverLimit(RATE_RULES.guestStart, clientIp(request));
+  if (limited) return limited;
 
   // A real account owns this email: its owner must sign in (with a password or an emailed link).
   const account = await prisma.client.findFirst({ where: { email, hasAccount: true }, select: { id: true } });

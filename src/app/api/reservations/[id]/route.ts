@@ -8,6 +8,7 @@ import { MAX_ONLINE_RENTAL_NIGHTS, computeDeliveryFeeCents, computeTotalCents } 
 import { getDrivingDistanceKm } from "@/lib/geo/distance";
 import { hasConflict } from "@/lib/availability";
 import { nights, quebecDay } from "@/lib/dates";
+import { RATE_RULES, rejectIfOverLimit } from "@/lib/rate-limit";
 
 const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Date invalide");
 
@@ -98,6 +99,9 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   if (rest.deliveryOption !== undefined || rest.usageLocation !== undefined) {
     const trips = deliveryTrips(deliveryOption as DeliveryOption);
     if (trips > 0 && usageLocation) {
+      // Each lookup is a paid Google Maps call.
+      const limited = await rejectIfOverLimit(RATE_RULES.maps, clientId);
+      if (limited) return limited;
       try {
         deliveryDistanceKm = await getDrivingDistanceKm(usageLocation);
         deliveryFeeCents = computeDeliveryFeeCents(deliveryDistanceKm, trips);

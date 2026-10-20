@@ -1,4 +1,4 @@
-import NextAuth from "next-auth";
+import NextAuth, { CredentialsSignin } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
@@ -6,6 +6,12 @@ import { loginSchema, adminLoginSchema } from "@/lib/validation";
 import { authConfig } from "@/lib/auth.config";
 import { verifyAdminLogin } from "@/lib/admin-login";
 import { hashGuestToken } from "@/lib/guest";
+import { RATE_RULES, clientIp, overLimit } from "@/lib/rate-limit";
+
+// Lets the login page say "too many attempts" instead of "wrong password".
+class RateLimitedSignin extends CredentialsSignin {
+  code = "rate_limited";
+}
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
@@ -15,9 +21,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         email: { label: "Courriel", type: "email" },
         password: { label: "Mot de passe", type: "password" },
       },
-      authorize: async (rawCredentials) => {
+      authorize: async (rawCredentials, request) => {
         const parsed = loginSchema.safeParse(rawCredentials);
         if (!parsed.success) return null;
+
+        // Too many tries for this email, or from this address: stop before any password is checked.
+        const byEmail = await overLimit(RATE_RULES.login, parsed.data.email);
+        const byIp = await overLimit(RATE_RULES.loginIp, clientIp(request));
+        if (byEmail.over || byIp.over) throw new RateLimitedSignin();
 
         // Only real accounts sign in with a password; guest records have none.
         const client = await prisma.client.findFirst({

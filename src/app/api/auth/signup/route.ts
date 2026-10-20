@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { signupSchema } from "@/lib/validation";
+import { RATE_RULES, clientIp, rejectIfOverLimit } from "@/lib/rate-limit";
 
 export async function POST(request: Request) {
   const body = await request.json().catch(() => null);
@@ -9,6 +10,9 @@ export async function POST(request: Request) {
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Requête invalide" }, { status: 400 });
   }
+
+  const limited = await rejectIfOverLimit(RATE_RULES.signup, clientIp(request));
+  if (limited) return limited;
 
   // Only real accounts count: records kept for guest bookings are not accounts, and the new account
   // does not inherit their history.

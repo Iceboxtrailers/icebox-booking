@@ -74,6 +74,20 @@ model TrafficEvent {
   @@map("traffic_events")
 }
 
+// Request counters that slow down abuse of public forms and logins (see src/lib/rate-limit.ts).
+// One row per rule + hashed requester + time window; the key never holds an IP or an email in
+// the clear, and rows are deleted shortly after their window ends.
+model RateLimit {
+  key       String
+  bucket    BigInt // window number: unix seconds / window length
+  count     Int    @default(1)
+  expiresAt BigInt // unix seconds after which the row is useless
+
+  @@id([key, bucket])
+  @@index([expiresAt])
+  @@map("rate_limits")
+}
+
 // Internal staff login for /dashboard — deliberately separate from Client,
 // no shared table or session identity between the two.
 model AdminUser {

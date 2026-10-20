@@ -27,7 +27,11 @@ function LoginForm() {
     try {
       const result = await signIn("credentials", { email, password, redirect: false });
       if (result?.error) {
-        setError("Courriel ou mot de passe invalide");
+        setError(
+          result.code === "rate_limited"
+            ? "Trop de tentatives. Réessayez dans 15 minutes ou utilisez « Mot de passe oublié »."
+            : "Courriel ou mot de passe invalide",
+        );
         return;
       }
       router.push(callbackUrl);

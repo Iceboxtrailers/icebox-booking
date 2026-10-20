@@ -5,6 +5,7 @@ import { getCurrentClientId } from "@/lib/session";
 import { getStorage } from "@/lib/providers/storage";
 import { DOCUMENT_TYPE } from "@/lib/constants";
 import { detectFileType } from "@/lib/file-type";
+import { RATE_RULES, rejectIfOverLimit } from "@/lib/rate-limit";
 
 const MAX_FILE_BYTES = 10 * 1024 * 1024;
 // A client needs a licence and an insurance proof; the rest is room for retries.
@@ -13,6 +14,9 @@ const MAX_DOCUMENTS_PER_CLIENT = 12;
 export async function POST(request: Request) {
   const clientId = await getCurrentClientId();
   if (!clientId) return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
+
+  const limited = await rejectIfOverLimit(RATE_RULES.upload, clientId);
+  if (limited) return limited;
 
   const formData = await request.formData();
   const type = formData.get("type");

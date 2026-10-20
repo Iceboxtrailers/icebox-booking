@@ -3,6 +3,7 @@ import { createHash } from "node:crypto";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { resetPasswordSchema } from "@/lib/validation";
+import { RATE_RULES, clientIp, rejectIfOverLimit } from "@/lib/rate-limit";
 
 export async function POST(request: Request) {
   const body = await request.json().catch(() => null);
@@ -10,6 +11,9 @@ export async function POST(request: Request) {
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Requête invalide" }, { status: 400 });
   }
+
+  const limited = await rejectIfOverLimit(RATE_RULES.resetPassword, clientIp(request));
+  if (limited) return limited;
 
   const resetTokenHash = createHash("sha256").update(parsed.data.token).digest("hex");
   const client = await prisma.client.findFirst({

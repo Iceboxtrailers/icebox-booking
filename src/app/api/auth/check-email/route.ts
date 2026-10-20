@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { RATE_RULES, clientIp, rejectIfOverLimit } from "@/lib/rate-limit";
 
 // Public, read-only — tells the booking page whether a real account (one that can sign in)
 // uses this email, so its owner is asked to sign in instead of filling out the whole form.
@@ -8,6 +9,9 @@ import { prisma } from "@/lib/prisma";
 export async function GET(request: Request) {
   const email = new URL(request.url).searchParams.get("email")?.trim().toLowerCase();
   if (!email) return NextResponse.json({ error: "Courriel requis" }, { status: 400 });
+
+  const limited = await rejectIfOverLimit(RATE_RULES.checkEmail, clientIp(request));
+  if (limited) return limited;
 
   const account = await prisma.client.findFirst({ where: { email, hasAccount: true }, select: { id: true } });
   return NextResponse.json({ exists: Boolean(account) });

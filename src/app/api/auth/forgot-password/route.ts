@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getMailer } from "@/lib/email";
 import { passwordResetEmail } from "@/lib/email/templates";
 import { forgotPasswordSchema } from "@/lib/validation";
+import { RATE_RULES, clientIp, rejectIfOverLimit } from "@/lib/rate-limit";
 
 const TOKEN_TTL_MS = 60 * 60 * 1000; // 1 hour
 // A new link is not sent while the last one is under a minute old: nobody can use this form to
@@ -16,6 +17,9 @@ export async function POST(request: Request) {
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Requête invalide" }, { status: 400 });
   }
+
+  const limited = await rejectIfOverLimit(RATE_RULES.forgotPassword, clientIp(request));
+  if (limited) return limited;
 
   // Only real accounts can reset a password: guest records have none and are never reachable by email.
   const client = await prisma.client.findFirst({ where: { email: parsed.data.email, hasAccount: true } });
