@@ -1,18 +1,20 @@
 import { MarketingLayout } from "@/components/MarketingLayout";
 import { Hero } from "@/components/Hero";
 import { ModelsSection } from "@/components/home/ModelsSection";
+import { InteriorSection } from "@/components/home/InteriorSection";
 import { HowItWorks } from "@/components/home/HowItWorks";
 import { FaqHighlights } from "@/components/home/FaqHighlights";
 import { OtherServices } from "@/components/home/OtherServices";
 import { buttonClassName } from "@/components/ui/Button";
 
-// Order of the page: what you can rent and for which need (hero + models), how it
-// works, the questions that can block a booking, then the quieter secondary services.
+// Order of the page: what you can rent and for which need (hero + models + interior),
+// how it works, the questions that can block a booking, then the quieter secondary services.
 export default function HomePage() {
   return (
     <MarketingLayout>
       <Hero />
       <ModelsSection />
+      <InteriorSection />
       <HowItWorks />
       <FaqHighlights />
 

@@ -37,8 +37,8 @@ export function Hero() {
       <div className="mx-auto grid max-w-5xl items-center gap-8 md:grid-cols-2 md:gap-10">
         <div className="md:order-2">
           <Image
-            src="/photos/remorque-icebox-cote.jpg"
-            alt="Remorque réfrigérée ICEBOX, vue de côté, avec le logo et le numéro de location"
+            src="/photos/remorque-5x10-cote.jpg"
+            alt="Remorque réfrigérée ICEBOX 5×10, vue de côté, avec le logo et le numéro de location"
             width={1800}
             height={1350}
             priority

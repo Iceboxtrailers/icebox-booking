@@ -25,7 +25,7 @@ export function HowItWorks() {
 
       <div className="grid items-center gap-8 md:grid-cols-[minmax(0,260px)_1fr]">
         <Image
-          src="/photos/remorque-icebox-porte.jpg"
+          src="/photos/remorque-6x12-porte.jpg"
           alt="Porte arrière d'une remorque ICEBOX, avec le marchepied et le numéro de location"
           width={1000}
           height={1399}

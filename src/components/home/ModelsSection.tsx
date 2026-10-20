@@ -1,8 +1,22 @@
+import Image from "next/image";
 import { Check } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { buttonClassName } from "@/components/ui/Button";
 import { CATALOGUE, INCLUDED_WITH_RENTAL } from "@/lib/catalogue";
+import type { TrailerSize } from "@/lib/constants";
 import { RATE_TABLE, TRANSPORT_FEE_PER_TRIP_CENTS, TRANSPORT_FEE_PER_KM_BEYOND_CENTS } from "@/lib/pricing";
+
+// One real photo per model (one axle = 5x10, two axles = 6x12).
+const MODEL_PHOTOS: Record<TrailerSize, { src: string; alt: string }> = {
+  "5x10": {
+    src: "/photos/remorque-5x10-avant.jpg",
+    alt: "Remorque ICEBOX 5×10 à un essieu, vue de trois quarts avec le groupe frigorifique et l'attelage",
+  },
+  "6x12": {
+    src: "/photos/remorque-6x12-cote.jpg",
+    alt: "Remorque ICEBOX 6×12 à deux essieux, vue de côté",
+  },
+};
 
 function money(cents: number) {
   return (cents / 100).toFixed(2);
@@ -26,44 +40,55 @@ export function ModelsSection() {
         {CATALOGUE.map((item) => {
           const rate = RATE_TABLE[item.size];
           return (
-            <Card key={item.size} className="flex flex-col p-5">
-              <div className="mb-1 flex items-baseline justify-between gap-2">
-                <div className="font-heading text-2xl">{item.size.replace("x", "×")}</div>
-                <div className="tabular-nums text-[12px] text-muted">{item.tempRangeLabel}</div>
+            <Card key={item.size} className="flex flex-col overflow-hidden">
+              <div className="relative aspect-[5/4] w-full bg-subtle">
+                <Image
+                  src={MODEL_PHOTOS[item.size].src}
+                  alt={MODEL_PHOTOS[item.size].alt}
+                  fill
+                  sizes="(min-width: 1024px) 490px, (min-width: 640px) 45vw, 100vw"
+                  className="object-cover"
+                />
               </div>
-              <div className="mb-4 text-[13px] text-muted">{item.idealFor}</div>
+              <div className="flex flex-1 flex-col p-5">
+                <div className="mb-1 flex items-baseline justify-between gap-2">
+                  <div className="font-heading text-2xl">{item.size.replace("x", "×")}</div>
+                  <div className="tabular-nums text-[12px] text-muted">{item.tempRangeLabel}</div>
+                </div>
+                <div className="mb-4 text-[13px] text-muted">{item.idealFor}</div>
 
-              <dl className="mb-5 space-y-1.5 text-[13px]">
-                <div className="flex justify-between gap-3">
-                  <dt className="text-muted">Intérieur</dt>
-                  <dd className="tabular-nums">{item.interiorDimensions}</dd>
-                </div>
-                <div className="flex justify-between gap-3">
-                  <dt className="text-muted">Alimentation</dt>
-                  <dd>120 V</dd>
-                </div>
-                <div className="flex justify-between gap-3">
-                  <dt className="text-muted">Poids approximatif</dt>
-                  <dd className="tabular-nums">{item.approxWeightLb.toLocaleString("fr-CA")} lb</dd>
-                </div>
-                <div className="flex justify-between gap-3">
-                  <dt className="text-muted">Main de remorque</dt>
-                  <dd className="tabular-nums">{item.hitchLabel}</dd>
-                </div>
-              </dl>
+                <dl className="mb-5 space-y-1.5 text-[13px]">
+                  <div className="flex justify-between gap-3">
+                    <dt className="text-muted">Intérieur</dt>
+                    <dd className="tabular-nums">{item.interiorDimensions}</dd>
+                  </div>
+                  <div className="flex justify-between gap-3">
+                    <dt className="text-muted">Alimentation</dt>
+                    <dd>120 V</dd>
+                  </div>
+                  <div className="flex justify-between gap-3">
+                    <dt className="text-muted">Poids approximatif</dt>
+                    <dd className="tabular-nums">{item.approxWeightLb.toLocaleString("fr-CA")} lb</dd>
+                  </div>
+                  <div className="flex justify-between gap-3">
+                    <dt className="text-muted">Main de remorque</dt>
+                    <dd className="tabular-nums">{item.hitchLabel}</dd>
+                  </div>
+                </dl>
 
-              <div className="mt-auto">
-                <div className="tabular-nums">
-                  <span className="text-[13px] text-muted">dès </span>
-                  <span className="text-2xl font-semibold">{dollars(rate.dayCents)} $</span>
-                  <span className="text-[13px] text-muted"> / jour</span>
+                <div className="mt-auto">
+                  <div className="tabular-nums">
+                    <span className="text-[13px] text-muted">dès </span>
+                    <span className="text-2xl font-semibold">{dollars(rate.dayCents)} $</span>
+                    <span className="text-[13px] text-muted"> / jour</span>
+                  </div>
+                  <div className="mb-4 tabular-nums text-[12px] text-muted">
+                    {dollars(rate.weekCents)} $ / semaine · {dollars(rate.monthCents)} $ / mois
+                  </div>
+                  <a href="#disponibilites" className={buttonClassName("cta", "md", "w-full justify-center")}>
+                    Choisir mes dates
+                  </a>
                 </div>
-                <div className="mb-4 tabular-nums text-[12px] text-muted">
-                  {dollars(rate.weekCents)} $ / semaine · {dollars(rate.monthCents)} $ / mois
-                </div>
-                <a href="#disponibilites" className={buttonClassName("cta", "md", "w-full justify-center")}>
-                  Choisir mes dates
-                </a>
               </div>
             </Card>
           );
