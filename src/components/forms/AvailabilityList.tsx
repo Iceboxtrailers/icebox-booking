@@ -86,7 +86,7 @@ export function AvailabilityList({
         <button
           type="button"
           onClick={() => setHelperOpen((v) => !v)}
-          className="flex items-center gap-1.5 text-[13px] font-medium text-navy"
+          className="flex items-center gap-1.5 py-1.5 text-[13px] font-medium text-navy"
         >
           <Sparkles size={14} /> Je ne sais pas laquelle choisir
         </button>

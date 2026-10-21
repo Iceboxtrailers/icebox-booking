@@ -19,13 +19,13 @@ export function SiteFooter() {
           <div className="mb-2 text-[11px] font-medium uppercase tracking-wide text-muted">Contact</div>
           <div className="flex items-center gap-1.5 text-[12px] text-foreground">
             <Mail size={13} />
-            <a href="mailto:info@iceboxtrailers.ca" className="hover:text-navy">
+            <a href="mailto:info@iceboxtrailers.ca" className="inline-block py-1 hover:text-navy">
               info@iceboxtrailers.ca
             </a>
           </div>
           <div className="mt-1 flex items-center gap-1.5 text-[12px] text-foreground">
             <Phone size={13} />
-            <a href="tel:+15818892093" className="hover:text-navy">
+            <a href="tel:+15818892093" className="inline-block py-1 hover:text-navy">
               Bureau : 581 889-2093
             </a>
           </div>
@@ -33,7 +33,7 @@ export function SiteFooter() {
 
         <div>
           <div className="mb-2 text-[11px] font-medium uppercase tracking-wide text-muted">Liens</div>
-          <div className="flex flex-col gap-1 text-[12px]">
+          <div className="flex flex-col text-[12px] [&>a]:py-1.5">
             <Link href="/comment-ca-marche" className="text-foreground hover:text-navy">
               Comment ça marche
             </Link>

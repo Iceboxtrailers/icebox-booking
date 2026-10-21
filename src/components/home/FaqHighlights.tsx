@@ -21,7 +21,7 @@ export function FaqHighlights() {
         ))}
       </div>
 
-      <Link href="/faq" className="mt-4 inline-flex items-center gap-1.5 text-[13px] font-medium text-navy hover:underline">
+      <Link href="/faq" className="mt-2 inline-flex items-center gap-1.5 py-2 text-[13px] font-medium text-navy hover:underline">
         Toutes les questions <ArrowRight size={14} />
       </Link>
     </section>

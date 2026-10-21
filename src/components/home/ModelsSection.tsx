@@ -108,7 +108,7 @@ export function ModelsSection() {
       </div>
 
       <details className="group mt-6">
-        <summary className="cursor-pointer text-[13px] font-medium text-navy hover:underline">
+        <summary className="cursor-pointer py-2 text-[13px] font-medium text-navy hover:underline">
           Voir la grille tarifaire complète
         </summary>
         <div id="tarification" className="mt-4 scroll-mt-6">

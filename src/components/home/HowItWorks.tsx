@@ -49,7 +49,7 @@ export function HowItWorks() {
           </ol>
           <Link
             href="/comment-ca-marche"
-            className="mt-6 inline-flex items-center gap-1.5 text-[13px] font-medium text-navy hover:underline"
+            className="mt-4 inline-flex items-center gap-1.5 py-2 text-[13px] font-medium text-navy hover:underline"
           >
             Voir toutes les étapes <ArrowRight size={14} />
           </Link>

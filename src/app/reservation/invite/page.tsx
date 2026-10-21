@@ -249,7 +249,7 @@ function GuestReservationForm() {
         )}
 
         <div className="mt-4 text-center text-[13px] text-muted">
-          Déjà un compte ? <a href="/login" className="text-navy underline">Se connecter</a>
+          Déjà un compte ? <a href="/login" className="inline-block py-1.5 text-navy underline">Se connecter</a>
         </div>
       </Card>
     </div>

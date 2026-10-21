@@ -70,52 +70,53 @@ export function SiteHeader() {
           <OtherServicesMenu />
         </nav>
 
-        <div className="ml-auto flex items-center gap-4">
-          <div className="hidden sm:block">
-            <Link href="/reservation/invite" className={buttonClassName("cta", "sm")}>
-              Réserver
-            </Link>
-          </div>
+        <div className="ml-auto flex items-center gap-2 sm:gap-4">
+          <Link href="/reservation/invite" className={buttonClassName("cta", "sm")}>
+            Réserver
+          </Link>
+          {/* On a phone the account links are icons only: the booking button keeps the room. */}
           {session ? (
             <>
               {!session.guest && (
-                <Link href="/compte" className="flex items-center gap-1.5 text-[13px] font-medium text-foreground hover:text-navy">
-                  <User size={16} />
-                  Mon compte
+                <Link href="/compte" aria-label="Mon compte" className="flex items-center gap-1.5 p-2 text-[13px] font-medium text-foreground hover:text-navy">
+                  <User size={18} />
+                  <span className="hidden sm:inline">Mon compte</span>
                 </Link>
               )}
               <button
                 onClick={() => signOut({ callbackUrl: "/" })}
-                className="flex items-center gap-1.5 text-[13px] font-medium text-foreground hover:text-navy"
+                aria-label="Déconnexion"
+                className="flex items-center gap-1.5 p-2 text-[13px] font-medium text-foreground hover:text-navy"
               >
-                <LogOut size={16} />
-                Déconnexion
+                <LogOut size={18} />
+                <span className="hidden sm:inline">Déconnexion</span>
               </button>
             </>
           ) : (
-            <Link href="/login" className="flex items-center gap-1.5 text-[13px] font-medium text-foreground hover:text-navy">
-              <User size={16} />
+            <Link href="/login" className="flex items-center gap-1.5 p-2 text-[13px] font-medium text-foreground hover:text-navy">
+              <User size={18} />
               Connexion
             </Link>
           )}
         </div>
       </div>
 
-      <nav className="flex items-center gap-4 overflow-x-auto border-t border-border-light px-4 py-2 sm:hidden">
-        <Link href="/reservation/invite" className="whitespace-nowrap text-[12px] font-medium text-cta">
-          Réserver
-        </Link>
-        {NAV_ITEMS.map((item) => (
-          <Link key={item.href} href={item.href} className="whitespace-nowrap text-[12px] font-medium text-foreground">
-            {item.label}
-          </Link>
-        ))}
-        {OTHER_SERVICES.map((item) => (
-          <Link key={item.href} href={item.href} className="whitespace-nowrap text-[12px] text-muted">
-            {item.label}
-          </Link>
-        ))}
-      </nav>
+      {/* Phones: the other pages in a strip that scrolls sideways; the fade on the right says there is more. */}
+      <div className="relative sm:hidden">
+        <nav className="flex items-center gap-5 overflow-x-auto border-t border-border-light px-4">
+          {NAV_ITEMS.map((item) => (
+            <Link key={item.href} href={item.href} className="whitespace-nowrap py-2.5 text-[13px] font-medium text-foreground">
+              {item.label}
+            </Link>
+          ))}
+          {OTHER_SERVICES.map((item) => (
+            <Link key={item.href} href={item.href} className="whitespace-nowrap py-2.5 text-[13px] text-muted">
+              {item.label}
+            </Link>
+          ))}
+        </nav>
+        <div aria-hidden className="pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-white to-transparent" />
+      </div>
     </header>
   );
 }

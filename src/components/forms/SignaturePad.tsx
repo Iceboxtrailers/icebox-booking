@@ -10,6 +10,9 @@ import { FormError } from "@/components/forms/FormError";
 import { apiErrorMessage } from "@/lib/api-client";
 import type { ContractLine } from "@/lib/providers/signature/contract-text";
 
+// A real signature is at least this long, in canvas pixels (the canvas is 520 wide).
+const MIN_SIGNATURE_LENGTH = 40;
+
 export function SignaturePad({
   reservationId,
   contractLines,
@@ -25,6 +28,9 @@ export function SignaturePad({
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const drawing = useRef(false);
   const hasDrawn = useRef(false);
+  // Length of what has been drawn, in canvas pixels: a tap or a stray dot is not a signature.
+  const drawnLength = useRef(0);
+  const lastPoint = useRef<{ x: number; y: number } | null>(null);
 
   const [pdfUrl, setPdfUrl] = useState(initialPdfUrl);
   const [signerName, setSignerName] = useState(defaultSignerName);
@@ -38,7 +44,7 @@ export function SignaturePad({
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
     ctx.strokeStyle = "#1B2733";
-    ctx.lineWidth = 2;
+    ctx.lineWidth = 3;
     ctx.lineCap = "round";
   }, []);
 
@@ -55,10 +61,15 @@ export function SignaturePad({
     })();
   }, [pdfUrl, reservationId]);
 
+  // The canvas is drawn at a fixed 520 x 120 but shown at the width of its container (about 300 px on a
+  // phone), so the pointer position is converted to canvas pixels or the line lands off the finger.
   function pos(e: React.MouseEvent | React.TouchEvent, canvas: HTMLCanvasElement) {
     const rect = canvas.getBoundingClientRect();
     const point = "touches" in e ? e.touches[0] : e;
-    return { x: point.clientX - rect.left, y: point.clientY - rect.top };
+    return {
+      x: (point.clientX - rect.left) * (canvas.width / rect.width),
+      y: (point.clientY - rect.top) * (canvas.height / rect.height),
+    };
   }
 
   function start(e: React.MouseEvent | React.TouchEvent) {
@@ -66,6 +77,7 @@ export function SignaturePad({
     if (!canvas) return;
     drawing.current = true;
     const { x, y } = pos(e, canvas);
+    lastPoint.current = { x, y };
     const ctx = canvas.getContext("2d")!;
     ctx.beginPath();
     ctx.moveTo(x, y);
@@ -79,12 +91,17 @@ export function SignaturePad({
     const ctx = canvas.getContext("2d")!;
     ctx.lineTo(x, y);
     ctx.stroke();
+    if (lastPoint.current) drawnLength.current += Math.hypot(x - lastPoint.current.x, y - lastPoint.current.y);
+    lastPoint.current = { x, y };
+    if (!hasDrawn.current && drawnLength.current >= MIN_SIGNATURE_LENGTH) {
+      hasDrawn.current = true;
+      setSigned(true);
+    }
   }
 
   function end() {
     drawing.current = false;
-    hasDrawn.current = true;
-    setSigned(true);
+    lastPoint.current = null;
   }
 
   function clear() {
@@ -92,6 +109,8 @@ export function SignaturePad({
     if (!canvas) return;
     canvas.getContext("2d")!.clearRect(0, 0, canvas.width, canvas.height);
     hasDrawn.current = false;
+    drawnLength.current = 0;
+    lastPoint.current = null;
     setSigned(false);
   }
 
@@ -161,7 +180,7 @@ export function SignaturePad({
           })}
         </div>
         {pdfUrl && (
-          <a href={pdfUrl} target="_blank" rel="noreferrer" className="mt-2 inline-block text-[12px] text-navy underline">
+          <a href={pdfUrl} target="_blank" rel="noreferrer" className="mt-1 inline-block py-2 text-[12px] text-navy underline">
             Voir le contrat en PDF
           </a>
         )}
@@ -181,10 +200,11 @@ export function SignaturePad({
           onMouseDown={start}
           onMouseMove={move}
           onMouseUp={end}
-          onMouseLeave={() => (drawing.current = false)}
+          onMouseLeave={end}
           onTouchStart={start}
           onTouchMove={move}
           onTouchEnd={end}
+          onTouchCancel={end}
         />
       </div>
       <div className="mt-2 flex items-center justify-between">

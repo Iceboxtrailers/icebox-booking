@@ -85,7 +85,7 @@ export function DocumentUpload({ reservationId }: { reservationId: string }) {
         <button
           type="button"
           onClick={() => router.push(`/reservation/${reservationId}/contrat`)}
-          className="text-navy underline"
+          className="py-1.5 text-navy underline"
         >
           Passer cette étape
         </button>

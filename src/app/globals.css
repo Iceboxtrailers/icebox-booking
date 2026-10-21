@@ -73,6 +73,16 @@ body {
   font-family: var(--font-sans), system-ui, sans-serif;
 }
 
+/* iPhone Safari zooms the whole page when a field smaller than 16px gets focus, and does not zoom back.
+   On phones every text field is 16px; from the "sm" breakpoint up the compact 13px size applies again. */
+@media (max-width: 639px) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]),
+  select,
+  textarea {
+    font-size: 16px;
+  }
+}
+
 /* Bungee is the brand display font: big hooks and short titles only (never
    paragraphs, forms, buttons, dates or prices — those stay in Inter).
    Tailwind only auto-generates font-family utilities for sans/serif/mono,
