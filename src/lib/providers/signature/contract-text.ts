@@ -1,4 +1,4 @@
-import { fmt, nights } from "@/lib/dates";
+import { fmt, nights, quebecDay } from "@/lib/dates";
 import { catalogueFor } from "@/lib/catalogue";
 import { RATE_TABLE, TRANSPORT_FEE_PER_TRIP_CENTS, computeTaxBreakdown } from "@/lib/pricing";
 import { DEPOSIT_AMOUNT_CENTS } from "@/lib/constants";
@@ -224,7 +224,8 @@ export function buildContractLines(p: {
   spacer();
   rule();
 
-  const today = new Date().toISOString().slice(0, 10);
+  // The contract is dated with the Québec day (toISOString would give tomorrow's date after 8 pm).
+  const today = quebecDay();
   heading("Signatures");
   body(`Fait à Lévis, le ${fmt(today)}.`);
   spacer();

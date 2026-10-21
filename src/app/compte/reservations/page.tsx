@@ -4,7 +4,7 @@ import { getCurrentAccountId } from "@/lib/session";
 import { getRentalHistory } from "@/lib/queries/rental-history";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
-import { fmt } from "@/lib/dates";
+import { fmt, quebecToday } from "@/lib/dates";
 
 const STATUS_LABEL_FR: Record<string, string> = {
   pending: "En cours de réservation",
@@ -15,9 +15,7 @@ const STATUS_LABEL_FR: Record<string, string> = {
 };
 
 function daysUntilLabel(pickupDate: Date): string {
-  const startOfToday = new Date();
-  startOfToday.setHours(0, 0, 0, 0);
-  const days = Math.ceil((pickupDate.getTime() - startOfToday.getTime()) / 86400000);
+  const days = Math.ceil((pickupDate.getTime() - quebecToday().getTime()) / 86400000);
   if (days <= 0) return "Aujourd'hui";
   if (days === 1) return "Demain";
   return `Dans ${days} jours`;
@@ -28,8 +26,7 @@ export default async function ReservationsPage() {
   if (!clientId) redirect("/login?callbackUrl=/compte/reservations");
   const reservations = await getRentalHistory(clientId);
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const today = quebecToday();
 
   const upcoming = reservations.filter(
     (r) => ["confirmed", "in_progress"].includes(r.status) && r.pickupDate && r.pickupDate >= today

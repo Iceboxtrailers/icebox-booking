@@ -2,6 +2,7 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { PDFDocument, StandardFonts, rgb, type PDFFont } from "pdf-lib";
 import type { ReportReservation } from "@/lib/admin/reports";
+import { quebecDay } from "@/lib/dates";
 
 const PAGE_SIZE: [number, number] = [612, 792];
 const MARGIN = 56;
@@ -83,7 +84,7 @@ export async function buildRentalReportPdf(params: {
   const textX = MARGIN + logoWidth + 14;
   page.drawText("Rapport des locations", { x: textX, y: y - 15, size: 16, font: boldFont, color: INK });
   page.drawText(periodLabel, { x: textX, y: y - 32, size: 11, font, color: MUTED });
-  page.drawText(`Généré le ${fmtShort(new Date())}`, { x: textX, y: y - 47, size: 9, font, color: MUTED });
+  page.drawText(`Généré le ${quebecDay()}`, { x: textX, y: y - 47, size: 9, font, color: MUTED });
   y -= LOGO_HEIGHT + 18;
   drawRule();
   y -= 16;

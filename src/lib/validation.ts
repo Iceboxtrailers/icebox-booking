@@ -1,7 +1,8 @@
 import { z } from "zod";
 import { CLIENT_STATUS, RESERVATION_STATUS, TRAILER_SIZE, TRAILER_STATUS } from "@/lib/constants";
+import { isRealIsoDate } from "@/lib/dates";
 
-const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Date invalide");
+export const isoDate = z.string().refine(isRealIsoDate, "Date invalide");
 const isoTime = z.string().regex(/^\d{2}:\d{2}$/, "Heure invalide");
 
 // Emails are stored and looked up in lower case, so "Test@x.com" and "test@x.com" are one person.

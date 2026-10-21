@@ -5,6 +5,7 @@ import { requireAdmin } from "@/lib/admin-auth";
 import { logAudit } from "@/lib/audit";
 import { emailDeliveryConfigured, getMailer } from "@/lib/email";
 import { depositLinkEmail } from "@/lib/email/templates";
+import { quebecDay } from "@/lib/dates";
 
 const LINK_VALID_DAYS = 7;
 
@@ -50,7 +51,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       const { subject, html } = depositLinkEmail({
         firstName: reservation.client.firstName,
         link: url,
-        expiresOn: expiresAt.toISOString().slice(0, 10),
+        expiresOn: quebecDay(expiresAt),
       });
       await getMailer().send({ to: reservation.client.email, subject, html });
       emailed = emailDeliveryConfigured();

@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { quebecDay, quebecToday } from "@/lib/dates";
 import type { TrailerSize } from "@/lib/constants";
 
 export const REAL_BOOKING_STATUSES = ["confirmed", "in_progress", "completed"];
@@ -23,10 +24,9 @@ export async function getDashboardKpis(): Promise<DashboardKpis> {
     prisma.reservation.count({ where: { isTest: false } }),
   ]);
 
-  const now = new Date();
-  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-  const startOfToday = new Date();
-  startOfToday.setHours(0, 0, 0, 0);
+  // Québec calendar, as 00:00 UTC like the pickup and return columns.
+  const startOfMonth = new Date(`${quebecDay().slice(0, 8)}01T00:00:00Z`);
+  const startOfToday = quebecToday();
 
   let totalRevenueCents = 0;
   let nightsSum = 0;

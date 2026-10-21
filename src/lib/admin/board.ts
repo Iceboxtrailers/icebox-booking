@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { quebecToday } from "@/lib/dates";
 import { SLOT_HOLDING_STATUSES } from "@/lib/constants";
 import type { TrailerSize } from "@/lib/constants";
 
@@ -44,8 +45,7 @@ function toIsoDate(d: Date): string {
 export async function getFleetBoardData(year: number, month: number): Promise<FleetBoardData> {
   const monthStart = new Date(Date.UTC(year, month - 1, 1));
   const monthEndExclusive = new Date(Date.UTC(year, month, 1));
-  const today = new Date();
-  today.setUTCHours(0, 0, 0, 0);
+  const today = quebecToday();
 
   const [trailers, monthRes, activeReservations, toConfirmCount] = await Promise.all([
     prisma.trailer.findMany({ orderBy: [{ size: "asc" }, { name: "asc" }] }),

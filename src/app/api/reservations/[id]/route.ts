@@ -9,8 +9,7 @@ import { getDrivingDistanceKm } from "@/lib/geo/distance";
 import { hasConflict } from "@/lib/availability";
 import { nights, quebecDay } from "@/lib/dates";
 import { RATE_RULES, rejectIfOverLimit } from "@/lib/rate-limit";
-
-const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Date invalide");
+import { isoDate } from "@/lib/validation";
 
 // The price is never taken from the client: it is worked out here from the trailer, the dates
 // and the delivery. Unknown fields (an old page still sending totalAmount) are ignored.

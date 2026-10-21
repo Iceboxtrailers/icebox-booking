@@ -4,6 +4,7 @@ import { getFleetBoardData } from "@/lib/admin/board";
 import { FleetBoard } from "@/components/admin/FleetBoard";
 import { TRAILER_SIZE } from "@/lib/constants";
 import { getCurrentAdmin } from "@/lib/admin-auth";
+import { quebecDay } from "@/lib/dates";
 
 function StatCard({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
@@ -21,9 +22,10 @@ export default async function DashboardPage({
   searchParams: Promise<{ year?: string; month?: string }>;
 }) {
   const { year: yearParam, month: monthParam } = await searchParams;
-  const now = new Date();
-  const year = Number(yearParam) || now.getFullYear();
-  const month = Number(monthParam) || now.getMonth() + 1;
+  // The month the console opens on is the current one in Québec, not on the server's clock.
+  const [currentYear, currentMonth] = quebecDay().split("-").map(Number);
+  const year = Number(yearParam) || currentYear;
+  const month = Number(monthParam) || currentMonth;
 
   const admin = await getCurrentAdmin();
   const role = admin?.role ?? "employee";

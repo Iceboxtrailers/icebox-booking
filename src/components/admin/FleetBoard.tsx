@@ -11,7 +11,7 @@ import { ReservationModal } from "@/components/admin/ReservationModal";
 import { resizeImageForUpload } from "@/lib/client/image";
 import { TrailerInfoModal } from "@/components/admin/TrailerInfoModal";
 import type { FleetBoardData, BoardTrailer } from "@/lib/admin/board";
-import { fmt } from "@/lib/dates";
+import { fmt, quebecDay } from "@/lib/dates";
 import { TRAILER_SIZE, TRAILER_STATUS } from "@/lib/constants";
 import type { AdminRole } from "@/lib/constants";
 
@@ -94,7 +94,7 @@ export function FleetBoard({ board, role }: { board: FleetBoardData; role: Admin
   const activeView = isNarrow ? "agenda" : view;
   const DAY_W = isNarrow ? 26 : 34;
   const LABEL_W = isNarrow ? 84 : 150;
-  const todayIso = new Date().toISOString().slice(0, 10);
+  const todayIso = quebecDay();
 
   const [search, setSearch] = useState("");
   const [fleetOpen, setFleetOpen] = useState(false);
@@ -112,8 +112,7 @@ export function FleetBoard({ board, role }: { board: FleetBoardData; role: Admin
   const nextYear = month === 12 ? year + 1 : year;
 
   function openBlankCreate() {
-    const today = new Date().toISOString().slice(0, 10);
-    setModal({ mode: "create", trailerId: trailerOptions[0]?.id ?? "", pickupDate: today });
+    setModal({ mode: "create", trailerId: trailerOptions[0]?.id ?? "", pickupDate: quebecDay() });
   }
 
   const filteredReservations = useMemo(() => {

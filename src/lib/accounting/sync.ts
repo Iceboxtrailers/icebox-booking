@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { logAudit } from "@/lib/audit";
-import { nights } from "@/lib/dates";
+import { nights, quebecDay } from "@/lib/dates";
 import type { DeliveryOption } from "@/lib/constants";
 import { buildInvoicePayload } from "@/lib/accounting/invoice";
 import { CONNECTION_ID, createInvoice, findOrCreateCustomer } from "@/lib/accounting/quickbooks";
@@ -87,7 +87,9 @@ export async function syncReservationToQuickBooks(
           transportItemId: connection.transportItemId,
           taxCodeId: connection.taxCodeId,
         },
-        new Date().toISOString().slice(0, 10),
+        // The invoice date sets the accounting period: the Québec day, not the UTC one (which is already
+        // tomorrow after 8 pm, and the wrong month or year on the last evening of one).
+        quebecDay(),
       );
 
       const invoice = await createInvoice(payload);
