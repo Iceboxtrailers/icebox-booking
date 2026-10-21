@@ -30,6 +30,7 @@ export function FunnelReportView({ report }: { report: FunnelReport }) {
           <Link
             key={days}
             href={`/dashboard/abandons?jours=${days}`}
+            aria-current={days === report.days ? "true" : undefined}
             className={`rounded-md px-3 py-1.5 font-medium ${
               days === report.days ? "bg-tint text-navy" : "text-muted hover:bg-hover hover:text-foreground"
             }`}

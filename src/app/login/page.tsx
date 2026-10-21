@@ -41,11 +41,11 @@ function LoginForm() {
   }
 
   return (
-    <div className="mx-auto flex min-h-screen max-w-md items-center px-4 py-8">
+    <main className="mx-auto flex min-h-screen max-w-md items-center px-4 py-8">
       <Card className="w-full p-6">
         <div className="mb-5 flex items-center gap-2.5">
           <BrandMark size={32} />
-          <div className="font-heading text-lg uppercase tracking-wide">Connexion</div>
+          <h1 className="font-heading text-lg uppercase tracking-wide">Connexion</h1>
         </div>
         <form onSubmit={handleSubmit}>
           <Field label="Courriel">
@@ -59,7 +59,7 @@ function LoginForm() {
               Mot de passe oublié ?
             </a>
           </div>
-          {error && <div className="mb-3 text-[13px] text-red-600">{error}</div>}
+          {error && <div role="alert" className="mb-3 text-[13px] text-red-600">{error}</div>}
           <Button type="submit" variant="cta" disabled={submitting} className="w-full justify-center">
             {submitting ? "Connexion..." : "Se connecter"}
           </Button>
@@ -71,7 +71,7 @@ function LoginForm() {
           ou <a href="/reservation/invite" className="text-navy underline">réservez sans créer de compte</a>
         </div>
       </Card>
-    </div>
+    </main>
   );
 }
 

@@ -11,6 +11,7 @@ import { ReservationModal } from "@/components/admin/ReservationModal";
 import { resizeImageForUpload } from "@/lib/client/image";
 import { TrailerInfoModal } from "@/components/admin/TrailerInfoModal";
 import type { FleetBoardData, BoardTrailer } from "@/lib/admin/board";
+import { fmt } from "@/lib/dates";
 import { TRAILER_SIZE, TRAILER_STATUS } from "@/lib/constants";
 import type { AdminRole } from "@/lib/constants";
 
@@ -27,12 +28,14 @@ const STATUS_LABEL_FR: Record<string, string> = {
   cancelled: "Annulée",
 };
 
+// "border" is the solid fill of a confirmed booking (white text on it needs 4.5:1), "bg" and "text" the
+// light tint and dark ink used for chips and for unfinished bookings.
 const TRAILER_COLORS = [
   { bg: "#E4EEF4", border: "#2F6690", text: "#173A50" },
-  { bg: "#E4F1F5", border: "#3E8FB0", text: "#1B4653" },
-  { bg: "#EAEFF4", border: "#5B7B9A", text: "#293F52" },
+  { bg: "#E4F1F5", border: "#2C7694", text: "#1B4653" },
+  { bg: "#EAEFF4", border: "#4D6C8B", text: "#293F52" },
   { bg: "#E1EAEF", border: "#26536F", text: "#152C3A" },
-  { bg: "#E5EFF1", border: "#4C8398", text: "#213B44" },
+  { bg: "#E5EFF1", border: "#3D6F83", text: "#213B44" },
   { bg: "#EBE8F2", border: "#6B5B95", text: "#332C4C" },
 ];
 
@@ -242,7 +245,7 @@ export function FleetBoard({ board, role }: { board: FleetBoardData; role: Admin
       {fleetOpen && (
         <Card className="mb-4 p-4">
           <div className="mb-2 text-[13px] font-semibold">Gestion de la flotte</div>
-          {fleetError && <div className="mb-2 text-[13px] text-red-600">{fleetError}</div>}
+          {fleetError && <div role="alert" className="mb-2 text-[13px] text-red-600">{fleetError}</div>}
           <div className="space-y-2">
             {trailers.map((t, i) => (
               <div key={t.id} className="border-b border-border-light pb-2 text-[13px]">
@@ -368,21 +371,24 @@ export function FleetBoard({ board, role }: { board: FleetBoardData; role: Admin
           </div>
           <Link
             href={`/dashboard?year=${prevYear}&month=${prevMonth}`}
-            className="rounded-md border border-border px-2.5 py-1 text-[13px] hover:bg-hover"
+            aria-label="Mois précédent"
+            className="rounded-md border border-border px-3 py-1.5 text-[13px] hover:bg-hover"
           >
-            ←
+            <span aria-hidden>←</span>
           </Link>
           <Link
             href={`/dashboard?year=${nextYear}&month=${nextMonth}`}
-            className="rounded-md border border-border px-2.5 py-1 text-[13px] hover:bg-hover"
+            aria-label="Mois suivant"
+            className="rounded-md border border-border px-3 py-1.5 text-[13px] hover:bg-hover"
           >
-            →
+            <span aria-hidden>→</span>
           </Link>
         </div>
         <div className="flex rounded-md border border-border">
           <button
             type="button"
             onClick={() => setView("agenda")}
+            aria-pressed={view === "agenda"}
             className={`flex items-center gap-1 px-2.5 py-1.5 text-[13px] ${view === "agenda" ? "bg-tint text-navy" : "bg-white"}`}
           >
             <List size={14} /> Agenda
@@ -391,6 +397,7 @@ export function FleetBoard({ board, role }: { board: FleetBoardData; role: Admin
             <button
               type="button"
               onClick={() => setView("grille")}
+              aria-pressed={view === "grille"}
               className={`flex items-center gap-1 border-l border-border px-2.5 py-1.5 text-[13px] ${view === "grille" ? "bg-tint text-navy" : "bg-white"}`}
             >
               <LayoutGrid size={14} /> Grille
@@ -400,7 +407,12 @@ export function FleetBoard({ board, role }: { board: FleetBoardData; role: Admin
       </div>
 
       {activeView === "grille" && (
-        <div className="mb-4 overflow-x-auto rounded-lg border border-border-light p-3">
+        <div
+          className="mb-4 overflow-x-auto rounded-lg border border-border-light p-3"
+          role="region"
+          aria-label="Calendrier de la flotte, défilement horizontal"
+          tabIndex={0}
+        >
           <div style={{ minWidth: LABEL_W + daysInMonth * DAY_W }}>
             <div style={{ display: "grid", gridTemplateColumns: `${LABEL_W}px repeat(${daysInMonth}, ${DAY_W}px)` }}>
               <div />
@@ -412,7 +424,7 @@ export function FleetBoard({ board, role }: { board: FleetBoardData; role: Admin
                     key={d}
                     className="text-center text-[10px] font-medium"
                     style={{
-                      color: dow === 0 || dow === 6 ? "#B5732A" : "var(--color-muted)",
+                      color: dow === 0 || dow === 6 ? "var(--color-warn-text)" : "var(--color-muted)",
                       background: isToday ? "var(--color-tint)" : "transparent",
                       borderRadius: 4,
                       padding: "2px 0",
@@ -454,8 +466,9 @@ export function FleetBoard({ board, role }: { board: FleetBoardData; role: Admin
                     minHeight: 44,
                   }}
                 >
-                  <div
-                    className="flex cursor-pointer items-center gap-2 overflow-hidden py-1.5 pr-2 text-[12px] hover:bg-page"
+                  <button
+                    type="button"
+                    className="flex w-full cursor-pointer items-center gap-2 overflow-hidden py-1.5 pr-2 text-left text-[12px] hover:bg-page"
                     onClick={() => setInfoTrailer(trailer)}
                     title="Voir la fiche de la remorque"
                   >
@@ -463,11 +476,11 @@ export function FleetBoard({ board, role }: { board: FleetBoardData; role: Admin
                       className="h-2.5 w-2.5 shrink-0 rounded-[3px]"
                       style={{ background: color.border }}
                     />
-                    <div className="overflow-hidden">
-                      <div className="truncate font-medium">{trailer.name}</div>
-                      <div className="font-mono text-[10px] text-muted">{trailer.size}</div>
-                    </div>
-                  </div>
+                    <span className="block overflow-hidden">
+                      <span className="block truncate font-medium">{trailer.name}</span>
+                      <span className="block font-mono text-[10px] text-muted">{trailer.size}</span>
+                    </span>
+                  </button>
                   <div style={{ position: "relative", width: daysInMonth * DAY_W }}>
                     <div
                       style={{
@@ -508,7 +521,16 @@ export function FleetBoard({ board, role }: { board: FleetBoardData; role: Admin
                       return (
                         <div
                           key={r.id}
+                          role="button"
+                          tabIndex={0}
+                          aria-label={`${r.clientName}, ${trailer.name}, du ${fmt(r.pickupDate)} au ${fmt(r.returnDate)}${isPending ? ", en attente" : ""}${isConflict ? ", en conflit" : ""}`}
                           onClick={() => setModal({ mode: "edit", reservationId: r.id })}
+                          onKeyDown={(event) => {
+                            if (event.key === "Enter" || event.key === " ") {
+                              event.preventDefault();
+                              setModal({ mode: "edit", reservationId: r.id });
+                            }
+                          }}
                           title={`${r.clientName}${r.note ? " — " + r.note : ""}`}
                           style={{
                             position: "absolute",
@@ -516,21 +538,20 @@ export function FleetBoard({ board, role }: { board: FleetBoardData; role: Admin
                             left,
                             width,
                             height: 32,
-                            background: color.border,
-                            opacity: isPending ? 0.65 : 1,
+                            background: isPending ? color.bg : color.border,
                             borderRadius: 6,
                             display: "flex",
                             alignItems: "center",
                             padding: "0 8px",
                             fontSize: 11.5,
                             fontWeight: 500,
-                            color: "#fff",
+                            color: isPending ? color.text : "#fff",
                             overflow: "hidden",
                             whiteSpace: "nowrap",
                             textOverflow: "ellipsis",
                             cursor: "pointer",
                             boxShadow: "0 1px 2px rgba(0,0,0,0.08)",
-                            border: isConflict ? "2px solid #dc2626" : isPending ? "2px dashed rgba(255,255,255,0.85)" : "none",
+                            border: isConflict ? "2px solid #dc2626" : isPending ? `2px dashed ${color.border}` : "none",
                           }}
                         >
                           {r.clientName}

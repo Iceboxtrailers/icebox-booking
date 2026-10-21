@@ -51,7 +51,7 @@ export function ReportsForm() {
   return (
     <Card className="max-w-md p-5">
       <form onSubmit={handleGenerate}>
-        <Field label="Période">
+        <Field label="Période" group>
           <div className="flex gap-2">
             {(
               [
@@ -64,6 +64,7 @@ export function ReportsForm() {
                 key={opt.value}
                 type="button"
                 onClick={() => setType(opt.value)}
+                aria-pressed={type === opt.value}
                 className={`rounded-md border px-3 py-1.5 text-[12px] ${
                   type === opt.value ? "border-navy bg-tint" : "border-border bg-white"
                 }`}
@@ -126,7 +127,7 @@ export function ReportsForm() {
           </div>
         )}
 
-        {error && <div className="mb-3 text-[13px] text-red-600">{error}</div>}
+        {error && <div role="alert" className="mb-3 text-[13px] text-red-600">{error}</div>}
 
         <Button type="submit" variant="cta" className="w-full justify-center">
           Générer le PDF

@@ -7,7 +7,7 @@ import { WIZARD_STEPS } from "@/lib/wizard";
 
 export function WizardShell({ step, children }: { step: number; children: ReactNode }) {
   return (
-    <div className="mx-auto min-h-screen max-w-2xl px-4 py-8">
+    <main className="mx-auto min-h-screen max-w-2xl px-4 py-8">
       <div className="mb-1.5 flex items-center gap-2.5">
         <BrandMark size={32} />
         <div className="font-heading text-lg uppercase tracking-wide">Réservation en ligne</div>
@@ -17,9 +17,9 @@ export function WizardShell({ step, children }: { step: number; children: ReactN
       </div>
 
       <StepIndicator currentStep={step} />
-      <div className="font-heading mb-4 text-xl">{WIZARD_STEPS[step]}</div>
+      <h1 className="font-heading mb-4 text-xl">{WIZARD_STEPS[step]}</h1>
 
       <Card className="p-5">{children}</Card>
-    </div>
+    </main>
   );
 }

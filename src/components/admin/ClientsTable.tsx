@@ -147,7 +147,7 @@ export function ClientsTable({ clients }: { clients: ClientListItem[] }) {
               value={newClient.billingPostalCode}
               onChange={(e) => setNewClient((c) => ({ ...c, billingPostalCode: e.target.value }))}
             />
-            {error && <div className="col-span-2 text-[13px] text-red-600">{error}</div>}
+            {error && <div role="alert" className="col-span-2 text-[13px] text-red-600">{error}</div>}
             <div className="col-span-2 flex justify-end gap-2">
               <Button type="button" onClick={() => setCreating(false)}>
                 Annuler

@@ -23,11 +23,11 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div className="mx-auto flex min-h-screen max-w-md items-center px-4 py-8">
+    <main className="mx-auto flex min-h-screen max-w-md items-center px-4 py-8">
       <Card className="w-full p-6">
         <div className="mb-5 flex items-center gap-2.5">
           <BrandMark size={32} />
-          <div className="font-heading text-lg uppercase tracking-wide">Mot de passe oublié</div>
+          <h1 className="font-heading text-lg uppercase tracking-wide">Mot de passe oublié</h1>
         </div>
 
         {status === "sent" ? (
@@ -59,6 +59,6 @@ export default function ForgotPasswordPage() {
           </a>
         </div>
       </Card>
-    </div>
+    </main>
   );
 }

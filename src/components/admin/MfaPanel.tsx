@@ -150,7 +150,7 @@ export function MfaPanel({ enabled }: { enabled: boolean }) {
         </Card>
       )}
 
-      {error && <div className="text-[13px] text-red-600">{error}</div>}
+      {error && <div role="alert" className="text-[13px] text-red-600">{error}</div>}
     </div>
   );
 }

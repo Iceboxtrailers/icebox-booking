@@ -116,7 +116,7 @@ export function ClientDocumentsPanel({
           );
         })}
 
-      {error && <div className="mt-2 text-[12px] text-red-600">{error}</div>}
+      {error && <div role="alert" className="mt-2 text-[12px] text-red-600">{error}</div>}
     </div>
   );
 }

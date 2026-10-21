@@ -56,7 +56,7 @@ export function ChangePasswordForm() {
           required
         />
       </Field>
-      {error && <div className="mb-3 text-[13px] text-red-600">{error}</div>}
+      {error && <div role="alert" className="mb-3 text-[13px] text-red-600">{error}</div>}
       {status === "saved" && <div className="mb-3 text-[13px] text-success">Mot de passe modifié.</div>}
       <Button type="submit" variant="cta" disabled={status === "submitting"}>
         {status === "submitting" ? "..." : "Changer le mot de passe"}

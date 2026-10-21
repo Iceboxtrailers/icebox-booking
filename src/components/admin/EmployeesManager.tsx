@@ -171,7 +171,7 @@ export function EmployeesManager({ employees }: { employees: Employee[] }) {
       </div>
 
       {notice && <div className="mb-4 text-[13px] text-green-700">{notice}</div>}
-      {error && <div className="mb-4 text-[13px] text-red-600">{error}</div>}
+      {error && <div role="alert" className="mb-4 text-[13px] text-red-600">{error}</div>}
 
       <form onSubmit={handleCreate}>
         <div className="mb-2 text-[13px] font-medium">Nouveau compte employé</div>

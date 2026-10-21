@@ -25,6 +25,7 @@ export function DashboardNav({ role }: { role: AdminRole }) {
           <Link
             key={tab.href}
             href={tab.href}
+            aria-current={active ? "page" : undefined}
             className={`whitespace-nowrap rounded-md px-3 py-2 text-[13px] font-medium md:py-1.5 ${
               active ? "bg-tint text-navy" : "text-muted hover:bg-hover hover:text-foreground"
             }`}

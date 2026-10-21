@@ -65,7 +65,7 @@ export function LeadContactForm({ topic }: { topic: string }) {
           required
         />
       </Field>
-      {error && <div className="mb-3 text-[13px] text-red-600">{error}</div>}
+      {error && <div role="alert" className="mb-3 text-[13px] text-red-600">{error}</div>}
       <Button type="submit" variant="cta" disabled={status === "submitting"}>
         {status === "submitting" ? "Envoi..." : "Envoyer ma demande"}
       </Button>

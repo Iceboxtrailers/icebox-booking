@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { CheckCircle2, Sparkles, Truck } from "lucide-react";
@@ -39,6 +39,9 @@ export function AvailabilityList({
   deliveryTrips: number;
 }) {
   const router = useRouter();
+  const captionId = useId();
+  const tempQuestionId = useId();
+  const volumeQuestionId = useId();
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -75,7 +78,7 @@ export function AvailabilityList({
 
   return (
     <div>
-      <div className="mb-1 text-[13px] text-muted">
+      <div id={captionId} className="mb-1 text-[13px] text-muted">
         Remorques disponibles pour votre demande :
       </div>
       <div className="mb-3.5 flex items-center gap-1.5 text-[12px] text-navy">
@@ -86,18 +89,22 @@ export function AvailabilityList({
         <button
           type="button"
           onClick={() => setHelperOpen((v) => !v)}
+          aria-expanded={helperOpen}
           className="flex items-center gap-1.5 py-1.5 text-[13px] font-medium text-navy"
         >
           <Sparkles size={14} /> Je ne sais pas laquelle choisir
         </button>
         {helperOpen && (
           <div className="mt-3 space-y-3">
-            <div>
-              <div className="mb-1.5 text-[12px] font-medium text-foreground">Quelle température vous faut-il ?</div>
+            <div role="group" aria-labelledby={tempQuestionId}>
+              <div id={tempQuestionId} className="mb-1.5 text-[12px] font-medium text-foreground">
+                Quelle température vous faut-il ?
+              </div>
               <div className="flex flex-wrap gap-2">
                 <button
                   type="button"
                   onClick={() => setTempNeed("refrigerated")}
+                  aria-pressed={tempNeed === "refrigerated"}
                   className={`rounded-md border px-3 py-1.5 text-[12px] ${
                     tempNeed === "refrigerated" ? "border-navy bg-tint" : "border-border bg-white"
                   }`}
@@ -107,6 +114,7 @@ export function AvailabilityList({
                 <button
                   type="button"
                   onClick={() => setTempNeed("frozen")}
+                  aria-pressed={tempNeed === "frozen"}
                   className={`rounded-md border px-3 py-1.5 text-[12px] ${
                     tempNeed === "frozen" ? "border-navy bg-tint" : "border-border bg-white"
                   }`}
@@ -117,12 +125,15 @@ export function AvailabilityList({
             </div>
 
             {tempNeed === "refrigerated" && (
-              <div>
-                <div className="mb-1.5 text-[12px] font-medium text-foreground">Quel volume ?</div>
+              <div role="group" aria-labelledby={volumeQuestionId}>
+                <div id={volumeQuestionId} className="mb-1.5 text-[12px] font-medium text-foreground">
+                  Quel volume ?
+                </div>
                 <div className="flex flex-wrap gap-2">
                   <button
                     type="button"
                     onClick={() => setVolumeNeed("small")}
+                    aria-pressed={volumeNeed === "small"}
                     className={`rounded-md border px-3 py-1.5 text-[12px] ${
                       volumeNeed === "small" ? "border-navy bg-tint" : "border-border bg-white"
                     }`}
@@ -132,6 +143,7 @@ export function AvailabilityList({
                   <button
                     type="button"
                     onClick={() => setVolumeNeed("large")}
+                    aria-pressed={volumeNeed === "large"}
                     className={`rounded-md border px-3 py-1.5 text-[12px] ${
                       volumeNeed === "large" ? "border-navy bg-tint" : "border-border bg-white"
                     }`}
@@ -162,41 +174,55 @@ export function AvailabilityList({
         </div>
       )}
 
-      {candidates.map((c, i) => {
-        const chosen = selectedIndex === i;
-        return (
-          <div
-            key={`${c.trailerId}-${c.windowStart}`}
-            onClick={() => setSelectedIndex(i)}
-            className={`mb-2.5 flex cursor-pointer items-center gap-3.5 rounded-[10px] border p-3.5 ${
-              chosen ? "border-2 border-navy" : "border-border-light"
-            }`}
-          >
-            <Truck size={22} className="text-navy" />
-            <div className="flex-1">
-              <div className="flex items-center gap-1.5 text-sm font-medium">
-                Remorque {c.size} <span className="text-xs font-normal text-muted">({c.tempRangeLabel})</span>
-                {recommendedSize === c.size && (
-                  <span className="rounded-full bg-tint px-2 py-0.5 text-[10px] font-medium text-navy">
-                    Recommandée pour vous
+      {/* Native radios, hidden but focusable: arrow keys move the choice and screen readers hear which one is picked. */}
+      {candidates.length > 0 && (
+        <div role="radiogroup" aria-labelledby={captionId}>
+          {candidates.map((c, i) => {
+            const chosen = selectedIndex === i;
+            return (
+              <label
+                key={`${c.trailerId}-${c.windowStart}`}
+                className={`mb-2.5 flex cursor-pointer items-center gap-3.5 rounded-[10px] border p-3.5 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-navy ${
+                  chosen ? "border-2 border-navy" : "border-border-light"
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="trailer"
+                  checked={chosen}
+                  onChange={() => setSelectedIndex(i)}
+                  className="sr-only"
+                />
+                <Truck size={22} className="text-navy" />
+                <span className="flex-1">
+                  <span className="block text-sm font-medium">
+                    Remorque {c.size}{" "}
+                    <span className="whitespace-nowrap text-xs font-normal text-muted">({c.tempRangeLabel})</span>
+                    {recommendedSize === c.size && (
+                      <span className="ml-1.5 inline-block rounded-full bg-tint px-2 py-0.5 text-[10px] font-medium text-navy">
+                        Recommandée pour vous
+                      </span>
+                    )}
                   </span>
-                )}
-              </div>
-              <div className="text-xs text-muted">
-                {fmt(c.windowStart)} → {fmt(c.windowEnd)} · {c.nights} jour(s)
-              </div>
-            </div>
-            <div className="text-right">
-              <div className="tabular-nums font-medium">{((c.totalCents + deliveryFeeCents) / 100).toFixed(2)} $</div>
-              <div className="tabular-nums text-[10px] text-muted">
-                {(computeTaxBreakdown(c.totalCents + deliveryFeeCents).totalWithTaxCents / 100).toFixed(2)} $ taxes
-                incl.
-              </div>
-            </div>
-            {chosen && <CheckCircle2 size={18} className="text-navy" />}
-          </div>
-        );
-      })}
+                  <span className="block text-xs text-muted">
+                    {fmt(c.windowStart)} → {fmt(c.windowEnd)} · {c.nights} jour(s)
+                  </span>
+                </span>
+                <span className="text-right">
+                  <span className="block tabular-nums font-medium">
+                    {((c.totalCents + deliveryFeeCents) / 100).toFixed(2)} $
+                  </span>
+                  <span className="block tabular-nums text-[10px] text-muted">
+                    {(computeTaxBreakdown(c.totalCents + deliveryFeeCents).totalWithTaxCents / 100).toFixed(2)} $ taxes
+                    incl.
+                  </span>
+                </span>
+                {chosen && <CheckCircle2 size={18} className="text-navy" />}
+              </label>
+            );
+          })}
+        </div>
+      )}
 
       <FormError message={error} />
 

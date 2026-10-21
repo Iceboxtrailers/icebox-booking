@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { Field } from "@/components/ui/Field";
@@ -25,6 +25,8 @@ export function TrailerDateForm({
   };
 }) {
   const router = useRouter();
+  const rangeLabelId = useId();
+  const deliveryLabelId = useId();
   const [dateRangeType, setDateRangeType] = useState<DateRangeType>(initial.dateRangeType);
   const [start, setStart] = useState(initial.start);
   const [end, setEnd] = useState(initial.end);
@@ -69,11 +71,14 @@ export function TrailerDateForm({
 
   return (
     <form onSubmit={handleSubmit}>
-      <span className="mb-1 block text-[11px] uppercase tracking-wide text-muted">Type de plage</span>
-      <div className="mb-3.5 flex gap-2">
+      <span id={rangeLabelId} className="mb-1 block text-[11px] uppercase tracking-wide text-muted">
+        Type de plage
+      </span>
+      <div role="group" aria-labelledby={rangeLabelId} className="mb-3.5 flex gap-2">
         <button
           type="button"
           onClick={() => setDateRangeType("fixed")}
+          aria-pressed={dateRangeType === "fixed"}
           className={`rounded-md border px-4 py-2.5 text-[13px] ${
             dateRangeType === "fixed" ? "border-navy bg-tint" : "border-border bg-white"
           }`}
@@ -83,6 +88,7 @@ export function TrailerDateForm({
         <button
           type="button"
           onClick={() => setDateRangeType("flexible")}
+          aria-pressed={dateRangeType === "flexible"}
           className={`rounded-md border px-4 py-2.5 text-[13px] ${
             dateRangeType === "flexible" ? "border-navy bg-tint" : "border-border bg-white"
           }`}
@@ -107,13 +113,16 @@ export function TrailerDateForm({
         </div>
       )}
 
-      <span className="mb-1 block text-[11px] uppercase tracking-wide text-muted">Ramassage ou livraison</span>
-      <div className="mb-2 flex flex-wrap gap-2">
+      <span id={deliveryLabelId} className="mb-1 block text-[11px] uppercase tracking-wide text-muted">
+        Ramassage ou livraison
+      </span>
+      <div role="group" aria-labelledby={deliveryLabelId} className="mb-2 flex flex-wrap gap-2">
         {DELIVERY_OPTION.map((option) => (
           <button
             key={option}
             type="button"
             onClick={() => setDeliveryOption(option)}
+            aria-pressed={deliveryOption === option}
             className={`rounded-md border px-4 py-2.5 text-[13px] ${
               deliveryOption === option ? "border-navy bg-tint" : "border-border bg-white"
             }`}

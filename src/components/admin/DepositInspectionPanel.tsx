@@ -426,7 +426,7 @@ export function DepositInspectionPanel({
         </div>
       )}
 
-      {error && <div className="text-[13px] text-red-600">{error}</div>}
+      {error && <div role="alert" className="text-[13px] text-red-600">{error}</div>}
       {dialog}
     </div>
   );

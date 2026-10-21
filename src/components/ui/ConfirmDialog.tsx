@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/Button";
 
@@ -14,12 +14,16 @@ type PendingConfirm = { message: string; options: ConfirmOptions };
 export function useConfirm() {
   const [pending, setPending] = useState<PendingConfirm | null>(null);
   const resolver = useRef<((ok: boolean) => void) | null>(null);
+  // The button that asked: the dialog takes focus (autoFocus), and focus goes back there once it is answered.
+  const trigger = useRef<HTMLElement | null>(null);
+  const messageId = useId();
 
   const confirm = useCallback(
     (message: string, options: ConfirmOptions = {}) =>
       new Promise<boolean>((resolve) => {
         resolver.current?.(false); // a newer question replaces an unanswered one
         resolver.current = resolve;
+        trigger.current ??= document.activeElement as HTMLElement | null;
         setPending({ message, options });
       }),
     [],
@@ -29,15 +33,22 @@ export function useConfirm() {
     resolver.current?.(ok);
     resolver.current = null;
     setPending(null);
+    trigger.current?.focus?.();
+    trigger.current = null;
   }, []);
 
   useEffect(() => {
     if (!pending) return;
+    // Capture phase and stopPropagation: while a question is open, Escape answers it and does not also
+    // close the modal underneath.
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") answer(false);
+      if (event.key === "Escape") {
+        event.stopPropagation();
+        answer(false);
+      }
     };
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
+    document.addEventListener("keydown", onKey, true);
+    return () => document.removeEventListener("keydown", onKey, true);
   }, [pending, answer]);
 
   // A dialog that disappears with its component must not leave the caller waiting forever.
@@ -61,10 +72,13 @@ export function useConfirm() {
             role="alertdialog"
             aria-modal="true"
             aria-label="Confirmation"
+            aria-describedby={messageId}
             className="w-full max-w-sm rounded-xl bg-white p-5"
             onClick={(event) => event.stopPropagation()}
           >
-            <p className="mb-5 whitespace-pre-line text-[14px] text-foreground">{pending.message}</p>
+            <p id={messageId} className="mb-5 whitespace-pre-line text-[14px] text-foreground">
+              {pending.message}
+            </p>
             <div className="flex justify-end gap-2">
               <Button type="button" autoFocus onClick={() => answer(false)}>
                 {pending.options.cancelLabel ?? "Annuler"}

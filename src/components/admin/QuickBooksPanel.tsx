@@ -111,7 +111,7 @@ export function QuickBooksPanel({
           {FLASH_MESSAGES[flash] ?? flash}
         </div>
       )}
-      {error && <div className="text-[13px] text-red-600">{error}</div>}
+      {error && <div role="alert" className="text-[13px] text-red-600">{error}</div>}
 
       {!appConfigured && (
         <Card className="p-4 text-[13px] text-muted">

@@ -7,18 +7,20 @@ import { Button } from "@/components/ui/Button";
 import { FormError } from "@/components/forms/FormError";
 import { apiErrorMessage } from "@/lib/api-client";
 
+// The file field is visually hidden but still focusable (display:none would make it unreachable by keyboard
+// and screen reader): the box shows the focus ring and Enter/Space opens the file picker.
 function UploadBox({ label, file, onSet }: { label: string; file: File | null; onSet: (f: File | null) => void }) {
   return (
-    <label className="mb-2.5 flex cursor-pointer items-center gap-3 rounded-lg border border-dashed border-border p-3.5">
+    <label className="mb-2.5 flex cursor-pointer items-center gap-3 rounded-lg border border-dashed border-border p-3.5 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-navy">
       <Upload size={18} className="text-muted" />
-      <div className="flex-1">
-        <div className="text-[13px] font-medium">{label}</div>
-        <div className="text-xs text-muted">{file ? file.name : "Cliquez pour choisir un fichier"}</div>
-      </div>
+      <span className="flex-1">
+        <span className="block text-[13px] font-medium">{label}</span>
+        <span className="block text-xs text-muted">{file ? file.name : "Cliquez pour choisir un fichier"}</span>
+      </span>
       <input
         type="file"
         accept="image/png,image/jpeg,image/webp,application/pdf"
-        className="hidden"
+        className="sr-only"
         onChange={(e) => onSet(e.target.files?.[0] ?? null)}
       />
     </label>

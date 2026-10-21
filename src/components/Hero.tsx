@@ -33,6 +33,7 @@ export function Hero() {
   return (
     <section
       id="disponibilites"
+      // The background runs from white to the brand light blue: text on it uses the darker "body" color (contrast).
       className="-mx-4 mb-14 scroll-mt-4 px-4 py-8 sm:py-12"
       style={{ background: "linear-gradient(135deg, #ffffff 0%, var(--color-tint-40) 100%)" }}
     >
@@ -53,7 +54,7 @@ export function Hero() {
           <h1 className="font-heading mb-3 text-[26px] leading-tight sm:text-4xl">
             Une remorque réfrigérée, quand vous en avez besoin.
           </h1>
-          <p className="mb-5 max-w-md text-[14px] leading-relaxed text-muted">
+          <p className="mb-5 max-w-md text-[14px] leading-relaxed text-body">
             Pour vos événements, vos besoins commerciaux et vos imprévus. Choisissez vos dates et trouvez une
             remorque adaptée à votre besoin de réfrigération ou de congélation.
           </p>
@@ -86,7 +87,7 @@ export function Hero() {
             </Button>
           </form>
 
-          <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-[12px] text-muted">
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-[12px] text-body">
             {FEATURES.map(({ icon: Icon, label }) => (
               <span key={label} className="flex items-center gap-1.5">
                 <Icon size={14} className="text-navy" /> {label}

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { useConfirm } from "@/components/ui/ConfirmDialog";
+import { useModal } from "@/components/ui/useModal";
 import { Field } from "@/components/ui/Field";
 import { Input } from "@/components/ui/Input";
 import { ClientDocumentsPanel } from "@/components/admin/ClientDocumentsPanel";
@@ -49,6 +50,7 @@ export function ReservationModal({
 }) {
   const router = useRouter();
   const { confirm, dialog } = useConfirm();
+  const { titleId, dialogProps } = useModal(onClose);
   const [loading, setLoading] = useState(state.mode === "edit");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -324,14 +326,15 @@ export function ReservationModal({
     <>
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
       <div
-        className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-xl bg-white p-5"
+        {...dialogProps}
+        className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-xl bg-white p-5 outline-none"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-4 flex items-center justify-between">
-          <div className="font-heading text-lg">
+          <div id={titleId} className="font-heading text-lg">
             {state.mode === "edit" ? "Modifier la réservation" : "Nouvelle réservation"}
           </div>
-          <button onClick={onClose} className="text-muted hover:text-foreground">
+          <button type="button" onClick={onClose} aria-label="Fermer" className="text-muted hover:text-foreground">
             <X size={18} />
           </button>
         </div>
@@ -412,6 +415,7 @@ export function ReservationModal({
                   <button
                     type="button"
                     onClick={() => setClientMode("search")}
+                    aria-pressed={clientMode === "search"}
                     className={`rounded-md border px-3 py-1.5 text-[12px] ${
                       clientMode === "search" ? "border-navy bg-tint" : "border-border bg-white"
                     }`}
@@ -421,6 +425,7 @@ export function ReservationModal({
                   <button
                     type="button"
                     onClick={() => setClientMode("new")}
+                    aria-pressed={clientMode === "new"}
                     className={`rounded-md border px-3 py-1.5 text-[12px] ${
                       clientMode === "new" ? "border-navy bg-tint" : "border-border bg-white"
                     }`}
@@ -620,7 +625,7 @@ export function ReservationModal({
             </label>
             </fieldset>
 
-            {error && <div className="mb-3 text-[13px] text-red-600">{error}</div>}
+            {error && <div role="alert" className="mb-3 text-[13px] text-red-600">{error}</div>}
 
             <div className="mt-4 flex items-center justify-between gap-2">
               {state.mode === "edit" && role === "owner" ? (

@@ -64,7 +64,7 @@ function HoldForm({ token, onDone }: { token: string; onDone: () => void }) {
       <div className="mb-3.5 rounded-lg border border-border-light bg-subtle p-4">
         <PaymentElement />
       </div>
-      {error && <div className="mb-3 text-[13px] text-red-600">{error}</div>}
+      {error && <div role="alert" className="mb-3 text-[13px] text-red-600">{error}</div>}
       <Button type="submit" variant="cta" disabled={!stripe || submitting}>
         {submitting ? "..." : "Autoriser le dépôt"}
       </Button>
@@ -124,7 +124,7 @@ export function SecureDepositForm({ token }: { token: string }) {
       ) : (
         !error && <div className="text-[13px] text-muted">Chargement du paiement...</div>
       )}
-      {error && <div className="mt-3 text-[13px] text-red-600">{error}</div>}
+      {error && <div role="alert" className="mt-3 text-[13px] text-red-600">{error}</div>}
     </div>
   );
 }
