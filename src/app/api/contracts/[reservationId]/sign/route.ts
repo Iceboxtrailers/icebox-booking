@@ -1,18 +1,12 @@
 import { NextResponse } from "next/server";
-import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getCurrentClientId } from "@/lib/session";
 import { getSignatureProvider } from "@/lib/providers/signature";
+import { logAudit } from "@/lib/audit";
 import { isPng } from "@/lib/file-type";
 import { RATE_RULES, rejectIfOverLimit } from "@/lib/rate-limit";
-
-const MAX_SIGNATURE_BYTES = 300 * 1024;
-
-const signSchema = z.object({
-  signerName: z.string().trim().min(1, "Nom du signataire requis").max(120, "Nom trop long"),
-  // base64 is about a third larger than the image it carries
-  signatureImageBase64: z.string().min(1, "Signature requise").max(Math.ceil(MAX_SIGNATURE_BYTES * 1.4)),
-});
+import { MAX_SIGNATURE_BYTES } from "@/lib/signature";
+import { signContractSchema } from "@/lib/validation";
 
 function requesterIp(request: Request): string {
   const forwarded = request.headers.get("x-forwarded-for");
@@ -39,7 +33,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ res
   }
 
   const body = await request.json().catch(() => null);
-  const parsed = signSchema.safeParse(body);
+  const parsed = signContractSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Requête invalide" }, { status: 400 });
   }
@@ -50,15 +44,20 @@ export async function POST(request: Request, { params }: { params: Promise<{ res
     return NextResponse.json({ error: "Signature invalide" }, { status: 400 });
   }
 
-  const provider = getSignatureProvider();
-  // The signature always goes with a contract generated for the terms as they stand now.
-  if (!reservation.contract?.pdfUrl) await provider.generateContract({ reservationId });
-
-  const result = await provider.captureSignature({
+  // The signed copy of the contract is made here, from the terms as they stand now (the unsigned one the
+  // client read is replaced), so the signature always goes with a contract that matches the booking.
+  const result = await getSignatureProvider().captureSignature({
     reservationId,
     signatureImageBuffer,
     signerName: parsed.data.signerName,
     signerIp: requesterIp(request),
+    method: parsed.data.signatureMethod,
+  });
+  await logAudit({
+    action: "contract_signed",
+    reservationId,
+    actor: { type: "client", id: clientId },
+    details: { method: parsed.data.signatureMethod },
   });
 
   return NextResponse.json(result);

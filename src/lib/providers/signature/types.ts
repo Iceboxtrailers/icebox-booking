@@ -5,5 +5,8 @@ export interface SignatureProvider {
     signatureImageBuffer: Buffer;
     signerName: string;
     signerIp: string;
+    // "drawn" on the signature pad, "typed" when the client typed their name instead (the image is then
+    // that name set in handwriting).
+    method?: "drawn" | "typed";
   }): Promise<{ signatureStatus: "signed"; signedAt: Date; signatureImageUrl: string }>;
 }

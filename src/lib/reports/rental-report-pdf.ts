@@ -3,6 +3,7 @@ import path from "node:path";
 import { PDFDocument, StandardFonts, rgb, type PDFFont } from "pdf-lib";
 import type { ReportReservation } from "@/lib/admin/reports";
 import { quebecDay } from "@/lib/dates";
+import { pdfText } from "@/lib/pdf-text";
 
 const PAGE_SIZE: [number, number] = [612, 792];
 const MARGIN = 56;
@@ -83,7 +84,7 @@ export async function buildRentalReportPdf(params: {
   page.drawImage(logoImage, { x: MARGIN, y: y - LOGO_HEIGHT, width: logoWidth, height: LOGO_HEIGHT });
   const textX = MARGIN + logoWidth + 14;
   page.drawText("Rapport des locations", { x: textX, y: y - 15, size: 16, font: boldFont, color: INK });
-  page.drawText(periodLabel, { x: textX, y: y - 32, size: 11, font, color: MUTED });
+  page.drawText(pdfText(periodLabel), { x: textX, y: y - 32, size: 11, font, color: MUTED });
   page.drawText(`Généré le ${quebecDay()}`, { x: textX, y: y - 47, size: 9, font, color: MUTED });
   y -= LOGO_HEIGHT + 18;
   drawRule();
@@ -102,7 +103,8 @@ export async function buildRentalReportPdf(params: {
     const values = [dateRange, r.clientName, r.trailerLabel, r.status, money(r.totalAmount)];
     for (let i = 0; i < COLS.length; i++) {
       const col = COLS[i];
-      const text = truncate(values[i], font, 9.5, col.width - 6);
+      // pdfText: a client name the PDF font cannot draw ("Nguyễn", "Łukasz") must not make the report fail.
+      const text = truncate(pdfText(values[i]), font, 9.5, col.width - 6);
       page.drawText(text, { x: MARGIN + col.x, y, size: 9.5, font, color: INK });
     }
     totalCents += r.totalAmount;

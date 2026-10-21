@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { CLIENT_STATUS, RESERVATION_STATUS, TRAILER_SIZE, TRAILER_STATUS } from "@/lib/constants";
 import { isRealIsoDate } from "@/lib/dates";
+import { MAX_SIGNATURE_BYTES, SIGNATURE_METHOD, isTypedSignatureValid } from "@/lib/signature";
 
 export const isoDate = z.string().refine(isRealIsoDate, "Date invalide");
 const isoTime = z.string().regex(/^\d{2}:\d{2}$/, "Heure invalide");
@@ -82,9 +83,17 @@ export const documentUploadSchema = z.object({
   consent: z.literal(true, "Le consentement est requis"),
 });
 
-export const signContractSchema = z.object({
-  signerName: z.string().trim().min(1, "Nom du signataire requis"),
-});
+export const signContractSchema = z
+  .object({
+    signerName: z.string().trim().min(1, "Nom du signataire requis").max(120, "Nom trop long"),
+    signatureImageBase64: z.string().min(1, "Signature requise").max(Math.ceil(MAX_SIGNATURE_BYTES * 1.4)),
+    // Absent from older pages: those always drew.
+    signatureMethod: z.enum(SIGNATURE_METHOD).default("drawn"),
+  })
+  .refine((value) => value.signatureMethod !== "typed" || isTypedSignatureValid(value.signerName), {
+    message: "Tapez votre nom complet pour signer",
+    path: ["signerName"],
+  });
 
 export const depositAuthorizeSchema = z.object({
   transactionId: z.string().trim().min(1, "transactionId requis"),
