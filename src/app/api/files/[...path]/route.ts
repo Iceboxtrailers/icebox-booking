@@ -52,6 +52,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ pat
   const { path: segments } = await params;
   if (!hasKnownShape(segments)) return NextResponse.json({ error: "Fichier introuvable" }, { status: 404 });
   const [kind] = segments;
+  let staffViewing: string | null = null;
 
   // The staff member is looked up in the database, so a removed account loses access at once.
   if (kind === "trailers" || kind === "inspections") {
@@ -68,10 +69,11 @@ export async function GET(_request: Request, { params }: { params: Promise<{ pat
     }
   } else {
     // Documents (licence, insurance proof): the client who uploaded them, or staff, who check them at
-    // handoff. Every time staff open one it is written to the audit log.
+    // handoff. Every time staff open one it is written to the audit log (below, once the file is served:
+    // a link to a file that does not exist is not a view).
     const admin = await getCurrentAdmin();
     if (admin) {
-      await logAudit({ action: "document_viewed", actor: { type: "admin", id: admin.id }, details: { path: segments.join("/") } });
+      staffViewing = admin.id;
     } else {
       const clientId = await getCurrentClientId();
       if (!clientId) {
@@ -89,6 +91,9 @@ export async function GET(_request: Request, { params }: { params: Promise<{ pat
 
   try {
     const data = await getStorage().read(segments.join("/"));
+    if (staffViewing) {
+      await logAudit({ action: "document_viewed", actor: { type: "admin", id: staffViewing }, details: { path: segments.join("/") } });
+    }
     return new NextResponse(new Uint8Array(data), {
       headers: {
         "Content-Type": contentType,

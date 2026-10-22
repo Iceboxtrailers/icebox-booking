@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/Button";
@@ -331,8 +332,15 @@ export function ReservationModal({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-4 flex items-center justify-between">
-          <div id={titleId} className="font-heading text-lg">
-            {state.mode === "edit" ? "Modifier la réservation" : "Nouvelle réservation"}
+          <div>
+            <div id={titleId} className="font-heading text-lg">
+              {state.mode === "edit" ? "Modifier la réservation" : "Nouvelle réservation"}
+            </div>
+            {state.mode === "edit" && role === "owner" && (
+              <Link href={`/dashboard/journal?reservation=${state.reservationId}`} className="text-[12px] text-navy underline">
+                Historique de cette réservation
+              </Link>
+            )}
           </div>
           <button type="button" onClick={onClose} aria-label="Fermer" className="text-muted hover:text-foreground">
             <X size={18} />
