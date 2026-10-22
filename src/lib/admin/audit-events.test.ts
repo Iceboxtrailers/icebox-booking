@@ -102,6 +102,17 @@ describe("audit journal: sentences", () => {
     assert.equal(describe_("deposit_link_emailed", { to: "a@b.ca", delivered: true }).detail, "a@b.ca");
   });
 
+  it("says when staff sent the confirmation e-mail again, and whether the contract went with it", () => {
+    assert.deepEqual(describe_("email_resent", { kind: "client_confirmation", to: "marie@example.com", attached: true }), {
+      title: "Courriel de confirmation renvoyé au client",
+      detail: "marie@example.com",
+      problem: false,
+    });
+    assert.equal(describe_("email_resent", { to: "marie@example.com", attached: false }).detail, "marie@example.com — sans contrat en pièce jointe");
+    assert.equal(describe_("email_failed", { kind: "client_confirmation", resend: true, message: "Resend 422" }).title, "Renvoi du courriel de confirmation échoué");
+    assert.equal(describe_("email_failed", { kind: "client_confirmation", resend: true, message: "Resend 422" }).problem, true);
+  });
+
   it("flags what went wrong, with the reason", () => {
     for (const [action, details] of [
       ["email_failed", { kind: "client_confirmation", message: "Resend 422: bad address" }],

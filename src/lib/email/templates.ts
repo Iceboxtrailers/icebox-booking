@@ -44,6 +44,10 @@ export function confirmationEmail(p: {
   end: string;
   totalCents: number;
   deliveryLabel: string | null; // e.g. "Livraison et récupération — 1 rue Test, Lévis"
+  // What the message may claim. Both are true for a booking made online; a booking entered by staff may have
+  // no signed contract (nothing is attached) or no saved card (the deposit is handled another way).
+  hasContract?: boolean;
+  cardOnFile?: boolean;
 }) {
   const subject = "Confirmation de votre réservation — IceBox";
   const html = wrap(`
@@ -56,8 +60,8 @@ export function confirmationEmail(p: {
       ${p.deliveryLabel ? `<li>${escapeHtml(p.deliveryLabel)}</li>` : "<li>Ramassage au dépôt de Lévis</li>"}
       <li>Montant : ${money(p.totalCents)} $ (avant taxes)</li>
     </ul>
-    <p>Votre contrat signé est joint à ce courriel (PDF).</p>
-    <p>Un dépôt de sécurité de ${money(DEPOSIT_AMOUNT_CENTS)} $ sera retenu sur la carte que vous avez enregistrée juste avant la remise de la remorque. Il n'est pas débité et il est libéré après l'inspection du retour.</p>
+    ${p.hasContract === false ? "" : "<p>Votre contrat signé est joint à ce courriel (PDF).</p>"}
+    ${p.cardOnFile === false ? "" : `<p>Un dépôt de sécurité de ${money(DEPOSIT_AMOUNT_CENTS)} $ sera retenu sur la carte que vous avez enregistrée juste avant la remise de la remorque. Il n'est pas débité et il est libéré après l'inspection du retour.</p>`}
     <p>Pour toute question, répondez simplement à ce courriel.</p>
     <p>Merci de votre confiance.</p>`);
   return { subject, html };
@@ -96,7 +100,8 @@ export function internalNewReservationEmail(p: {
   deliveryLabel: string | null;
   adminUrl: string;
 }) {
-  const subject = `Nouvelle réservation — ${p.clientName} (${fmt(p.start)} → ${fmt(p.end)})`;
+  // A name is typed by the visitor: no line break may reach the subject.
+  const subject = `Nouvelle réservation — ${p.clientName.replace(/[\r\n]+/g, " ")} (${fmt(p.start)} → ${fmt(p.end)})`;
   const html = wrap(`
     ${heading("Nouvelle réservation confirmée")}
     <ul>

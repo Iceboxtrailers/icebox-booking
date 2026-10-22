@@ -36,6 +36,7 @@ const KNOWN_ACTIONS: Record<string, { topic: Topic; problem?: true }> = {
   deposit_authorize_failed: { topic: "depots", problem: true },
   deposit_renew_old_hold_not_released: { topic: "depots", problem: true },
   deposit_link_emailed: { topic: "courriels" },
+  email_resent: { topic: "courriels" },
   email_failed: { topic: "courriels", problem: true },
   contract_signed: { topic: "contrats" },
   document_viewed: { topic: "documents" },
@@ -207,9 +208,18 @@ export function describeAuditEvent(event: { action: string; details: unknown }, 
       return make("Authentification à deux facteurs activée", text(d.username));
     case "mfa_disabled":
       return make("Authentification à deux facteurs désactivée", text(d.username));
+    case "email_resent":
+      return make(
+        "Courriel de confirmation renvoyé au client",
+        join(text(d.to), d.attached === false ? "sans contrat en pièce jointe" : null),
+      );
     case "email_failed":
       return make(
-        d.kind === "client_confirmation" ? "Courriel de confirmation non envoyé au client" : "Courriel non envoyé",
+        d.kind === "client_confirmation"
+          ? d.resend === true
+            ? "Renvoi du courriel de confirmation échoué"
+            : "Courriel de confirmation non envoyé au client"
+          : "Courriel non envoyé",
         text(d.message),
       );
     default:

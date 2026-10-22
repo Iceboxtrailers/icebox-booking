@@ -6,6 +6,7 @@ import { hasConflict, withTrailerLock } from "@/lib/availability";
 import { holdsSlot } from "@/lib/constants";
 import { syncReservationToQuickBooks } from "@/lib/accounting/sync";
 import { getClientDocuments } from "@/lib/admin/documents";
+import { getConfirmationEmailProblem } from "@/lib/reservations/confirmation-email";
 import { adminReservationUpdateSchema } from "@/lib/validation";
 
 const RESERVATION_CLIENT_SELECT = {
@@ -32,7 +33,12 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   });
   if (!reservation) return NextResponse.json({ error: "Introuvable" }, { status: 404 });
 
-  return NextResponse.json({ ...reservation, documents: await getClientDocuments(reservation.clientId) });
+  return NextResponse.json({
+    ...reservation,
+    documents: await getClientDocuments(reservation.clientId),
+    // Why the client's confirmation e-mail did not go out the last time, if it did not.
+    confirmationEmailProblem: await getConfirmationEmailProblem(reservation.id),
+  });
 }
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {

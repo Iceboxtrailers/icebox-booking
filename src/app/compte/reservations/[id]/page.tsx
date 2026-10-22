@@ -144,7 +144,7 @@ export default async function ReservationDetailPage({ params }: { params: Promis
               href={reservation.contract.pdfUrl}
               target="_blank"
               rel="noreferrer"
-              className="text-[13px] text-navy hover:underline"
+              className="text-[13px] text-navy underline"
             >
               Voir le contrat signé
             </a>

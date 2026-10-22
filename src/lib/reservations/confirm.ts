@@ -1,10 +1,9 @@
 import { prisma } from "@/lib/prisma";
 import { hasConflict, withTrailerLock } from "@/lib/availability";
-import { getMailer, sendInternalNotice } from "@/lib/email";
-import { confirmationEmail, internalNewReservationEmail } from "@/lib/email/templates";
-import { loadContractAttachment } from "@/lib/email/attachments";
+import { sendInternalNotice } from "@/lib/email";
+import { internalNewReservationEmail } from "@/lib/email/templates";
+import { sendConfirmationEmail } from "@/lib/reservations/confirmation-email";
 import { syncReservationToQuickBooks } from "@/lib/accounting/sync";
-import { logAudit } from "@/lib/audit";
 import { siteUrl } from "@/lib/site";
 import { DELIVERY_OPTION_LABEL_FR } from "@/lib/constants";
 import type { DeliveryOption } from "@/lib/constants";
@@ -91,32 +90,12 @@ export async function confirmReservation(reservationId: string, clientId: string
     confirmed.deliveryOption !== "pickup"
       ? `${DELIVERY_OPTION_LABEL_FR[confirmed.deliveryOption as DeliveryOption]}${confirmed.usageLocation ? ` — ${confirmed.usageLocation}` : ""}`
       : null;
-  const mailer = getMailer();
 
+  // The client's e-mail (a failure is recorded in the audit log, and can be retried from the console).
   try {
-    const contract = await loadContractAttachment(confirmed.contract?.pdfUrl);
-    const { subject, html } = confirmationEmail({
-      firstName: confirmed.client.firstName,
-      trailerSize: confirmed.trailer!.size,
-      start,
-      end,
-      totalCents: confirmed.totalAmount,
-      deliveryLabel,
-    });
-    await mailer.send({
-      to: confirmed.client.email,
-      subject,
-      html,
-      attachments: contract ? [contract] : undefined,
-    });
+    await sendConfirmationEmail(reservationId);
   } catch (error) {
     console.error("Confirmation email failed", error);
-    await logAudit({
-      action: "email_failed",
-      reservationId,
-      actor: { type: "system" },
-      details: { kind: "client_confirmation", message: error instanceof Error ? error.message.slice(0, 300) : "unknown" },
-    });
   }
 
   try {

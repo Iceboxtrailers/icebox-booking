@@ -134,7 +134,7 @@ export function EmployeesManager({ employees }: { employees: Employee[] }) {
                       setError(null);
                       setNotice(null);
                     }}
-                    className="text-[12px] text-navy hover:underline"
+                    className="text-[12px] text-navy underline"
                   >
                     Nouveau mot de passe
                   </button>

@@ -104,7 +104,7 @@ export function ClientDocumentsPanel({
                     {older.map((d) => (
                       <li key={d.id}>
                         {date(d.uploadedAt)} · {statusLabel(d.verificationStatus)} ·{" "}
-                        <a href={d.url} target="_blank" rel="noreferrer" className="text-navy hover:underline">
+                        <a href={d.url} target="_blank" rel="noreferrer" className="text-navy underline">
                           Ouvrir
                         </a>
                       </li>

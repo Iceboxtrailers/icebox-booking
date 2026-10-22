@@ -29,6 +29,9 @@ export const RATE_RULES = {
   contract: { name: "contract", limit: 30, windowSeconds: 60 * 60 },
   maps: { name: "maps", limit: 20, windowSeconds: 60 * 60 },
   passwordChange: { name: "password-change", limit: 10, windowSeconds: 15 * 60 },
+  // Staff resending a client's confirmation e-mail, per booking: enough to retry after a typo or an outage,
+  // not enough to flood one client's inbox.
+  resendConfirmation: { name: "resend-confirmation", limit: 5, windowSeconds: 60 * 60 },
 } satisfies Record<string, RateRule>;
 
 // The visitor's address as the hosting platform reports it (it replaces anything the visitor sent).

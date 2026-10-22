@@ -156,7 +156,7 @@ export function TrafficReportView({ report }: { report: TrafficReport }) {
         <p className="mt-4 text-[12px] text-muted">
           Les trois premières étapes viennent du suivi anonyme; les deux dernières, de vos réservations. Quelqu&apos;un qui revient un
           autre jour compte pour une nouvelle visite.{" "}
-          <Link href="/dashboard/abandons" className="font-medium text-navy hover:underline">
+          <Link href="/dashboard/abandons" className="font-medium text-navy underline">
             Voir les réservations abandonnées
           </Link>
         </p>

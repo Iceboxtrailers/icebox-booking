@@ -10,11 +10,12 @@ import { useModal } from "@/components/ui/useModal";
 import { Field } from "@/components/ui/Field";
 import { Input } from "@/components/ui/Input";
 import { ClientDocumentsPanel } from "@/components/admin/ClientDocumentsPanel";
+import { ConfirmationEmailPanel } from "@/components/admin/ConfirmationEmailPanel";
 import { ClientModal } from "@/components/admin/ClientModal";
 import { DepositInspectionPanel, type PanelChange, type PanelInspection } from "@/components/admin/DepositInspectionPanel";
 import type { ClientDocument } from "@/lib/admin/documents";
 import { computeTotalCents } from "@/lib/pricing";
-import { DELIVERY_OPTION_LABEL_FR, RESERVATION_STATUS } from "@/lib/constants";
+import { DELIVERY_OPTION_LABEL_FR, RESERVATION_STATUS, holdsSlot } from "@/lib/constants";
 import type { AdminRole, DeliveryOption, TrailerSize } from "@/lib/constants";
 
 type ModalState =
@@ -93,6 +94,9 @@ export function ReservationModal({
   // Edit mode: the licence and insurance proof the client uploaded, checked by staff.
   const [documents, setDocuments] = useState<ClientDocument[]>([]);
 
+  // Edit mode: why the client's confirmation e-mail did not go out last time, if it did not.
+  const [emailProblem, setEmailProblem] = useState<string | null>(null);
+
   // Create mode: existing-client search vs. quick-create a new one.
   const [clientMode, setClientMode] = useState<"search" | "new">("search");
   const [clientQuery, setClientQuery] = useState("");
@@ -143,6 +147,7 @@ export function ReservationModal({
       setClientDisplay(data.client);
       setDocuments(data.documents ?? []);
       setContractPdfUrl(data.contract?.pdfUrl ?? null);
+      setEmailProblem(data.confirmationEmailProblem ?? null);
       setDepositStatus(data.depositStatus ?? "none");
       setDepositAmountCents(data.depositAmount ?? 0);
       setDepositExpiresAt(data.depositExpiresAt ?? null);
@@ -380,7 +385,7 @@ export function ReservationModal({
                       href={contractPdfUrl}
                       target="_blank"
                       rel="noreferrer"
-                      className="text-navy hover:underline"
+                      className="text-navy underline"
                     >
                       Voir le PDF
                     </a>
@@ -397,6 +402,10 @@ export function ReservationModal({
                   {generatingContract ? "..." : contractPdfUrl ? "Régénérer le PDF" : "Générer le contrat (PDF)"}
                 </button>
               </div>
+            )}
+
+            {state.mode === "edit" && holdsSlot(status) && clientDisplay && (
+              <ConfirmationEmailPanel reservationId={state.reservationId} clientEmail={clientDisplay.email} problem={emailProblem} />
             )}
 
             {state.mode === "edit" && <ClientDocumentsPanel documents={documents} reservationId={state.reservationId} />}

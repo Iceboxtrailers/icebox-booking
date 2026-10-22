@@ -159,7 +159,7 @@ export function QuickBooksPanel({
               <button
                 type="button"
                 onClick={connect}
-                className="text-navy hover:underline"
+                className="text-navy underline"
               >
                 Connecter une autre entreprise
               </button>
