@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { auth } from "@/lib/auth";
+import { getCurrentAdminId } from "@/lib/session";
 import {
   MAX_EVENTS_PER_VISITOR_PER_DAY,
   TRAFFIC_EVENT_NAMES,
@@ -42,8 +42,7 @@ export async function POST(request: Request) {
   if (!path) return ignored();
 
   // The owner's own visits are not traffic.
-  const session = await auth();
-  if (session?.adminId) return ignored();
+  if (await getCurrentAdminId()) return ignored();
 
   const ip = (request.headers.get("x-forwarded-for") ?? "").split(",")[0].trim() || request.headers.get("x-real-ip") || "unknown";
   const day = quebecDay();

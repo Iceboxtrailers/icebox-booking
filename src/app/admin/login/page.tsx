@@ -1,8 +1,7 @@
 "use client";
 
 import { Suspense, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { signIn } from "next-auth/react";
+import { useSearchParams } from "next/navigation";
 import { BrandMark } from "@/components/BrandMark";
 import { Card } from "@/components/ui/Card";
 import { Field } from "@/components/ui/Field";
@@ -11,7 +10,6 @@ import { Button } from "@/components/ui/Button";
 import { safeRedirectPath } from "@/lib/safe-redirect";
 
 function AdminLoginForm() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = safeRedirectPath(searchParams.get("callbackUrl"), "/dashboard");
 
@@ -45,17 +43,23 @@ function AdminLoginForm() {
         }
       }
 
-      const result = await signIn("admin-credentials", {
-        username,
-        password,
-        code: needsCode ? code : "",
-        redirect: false,
+      // The console's own session (separate from the booking pages' one): see /api/admin/auth/login.
+      const login = await fetch("/api/admin/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password, code: needsCode ? code : "" }),
       });
-      if (result?.error) {
-        setError(needsCode ? "Code invalide ou déjà utilisé" : "Nom d'utilisateur ou mot de passe invalide");
+      if (!login.ok) {
+        const data = await login.json().catch(() => ({}));
+        if (login.status === 429) {
+          setError(data.error ?? "Trop de tentatives. Réessayez dans quelques minutes.");
+        } else {
+          setError(needsCode ? "Code invalide ou déjà utilisé" : "Nom d'utilisateur ou mot de passe invalide");
+        }
         return;
       }
-      router.push(callbackUrl);
+      // A full page load, so the first request already carries the new cookie.
+      window.location.assign(callbackUrl);
     } finally {
       setSubmitting(false);
     }

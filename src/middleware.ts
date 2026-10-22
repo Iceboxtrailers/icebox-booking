@@ -1,58 +1,30 @@
 import NextAuth from "next-auth";
 import { NextResponse } from "next/server";
 import { authConfig } from "@/lib/auth.config";
+import { ADMIN_SESSION_COOKIE, readAdminSessionToken } from "@/lib/admin-session";
+import { decideAccess } from "@/lib/access";
 
 // Uses the Edge-safe config (no Prisma-backed provider) so this middleware
-// can run in the Edge Runtime — see src/lib/auth.config.ts.
+// can run in the Edge Runtime — see src/lib/auth.config.ts. `req.auth` is the booking pages' session
+// (client or guest); the console's session is its own cookie, read below. Which of the two a page needs
+// is decided in src/lib/access.ts.
 const { auth } = NextAuth(authConfig);
 
-export default auth((req) => {
-  if (req.nextUrl.pathname.startsWith("/dashboard")) {
-    if (!req.auth?.adminId) {
-      const loginUrl = new URL("/admin/login", req.nextUrl.origin);
-      loginUrl.searchParams.set("callbackUrl", req.nextUrl.pathname);
-      return NextResponse.redirect(loginUrl);
-    }
-    return;
-  }
+export default auth(async (req) => {
+  const admin = await readAdminSessionToken(req.cookies.get(ADMIN_SESSION_COOKIE)?.value);
+  const decision = decideAccess({
+    pathname: req.nextUrl.pathname,
+    adminId: admin?.adminId ?? null,
+    clientId: req.auth?.clientId ?? null,
+  });
 
-  // Fleet photos are admin-managed assets, not client-owned documents — the
-  // client-session gate below would otherwise bounce admin requests to
-  // /login before the route handler's own admin check ever runs.
-  if (
-    req.nextUrl.pathname.startsWith("/api/files/trailers") ||
-    req.nextUrl.pathname.startsWith("/api/files/inspections")
-  ) {
-    if (!req.auth?.adminId) {
-      return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
-    }
-    return;
-  }
-
-  // Staff are a party to every contract, and they check the licence and insurance proof of the people
-  // they hand a trailer to, so an admin session alone should reach these — same reasoning as
-  // /api/files/trailers above. The route handler still checks ownership for the client-session fallback path.
-  if (
-    req.nextUrl.pathname.startsWith("/api/files/contracts") ||
-    req.nextUrl.pathname.startsWith("/api/files/signatures") ||
-    req.nextUrl.pathname.startsWith("/api/files/documents")
-  ) {
-    if (!req.auth?.adminId && !req.auth?.clientId) {
-      return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
-    }
-    return;
-  }
-
-  // The guest-checkout page is how a visitor *gets* a client session — it
-  // can't require one already, unlike every other /reservation/* route.
-  if (req.nextUrl.pathname === "/reservation/invite") {
-    return;
-  }
-
-  if (!req.auth?.clientId) {
-    const loginUrl = new URL("/login", req.nextUrl.origin);
-    loginUrl.searchParams.set("callbackUrl", req.nextUrl.pathname);
+  if (decision.kind === "redirect") {
+    const loginUrl = new URL(decision.to, req.nextUrl.origin);
+    loginUrl.searchParams.set("callbackUrl", decision.callbackUrl);
     return NextResponse.redirect(loginUrl);
+  }
+  if (decision.kind === "unauthorized") {
+    return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
   }
 });
 

@@ -2,9 +2,8 @@ import NextAuth, { CredentialsSignin } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
-import { loginSchema, adminLoginSchema } from "@/lib/validation";
+import { loginSchema } from "@/lib/validation";
 import { authConfig } from "@/lib/auth.config";
-import { verifyAdminLogin } from "@/lib/admin-login";
 import { hashGuestToken } from "@/lib/guest";
 import { RATE_RULES, clientIp, overLimit } from "@/lib/rate-limit";
 
@@ -72,24 +71,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         return { id: client.id, email: client.email, name: `${client.firstName} ${client.lastName}` };
       },
     }),
-    Credentials({
-      id: "admin-credentials",
-      name: "Admin",
-      credentials: {
-        username: { label: "Nom d'utilisateur", type: "text" },
-        password: { label: "Mot de passe", type: "password" },
-        code: { label: "Code de vérification", type: "text" },
-      },
-      authorize: async (rawCredentials) => {
-        const parsed = adminLoginSchema.safeParse(rawCredentials);
-        if (!parsed.success) return null;
-
-        // Password, lockout and two-factor checks live in one place (case-insensitive username).
-        const result = await verifyAdminLogin(parsed.data);
-        if (!result.ok) return null;
-
-        return { id: result.admin.id, name: result.admin.username };
-      },
-    }),
+    // The console does not sign in here: it has its own session (src/lib/admin-session.ts, signed in through
+    // /api/admin/auth/login), so the staff and the clients never share a cookie.
   ],
 });

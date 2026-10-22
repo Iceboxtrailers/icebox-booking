@@ -11,6 +11,9 @@ export const RATE_RULES = {
   // Client sign-in: per email (guessing one password) and per IP (trying many emails).
   login: { name: "login", limit: 10, windowSeconds: 15 * 60 },
   loginIp: { name: "login-ip", limit: 40, windowSeconds: 15 * 60 },
+  // Console sign-in. The account lockout (8 failures, 15 minutes) stops one account being guessed; this stops
+  // one address trying many accounts. A normal sign-in is two or three requests (password, then the code).
+  adminLoginIp: { name: "admin-login-ip", limit: 30, windowSeconds: 15 * 60 },
   signup: { name: "signup", limit: 5, windowSeconds: 60 * 60 },
   // "Does this email have an account?" can be used to list customers.
   checkEmail: { name: "check-email", limit: 30, windowSeconds: 10 * 60 },

@@ -4,7 +4,10 @@ import { GUEST_SESSION_MS } from "@/lib/constants";
 // Edge-safe subset of the Auth.js config (no providers, no Prisma) so
 // src/middleware.ts can check for a session without pulling the
 // Prisma/better-sqlite3 native driver into the Edge Runtime bundle. The full
-// config with the Credentials provider lives in src/lib/auth.ts.
+// config with the Credentials providers lives in src/lib/auth.ts.
+//
+// This is the session of the booking pages: a client with an account, or a guest. The console has its own
+// session and cookie (src/lib/admin-session.ts), so the two never replace each other.
 export const authConfig = {
   session: { strategy: "jwt" },
   pages: {
@@ -12,12 +15,12 @@ export const authConfig = {
   },
   providers: [],
   callbacks: {
-    // account.provider tells apart the Credentials providers (client, guest, admin)
-    // at sign-in time, so a JWT only ever carries one identity.
     jwt: async ({ token, user, account }) => {
-      if (user?.id && account?.provider === "admin-credentials") {
-        token.adminId = user.id;
-      } else if (user?.id && account?.provider === "guest-session") {
+      // A token from before the console got its own session: it carries an admin identity, which has no
+      // place in this session. Returning null ends it (and clears the cookie).
+      if ("adminId" in token) return null;
+
+      if (user?.id && account?.provider === "guest-session") {
         // A guest session stops working after GUEST_SESSION_MS, whatever the cookie lifetime.
         token.clientId = user.id;
         token.guestUntil = Date.now() + GUEST_SESSION_MS;
@@ -31,9 +34,6 @@ export const authConfig = {
       if (!guestExpired && token.clientId && typeof token.clientId === "string") {
         session.clientId = token.clientId;
         if (typeof token.guestUntil === "number") session.guest = true;
-      }
-      if (token.adminId && typeof token.adminId === "string") {
-        session.adminId = token.adminId;
       }
       return session;
     },
