@@ -9,6 +9,7 @@
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "test": "tsx --test \"src/**/*.test.ts\"",
+    "test:db": "node scripts/test-db.mjs",
     "postinstall": "prisma generate"
   },
   "dependencies": {
