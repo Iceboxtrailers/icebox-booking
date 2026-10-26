@@ -41,3 +41,9 @@ export function resolveDeliveryTerms(
     terms: { deliveryOption, usageLocation, deliveryFeeCents, deliveryDistanceKm: changed ? null : stored.deliveryDistanceKm },
   };
 }
+
+// The transport is charged on top of the rental, so when its fee changes the total moves by the same amount and the
+// rental price stays where it was (1 950 $ of rental + 490 $ of transport is 2 440 $).
+export function totalAfterFeeChange(totalCents: number, oldFeeCents: number, newFeeCents: number): number {
+  return Math.max(0, totalCents + newFeeCents - oldFeeCents);
+}

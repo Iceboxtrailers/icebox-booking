@@ -16,6 +16,7 @@ import { ClientModal } from "@/components/admin/ClientModal";
 import { DepositInspectionPanel, type PanelChange, type PanelInspection } from "@/components/admin/DepositInspectionPanel";
 import type { ClientDocument } from "@/lib/admin/documents";
 import { computeTotalCents } from "@/lib/pricing";
+import { totalAfterFeeChange } from "@/lib/reservations/delivery-terms";
 import { DELIVERY_OPTION, DELIVERY_OPTION_LABEL_FR, RESERVATION_STATUS, holdsSlot } from "@/lib/constants";
 import type { AdminRole, DeliveryOption, TrailerSize } from "@/lib/constants";
 
@@ -211,11 +212,16 @@ export function ReservationModal({
     setTotalAmountDollars((cents / 100).toFixed(2));
   }
 
+  // The transport is on top of the rental: a new fee moves the total by the difference, the rental price stays.
+  function moveTotalForFee(newFeeCents: number) {
+    setTotalAmountDollars((current) => (totalAfterFeeChange(toCents(current), deliveryFeeCents, newFeeCents) / 100).toFixed(2));
+  }
+
   function changeDeliveryOption(next: DeliveryOption) {
     setDeliveryOption(next);
     if (next === "pickup") {
       setDeliveryFeeDollars("");
-      suggestTotal(trailerId, pickupDate, returnDate, 0);
+      moveTotalForFee(0);
     }
   }
 
@@ -656,14 +662,14 @@ export function ReservationModal({
                     value={deliveryFeeDollars}
                     onChange={(e) => {
                       setDeliveryFeeDollars(e.target.value);
-                      suggestTotal(trailerId, pickupDate, returnDate, toCents(e.target.value));
+                      moveTotalForFee(toCents(e.target.value));
                     }}
                   />
                 </Field>
                 <p className={`-mt-1 mb-3 text-[12px] ${deliveryFeeCents > toCents(totalAmountDollars) ? "text-red-600" : "text-muted"}`}>
                   {deliveryFeeCents > toCents(totalAmountDollars)
                     ? "Les frais de transport dépassent le montant total."
-                    : `Le montant total comprend le transport : location ${money(toCents(totalAmountDollars) - deliveryFeeCents)} + transport ${money(deliveryFeeCents)}${deliveryKm !== null ? ` (${deliveryKm} km depuis Lévis)` : ""}.`}
+                    : `Location ${money(toCents(totalAmountDollars) - deliveryFeeCents)} + transport ${money(deliveryFeeCents)} = ${money(toCents(totalAmountDollars))} avant taxes${deliveryKm !== null ? ` (${deliveryKm} km depuis Lévis)` : ""}.`}
                 </p>
               </>
             )}

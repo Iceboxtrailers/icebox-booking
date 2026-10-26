@@ -1,6 +1,6 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { NO_DELIVERY, resolveDeliveryTerms } from "@/lib/reservations/delivery-terms";
+import { NO_DELIVERY, resolveDeliveryTerms, totalAfterFeeChange } from "@/lib/reservations/delivery-terms";
 
 const atDepot = { ...NO_DELIVERY, totalAmount: 195000 };
 const delivered = {
@@ -92,5 +92,34 @@ describe("transport set from the console", () => {
     const result = terms(resolveDeliveryTerms({ ...atDepot, usageLocation: "Marché Jean-Talon" }, { usageLocation: "" }));
     assert.equal(result.terms.usageLocation, null);
     assert.equal(result.changed, true);
+  });
+});
+
+describe("the total when the transport fee changes", () => {
+  it("goes up by the fee that is added, so the rental price stays the same", () => {
+    assert.equal(totalAfterFeeChange(195000, 0, 49000), 244000);
+  });
+
+  it("follows the fee up and down, whatever is typed on the way", () => {
+    // 4, 49, 490 typed one digit at a time in the field (dollars), then corrected to 300.
+    let total = 195000;
+    let fee = 0;
+    for (const typed of [400, 4900, 49000, 30000]) {
+      total = totalAfterFeeChange(total, fee, typed);
+      fee = typed;
+    }
+    assert.equal(total, 195000 + 30000);
+  });
+
+  it("comes back to the rental price when the transport is dropped", () => {
+    assert.equal(totalAfterFeeChange(244000, 49000, 0), 195000);
+  });
+
+  it("keeps a price that was typed by hand: only the difference is applied", () => {
+    assert.equal(totalAfterFeeChange(180000, 20000, 25000), 185000);
+  });
+
+  it("never goes below zero", () => {
+    assert.equal(totalAfterFeeChange(10000, 49000, 0), 0);
   });
 });
