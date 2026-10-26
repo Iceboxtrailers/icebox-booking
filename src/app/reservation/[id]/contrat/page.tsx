@@ -4,8 +4,7 @@ import { getCurrentClientId } from "@/lib/session";
 import { WizardShell } from "@/components/wizard/WizardShell";
 import { SignaturePad } from "@/components/forms/SignaturePad";
 import { stepIndexForSegment } from "@/lib/wizard";
-import { buildContractLines } from "@/lib/providers/signature/contract-text";
-import type { TrailerSize } from "@/lib/constants";
+import { buildContractLines, contractParamsFor } from "@/lib/providers/signature/contract-text";
 
 export default async function ContratPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -22,20 +21,15 @@ export default async function ContratPage({ params }: { params: Promise<{ id: st
     redirect(`/reservation/${id}/remorque-dates`);
   }
 
-  const start = reservation.pickupDate.toISOString().slice(0, 10);
-  const end = reservation.returnDate.toISOString().slice(0, 10);
-  const contractLines = buildContractLines({
-    firstName: reservation.client.firstName,
-    lastName: reservation.client.lastName,
-    company: reservation.client.company,
-    email: reservation.client.email,
-    phone: reservation.client.phone,
-    trailerSize: reservation.trailer.size as TrailerSize,
-    start,
-    end,
-    totalCents: reservation.totalAmount,
-    usageLocation: reservation.usageLocation,
-  });
+  // The same mapping as the PDF, so the page and the signed copy show the same contract.
+  const contractLines = buildContractLines(
+    contractParamsFor({
+      ...reservation,
+      trailer: reservation.trailer,
+      pickupDate: reservation.pickupDate,
+      returnDate: reservation.returnDate,
+    }),
+  );
 
   return (
     <WizardShell step={stepIndexForSegment("contrat")}>

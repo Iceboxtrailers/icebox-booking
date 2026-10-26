@@ -2,7 +2,7 @@ import { afterEach, describe, it, mock } from "node:test";
 import assert from "node:assert/strict";
 import { DEPOSIT_AMOUNT_CENTS } from "@/lib/constants";
 import { computeTaxBreakdown } from "@/lib/pricing";
-import { buildContractLines, buildContractText } from "@/lib/providers/signature/contract-text";
+import { buildContractLines, buildContractText, contractParamsFor } from "@/lib/providers/signature/contract-text";
 
 type Input = Parameters<typeof buildContractLines>[0];
 
@@ -110,5 +110,102 @@ describe("contract date", () => {
   it("is the same day in the middle of the day", () => {
     mock.timers.enable({ apis: ["Date"], now: new Date("2026-10-21T16:00:00Z") });
     assert.match(textOf(), /Fait à Lévis, le 21 octobre 2026\./);
+  });
+});
+
+describe("contract with transport", () => {
+  const delivered = { usageLocation: "777 rue Villeray, Montréal", totalCents: 40000, deliveryFeeCents: 9000 };
+
+  it("is word for word the same when the client comes to the depot", () => {
+    assert.equal(textOf({ deliveryOption: "pickup", deliveryFeeCents: 9000 }), textOf());
+    assert.equal(textOf({ deliveryOption: undefined, deliveryFeeCents: undefined }), textOf());
+  });
+
+  it("says that the Locateur delivers and collects, on which days and where", () => {
+    const text = textOf({ ...delivered, deliveryOption: "delivery" });
+    assert.match(text, /777 rue Villeray, Montréal/);
+    assert.match(text, /Livraison : le Locateur livre la remorque à cette adresse le 5 mars 2029\./);
+    assert.match(text, /Récupération : le Locateur reprend la remorque à cette adresse le 8 mars 2029\./);
+    assert.match(text, /le Locateur récupère la remorque à l'adresse indiquée à l'article 3/);
+    assert.ok(!text.includes("Le Locataire s'engage à retourner la remorque à l'adresse du Locateur"));
+  });
+
+  it("splits the amount into rental and transport, with the same total and taxes", () => {
+    const text = textOf({ ...delivered, deliveryOption: "delivery" });
+    assert.match(text, /Location : 310\.00 \$ CAD/);
+    assert.match(text, /Transport \(livraison et récupération\) : 90\.00 \$ CAD/);
+    assert.match(text, /Sous-total : 400\.00 \$ CAD/);
+    assert.match(text, /Total : 459\.90 \$ CAD/);
+  });
+
+  it("describes a delivery one way and a collection one way", () => {
+    const out = textOf({ ...delivered, deliveryOption: "delivery_only" });
+    assert.match(out, /Livraison : le Locateur livre la remorque à cette adresse le 5 mars 2029\./);
+    assert.match(out, /Retour : le Locataire rapporte la remorque à l'adresse du Locateur le 8 mars 2029\./);
+    assert.ok(!out.includes("Récupération : le Locateur reprend"));
+    assert.match(out, /Transport \(livraison seulement\) : 90\.00 \$ CAD/);
+    assert.match(out, /Le Locataire s'engage à retourner la remorque à l'adresse du Locateur\./);
+
+    const back = textOf({ ...delivered, deliveryOption: "return_only" });
+    assert.match(back, /Ramassage : le Locataire prend possession de la remorque à l'adresse du Locateur le 5 mars 2029\./);
+    assert.match(back, /Récupération : le Locateur reprend la remorque à cette adresse le 8 mars 2029\./);
+    assert.match(back, /Transport \(récupération seulement\) : 90\.00 \$ CAD/);
+    assert.match(back, /le Locateur récupère la remorque à l'adresse indiquée à l'article 3/);
+  });
+
+  it("shows a free transport as zero, and never a negative rental", () => {
+    assert.match(textOf({ ...delivered, deliveryOption: "delivery", deliveryFeeCents: 0 }), /Transport \(livraison et récupération\) : 0\.00 \$ CAD/);
+    const tooMuch = textOf({ ...delivered, deliveryOption: "delivery", deliveryFeeCents: 99999 });
+    assert.match(tooMuch, /Location : 0\.00 \$ CAD/);
+    assert.match(tooMuch, /Transport \(livraison et récupération\) : 400\.00 \$ CAD/);
+    assert.match(textOf({ ...delivered, deliveryOption: "delivery", deliveryFeeCents: -500 }), /Location : 400\.00 \$ CAD/);
+  });
+});
+
+describe("contract of a stored booking", () => {
+  it("takes everything from the booking, the transport included", () => {
+    const params = contractParamsFor({
+      client: {
+        firstName: "Riad",
+        lastName: "Leroy",
+        company: "L'artisan Délice sans gluten",
+        email: "riad@example.com",
+        phone: "514 575-8751",
+        billingAddress: "7700 rue St-Hubert",
+        billingCity: "Montréal",
+        billingProvince: "Québec",
+        billingPostalCode: "H2R 2N8",
+      },
+      trailer: { size: "6x12" },
+      pickupDate: new Date("2026-11-11T00:00:00Z"),
+      returnDate: new Date("2026-12-26T00:00:00Z"),
+      totalAmount: 195000,
+      usageLocation: "777 rue Villeray, Montréal",
+      deliveryOption: "delivery",
+      deliveryFeeCents: 49000,
+    });
+    assert.deepEqual(params, {
+      firstName: "Riad",
+      lastName: "Leroy",
+      company: "L'artisan Délice sans gluten",
+      email: "riad@example.com",
+      phone: "514 575-8751",
+      billingAddress: "7700 rue St-Hubert",
+      billingCity: "Montréal",
+      billingProvince: "Québec",
+      billingPostalCode: "H2R 2N8",
+      trailerSize: "6x12",
+      start: "2026-11-11",
+      end: "2026-12-26",
+      totalCents: 195000,
+      usageLocation: "777 rue Villeray, Montréal",
+      deliveryOption: "delivery",
+      deliveryFeeCents: 49000,
+    });
+    const text = buildContractLines(params)
+      .flatMap((line) => ("text" in line ? [line.text] : []))
+      .join("\n");
+    assert.match(text, /Location : 1460\.00 \$ CAD/);
+    assert.match(text, /Transport \(livraison et récupération\) : 490\.00 \$ CAD/);
   });
 });

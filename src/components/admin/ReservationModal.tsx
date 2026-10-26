@@ -11,11 +11,12 @@ import { Field } from "@/components/ui/Field";
 import { Input } from "@/components/ui/Input";
 import { ClientDocumentsPanel } from "@/components/admin/ClientDocumentsPanel";
 import { ConfirmationEmailPanel } from "@/components/admin/ConfirmationEmailPanel";
+import { QuickBooksInvoicePanel } from "@/components/admin/QuickBooksInvoicePanel";
 import { ClientModal } from "@/components/admin/ClientModal";
 import { DepositInspectionPanel, type PanelChange, type PanelInspection } from "@/components/admin/DepositInspectionPanel";
 import type { ClientDocument } from "@/lib/admin/documents";
 import { computeTotalCents } from "@/lib/pricing";
-import { DELIVERY_OPTION_LABEL_FR, RESERVATION_STATUS, holdsSlot } from "@/lib/constants";
+import { DELIVERY_OPTION, DELIVERY_OPTION_LABEL_FR, RESERVATION_STATUS, holdsSlot } from "@/lib/constants";
 import type { AdminRole, DeliveryOption, TrailerSize } from "@/lib/constants";
 
 type ModalState =
@@ -38,6 +39,10 @@ function addOneDay(iso: string): string {
   d.setUTCDate(d.getUTCDate() + 1);
   return d.toISOString().slice(0, 10);
 }
+
+// Dollars typed in a field -> cents; anything unreadable counts as nothing.
+const toCents = (dollars: string) => Math.round(parseFloat(dollars || "0") * 100) || 0;
+const money = (cents: number) => `${(cents / 100).toLocaleString("fr-CA", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} $`;
 
 export function ReservationModal({
   state,
@@ -68,12 +73,12 @@ export function ReservationModal({
   const [pickupTime, setPickupTime] = useState("");
   const [returnTime, setReturnTime] = useState("");
   const [isTest, setIsTest] = useState(false);
-  const [delivery, setDelivery] = useState<{
-    option: DeliveryOption;
-    address: string;
-    km: number | null;
-    feeCents: number;
-  } | null>(null);
+  // Transport: how the trailer travels, where it will be used, and what the transport costs (it is part of the total).
+  const [deliveryOption, setDeliveryOption] = useState<DeliveryOption>("pickup");
+  const [usageLocation, setUsageLocation] = useState("");
+  const [deliveryFeeDollars, setDeliveryFeeDollars] = useState("");
+  const [deliveryKm, setDeliveryKm] = useState<number | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
 
   // Edit mode: client display, fetched with the reservation; editable via ClientModal.
@@ -134,16 +139,10 @@ export function ReservationModal({
       setPickupTime(data.pickupTime ?? "");
       setReturnTime(data.returnTime ?? "");
       setIsTest(Boolean(data.isTest));
-      setDelivery(
-        data.deliveryOption && data.deliveryOption !== "pickup"
-          ? {
-              option: data.deliveryOption as DeliveryOption,
-              address: data.usageLocation ?? "",
-              km: data.deliveryDistanceKm ?? null,
-              feeCents: data.deliveryFeeCents ?? 0,
-            }
-          : null,
-      );
+      setDeliveryOption((data.deliveryOption ?? "pickup") as DeliveryOption);
+      setUsageLocation(data.usageLocation ?? "");
+      setDeliveryFeeDollars(data.deliveryFeeCents ? (data.deliveryFeeCents / 100).toFixed(2) : "");
+      setDeliveryKm(data.deliveryDistanceKm ?? null);
       setClientDisplay(data.client);
       setDocuments(data.documents ?? []);
       setContractPdfUrl(data.contract?.pdfUrl ?? null);
@@ -201,13 +200,23 @@ export function ReservationModal({
   // change in create mode — still fully editable afterward. Computed directly
   // from the change handlers (not an effect) since it's a one-shot default,
   // not a continuous sync with an external system.
-  function suggestTotal(nextTrailerId: string, nextPickup: string, nextReturn: string) {
+  const deliveryFeeCents = deliveryOption === "pickup" ? 0 : toCents(deliveryFeeDollars);
+
+  function suggestTotal(nextTrailerId: string, nextPickup: string, nextReturn: string, feeCents = deliveryFeeCents) {
     if (state.mode !== "create") return;
     if (!nextTrailerId || !nextPickup || !nextReturn || nextReturn <= nextPickup) return;
     const size = trailers.find((t) => t.id === nextTrailerId)?.size as TrailerSize | undefined;
     if (!size) return;
-    const cents = computeTotalCents(size, nextPickup, nextReturn);
+    const cents = computeTotalCents(size, nextPickup, nextReturn) + feeCents;
     setTotalAmountDollars((cents / 100).toFixed(2));
+  }
+
+  function changeDeliveryOption(next: DeliveryOption) {
+    setDeliveryOption(next);
+    if (next === "pickup") {
+      setDeliveryFeeDollars("");
+      suggestTotal(trailerId, pickupDate, returnDate, 0);
+    }
   }
 
   useEffect(() => {
@@ -232,6 +241,8 @@ export function ReservationModal({
     }
 
     const totalAmount = Math.round(parseFloat(totalAmountDollars || "0") * 100);
+    const transport = { deliveryOption, usageLocation, deliveryFeeCents };
+    setNotice(null);
     setSubmitting(true);
     try {
       if (state.mode === "edit") {
@@ -248,11 +259,24 @@ export function ReservationModal({
             pickupTime,
             returnTime,
             isTest,
+            ...transport,
           }),
         });
+        const data = await res.json().catch(() => ({}));
         if (!res.ok) {
-          const data = await res.json().catch(() => ({}));
           setError(data.error ?? "Impossible d'enregistrer");
+          return;
+        }
+        // An unsigned contract is made again by the server. These two cases need a person: stay open and say so.
+        if (data.contractRefresh === "signed_outdated") {
+          setNotice("Enregistré. Attention : le contrat signé par le client ne correspond plus à ces nouvelles conditions; il faudra le lui faire signer de nouveau.");
+          router.refresh();
+          return;
+        }
+        if (data.contractRefresh === "cleared") {
+          setContractPdfUrl(null);
+          setNotice("Enregistré. Le contrat n'a pas pu être refait automatiquement : cliquez sur « Générer le contrat (PDF) ».");
+          router.refresh();
           return;
         }
       } else {
@@ -289,6 +313,7 @@ export function ReservationModal({
             pickupTime,
             returnTime,
             isTest,
+            ...transport,
           }),
         });
         if (!res.ok) {
@@ -402,6 +427,13 @@ export function ReservationModal({
                   {generatingContract ? "..." : contractPdfUrl ? "Régénérer le PDF" : "Générer le contrat (PDF)"}
                 </button>
               </div>
+            )}
+
+            {state.mode === "edit" && role === "owner" && holdsSlot(status) && !isTest && clientDisplay && (
+              <QuickBooksInvoicePanel
+                reservationId={state.reservationId}
+                clientName={`${clientDisplay.firstName} ${clientDisplay.lastName}`}
+              />
             )}
 
             {state.mode === "edit" && holdsSlot(status) && clientDisplay && (
@@ -590,15 +622,50 @@ export function ReservationModal({
               </Field>
             </div>
 
-            {delivery && (
-              <div className="mb-3 rounded-md border border-border-light bg-subtle p-3 text-[12px]">
-                <div className="font-medium">{DELIVERY_OPTION_LABEL_FR[delivery.option]}</div>
-                <div className="text-muted">{delivery.address}</div>
-                <div className="text-muted">
-                  {delivery.km !== null && `${delivery.km} km depuis Lévis · `}
-                  Transport inclus dans le total : {(delivery.feeCents / 100).toFixed(2)} $ (avant taxes)
-                </div>
-              </div>
+            <Field label="Transport">
+              <select
+                value={deliveryOption}
+                onChange={(e) => changeDeliveryOption(e.target.value as DeliveryOption)}
+                className="w-full rounded-md border border-border px-3 py-2.5 text-[13px]"
+              >
+                {DELIVERY_OPTION.map((option) => (
+                  <option key={option} value={option}>
+                    {DELIVERY_OPTION_LABEL_FR[option]}
+                  </option>
+                ))}
+              </select>
+            </Field>
+
+            <Field label={deliveryOption === "pickup" ? "Lieu d'utilisation (facultatif)" : "Adresse de livraison"}>
+              <Input
+                value={usageLocation}
+                onChange={(e) => setUsageLocation(e.target.value)}
+                placeholder="Numéro, rue, ville"
+                maxLength={200}
+                required={deliveryOption !== "pickup"}
+              />
+            </Field>
+
+            {deliveryOption !== "pickup" && (
+              <>
+                <Field label="Frais de transport ($, avant taxes)">
+                  <Input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={deliveryFeeDollars}
+                    onChange={(e) => {
+                      setDeliveryFeeDollars(e.target.value);
+                      suggestTotal(trailerId, pickupDate, returnDate, toCents(e.target.value));
+                    }}
+                  />
+                </Field>
+                <p className={`-mt-1 mb-3 text-[12px] ${deliveryFeeCents > toCents(totalAmountDollars) ? "text-red-600" : "text-muted"}`}>
+                  {deliveryFeeCents > toCents(totalAmountDollars)
+                    ? "Les frais de transport dépassent le montant total."
+                    : `Le montant total comprend le transport : location ${money(toCents(totalAmountDollars) - deliveryFeeCents)} + transport ${money(deliveryFeeCents)}${deliveryKm !== null ? ` (${deliveryKm} km depuis Lévis)` : ""}.`}
+                </p>
+              </>
             )}
 
             <div className="grid grid-cols-2 gap-3">
@@ -643,6 +710,11 @@ export function ReservationModal({
             </fieldset>
 
             {error && <div role="alert" className="mb-3 text-[13px] text-red-600">{error}</div>}
+            {notice && (
+              <div role="status" className="mb-3 rounded-md border border-warn-line bg-warn-soft p-2 text-[13px] text-warn-text">
+                {notice}
+              </div>
+            )}
 
             <div className="mt-4 flex items-center justify-between gap-2">
               {state.mode === "edit" && role === "owner" ? (

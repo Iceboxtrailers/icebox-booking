@@ -133,6 +133,17 @@ export function QuickBooksPanel({
         </Card>
       )}
 
+      {connection && environment === "sandbox" && (
+        <Card className="border-warn-line bg-warn-soft p-4 text-[13px] text-warn-text">
+          <div className="mb-1 font-medium">Mode essai</div>
+          <p>
+            Les factures créées ici vont dans l&apos;entreprise d&apos;essai d&apos;Intuit, pas dans votre vrai QuickBooks : vous ne les y
+            verrez pas. Le passage en production se fait une fois vos numéros de TPS et de TVQ en place dans QuickBooks. Les
+            réservations déjà créées pourront alors être envoyées une à une depuis leur fiche (bloc « Facture QuickBooks »).
+          </p>
+        </Card>
+      )}
+
       {connection && (
         <Card className="p-4 text-[13px]">
           <div className="mb-1 font-medium">Connecté à QuickBooks Online</div>

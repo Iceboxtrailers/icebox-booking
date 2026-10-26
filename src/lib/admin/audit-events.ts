@@ -47,6 +47,7 @@ const KNOWN_ACTIONS: Record<string, { topic: Topic; problem?: true }> = {
   quickbooks_connected: { topic: "compta" },
   quickbooks_configured: { topic: "compta" },
   quickbooks_disconnected: { topic: "compta" },
+  quickbooks_company_changed: { topic: "compta" },
   quickbooks_invoice_created: { topic: "compta" },
   quickbooks_sync_failed: { topic: "compta", problem: true },
   employee_created: { topic: "equipe" },
@@ -192,6 +193,16 @@ export function describeAuditEvent(event: { action: string; details: unknown }, 
       return make("Réglages QuickBooks enregistrés");
     case "quickbooks_disconnected":
       return make("QuickBooks déconnecté");
+    case "quickbooks_company_changed": {
+      const clients = typeof d.clients === "number" ? d.clients : 0;
+      const reservations = typeof d.reservations === "number" ? d.reservations : 0;
+      return make(
+        "Autre entreprise QuickBooks connectée",
+        reservations > 0
+          ? `${reservations} réservation${reservations > 1 ? "s" : ""} et ${clients} client${clients > 1 ? "s" : ""} liés à l'ancienne entreprise remis à zéro : à renvoyer au besoin`
+          : "aucune facture liée à l'ancienne entreprise",
+      );
+    }
     case "quickbooks_invoice_created":
       return make("Facture QuickBooks créée", text(d.invoiceNumber) ? `n° ${text(d.invoiceNumber)}` : null);
     case "quickbooks_sync_failed":

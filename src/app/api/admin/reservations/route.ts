@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { requireOwner } from "@/lib/admin-auth";
 import { hasConflict, withTrailerLock } from "@/lib/availability";
 import { adminReservationCreateSchema } from "@/lib/validation";
+import { NO_DELIVERY, resolveDeliveryTerms } from "@/lib/reservations/delivery-terms";
 import { syncReservationToQuickBooks } from "@/lib/accounting/sync";
 
 export async function POST(request: Request) {
@@ -16,6 +17,10 @@ export async function POST(request: Request) {
 
   const { clientId, trailerId, pickupDate, returnDate, totalAmount, status, note, pickupTime, returnTime, isTest } =
     parsed.data;
+
+  // Transport: how the trailer travels, where it goes, what it costs (part of the total).
+  const delivery = resolveDeliveryTerms({ ...NO_DELIVERY, totalAmount }, parsed.data);
+  if (!delivery.ok) return NextResponse.json({ error: delivery.error }, { status: 400 });
 
   // Checked and written with the trailer locked: a client finishing a booking at the same moment cannot
   // take the same dates.
@@ -34,6 +39,7 @@ export async function POST(request: Request) {
         pickupTime: pickupTime || null,
         returnTime: returnTime || null,
         isTest: isTest ?? false,
+        ...delivery.terms,
       },
       include: {
         client: { select: { id: true, firstName: true, lastName: true, email: true, phone: true } },

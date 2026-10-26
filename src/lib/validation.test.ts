@@ -132,6 +132,17 @@ describe("booking created by staff", () => {
     assert.equal(adminReservationCreateSchema.safeParse({ ...base, totalAmount: -1 }).success, false);
     assert.equal(adminReservationCreateSchema.safeParse({ ...base, totalAmount: 100.5 }).success, false);
   });
+
+  it("takes the transport: how it travels, where to, and what it costs in whole cents", () => {
+    const delivered = { ...base, deliveryOption: "delivery", usageLocation: "  777 rue Villeray, Montréal ", deliveryFeeCents: 49000 };
+    const parsed = adminReservationCreateSchema.safeParse(delivered);
+    assert.equal(parsed.success, true);
+    assert.equal(parsed.data?.usageLocation, "777 rue Villeray, Montréal");
+    assert.equal(adminReservationCreateSchema.safeParse({ ...delivered, deliveryOption: "drone" }).success, false);
+    assert.equal(adminReservationCreateSchema.safeParse({ ...delivered, deliveryFeeCents: -1 }).success, false);
+    assert.equal(adminReservationCreateSchema.safeParse({ ...delivered, deliveryFeeCents: 10.5 }).success, false);
+    assert.equal(firstMessage(adminReservationCreateSchema.safeParse({ ...delivered, usageLocation: "x".repeat(201) })), "Adresse trop longue");
+  });
 });
 
 describe("report query", () => {

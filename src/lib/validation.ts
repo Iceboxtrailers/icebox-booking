@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { CLIENT_STATUS, RESERVATION_STATUS, TRAILER_SIZE, TRAILER_STATUS } from "@/lib/constants";
+import { CLIENT_STATUS, DELIVERY_OPTION, RESERVATION_STATUS, TRAILER_SIZE, TRAILER_STATUS } from "@/lib/constants";
 import { isRealIsoDate } from "@/lib/dates";
 import { MAX_SIGNATURE_BYTES, SIGNATURE_METHOD, isTypedSignatureValid } from "@/lib/signature";
 
@@ -126,6 +126,14 @@ export const adminUserCreateSchema = z.object({
   password: z.string().min(10, "Mot de passe : 10 caractères minimum"),
 });
 
+// Transport as the console sets it. The rules that need the stored booking (an address for a delivery, a fee that
+// fits in the total) are applied by resolveDeliveryTerms.
+const adminDeliveryFields = {
+  deliveryOption: z.enum(DELIVERY_OPTION).optional(),
+  usageLocation: z.string().trim().max(200, "Adresse trop longue").optional(),
+  deliveryFeeCents: z.number().int("Frais de transport invalides").min(0, "Frais de transport invalides").max(10_000_000, "Frais de transport trop élevés").optional(),
+};
+
 export const adminReservationCreateSchema = z
   .object({
     clientId: z.string().min(1, "Client requis"),
@@ -138,6 +146,7 @@ export const adminReservationCreateSchema = z
     pickupTime: isoTime.optional().or(z.literal("")),
     returnTime: isoTime.optional().or(z.literal("")),
     isTest: z.boolean().optional(),
+    ...adminDeliveryFields,
   })
   .refine((v) => v.returnDate > v.pickupDate, {
     message: "La date de retour doit être après la date de ramassage",
@@ -154,6 +163,7 @@ export const adminReservationUpdateSchema = z.object({
   pickupTime: isoTime.optional().or(z.literal("")),
   returnTime: isoTime.optional().or(z.literal("")),
   isTest: z.boolean().optional(),
+  ...adminDeliveryFields,
   // Departure checks (status -> in_progress): the hold covers less than the rental,
   // or the deposit was taken another way (owner only).
   acknowledgeDepositExpiry: z.boolean().optional(),

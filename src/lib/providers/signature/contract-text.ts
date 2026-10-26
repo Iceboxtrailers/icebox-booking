@@ -1,8 +1,8 @@
 import { fmt, nights, quebecDay } from "@/lib/dates";
 import { catalogueFor } from "@/lib/catalogue";
 import { RATE_TABLE, TRANSPORT_FEE_PER_TRIP_CENTS, computeTaxBreakdown } from "@/lib/pricing";
-import { DEPOSIT_AMOUNT_CENTS } from "@/lib/constants";
-import type { TrailerSize } from "@/lib/constants";
+import { DELIVERY_OPTION_LABEL_FR, DEPOSIT_AMOUNT_CENTS } from "@/lib/constants";
+import type { DeliveryOption, TrailerSize } from "@/lib/constants";
 
 // Company-side facts from the real IceBox rental contract template —
 // legally significant, do not infer or alter these.
@@ -78,6 +78,10 @@ export function buildContractLines(p: {
   end: string;
   totalCents: number;
   usageLocation: string | null;
+  // How the trailer gets to the client and back. Absent or "pickup": the client comes to the depot both ways and
+  // the wording is exactly what it was before delivery existed. `deliveryFeeCents` is part of `totalCents`.
+  deliveryOption?: DeliveryOption;
+  deliveryFeeCents?: number;
 }): ContractLine[] {
   const n = nights(p.start, p.end);
   const catalogue = catalogueFor(p.trailerSize);
@@ -85,6 +89,8 @@ export function buildContractLines(p: {
   const spec = TRAILER_SPECS[p.trailerSize];
   const clientName = `${p.firstName} ${p.lastName}`;
   const lieuUtilisation = p.usageLocation?.trim() || "À préciser";
+  const delivery = p.deliveryOption ?? "pickup";
+  const transportCents = delivery === "pickup" ? 0 : Math.min(Math.max(p.deliveryFeeCents ?? 0, 0), p.totalCents);
   const cityLine = [p.billingCity, p.billingProvince].filter(Boolean).join(", ");
   const cityPostalLine = [cityLine, p.billingPostalCode].filter(Boolean).join(" ");
 
@@ -137,6 +143,18 @@ export function buildContractLines(p: {
 
   heading("3. Lieu d'Utilisation");
   body(lieuUtilisation);
+  const livraison = `Livraison : le Locateur livre la remorque à cette adresse le ${fmt(p.start)}.`;
+  const recuperation = `Récupération : le Locateur reprend la remorque à cette adresse le ${fmt(p.end)}.`;
+  if (delivery === "delivery") {
+    bullet(livraison);
+    bullet(recuperation);
+  } else if (delivery === "delivery_only") {
+    bullet(livraison);
+    bullet(`Retour : le Locataire rapporte la remorque à l'adresse du Locateur le ${fmt(p.end)}.`);
+  } else if (delivery === "return_only") {
+    bullet(`Ramassage : le Locataire prend possession de la remorque à l'adresse du Locateur le ${fmt(p.start)}.`);
+    bullet(recuperation);
+  }
   spacer();
   rule();
 
@@ -149,6 +167,10 @@ export function buildContractLines(p: {
   bullet(`${money(rate.monthCents)} $ +Tx CAD par mois.`);
   bullet(`${money(TRANSPORT_FEE_PER_TRIP_CENTS)} $ / transport dans un rayon de 50 km du Locateur.`);
   body(`Montant pour cette réservation (${n} jour${n > 1 ? "s" : ""}) :`);
+  if (delivery !== "pickup") {
+    bullet(`Location : ${money(p.totalCents - transportCents)} $ CAD`);
+    bullet(`Transport (${DELIVERY_OPTION_LABEL_FR[delivery].toLowerCase()}) : ${money(transportCents)} $ CAD`);
+  }
   bullet(`Sous-total : ${money(tax.subtotalCents)} $ CAD`);
   bullet(`TPS (5%) : ${money(tax.gstCents)} $`);
   bullet(`TVQ (9,975%) : ${money(tax.qstCents)} $`);
@@ -211,9 +233,15 @@ export function buildContractLines(p: {
   rule();
 
   heading("8. Retour des Équipements");
-  body(
-    "Le Locataire s'engage à retourner la remorque à l'adresse du Locateur. La remorque devra être restituée en bon état de propreté et de fonctionnement."
-  );
+  if (delivery === "delivery" || delivery === "return_only") {
+    body(
+      "À la fin de la location, le Locateur récupère la remorque à l'adresse indiquée à l'article 3, à la date prévue. Le Locataire s'engage à la rendre accessible et à la restituer en bon état de propreté et de fonctionnement."
+    );
+  } else {
+    body(
+      "Le Locataire s'engage à retourner la remorque à l'adresse du Locateur. La remorque devra être restituée en bon état de propreté et de fonctionnement."
+    );
+  }
   spacer();
   rule();
 
@@ -236,6 +264,49 @@ export function buildContractLines(p: {
   body(clientName);
 
   return lines;
+}
+
+// The contract of a stored booking. The PDF (stub.ts) and the page the client signs on both go through this, so
+// they cannot drift apart.
+export function contractParamsFor(reservation: {
+  client: {
+    firstName: string;
+    lastName: string;
+    company: string | null;
+    email: string;
+    phone: string;
+    billingAddress: string | null;
+    billingCity: string | null;
+    billingProvince: string | null;
+    billingPostalCode: string | null;
+  };
+  trailer: { size: string };
+  pickupDate: Date;
+  returnDate: Date;
+  totalAmount: number;
+  usageLocation: string | null;
+  deliveryOption: string;
+  deliveryFeeCents: number;
+}): Parameters<typeof buildContractLines>[0] {
+  const { client } = reservation;
+  return {
+    firstName: client.firstName,
+    lastName: client.lastName,
+    company: client.company,
+    email: client.email,
+    phone: client.phone,
+    billingAddress: client.billingAddress,
+    billingCity: client.billingCity,
+    billingProvince: client.billingProvince,
+    billingPostalCode: client.billingPostalCode,
+    trailerSize: reservation.trailer.size as TrailerSize,
+    start: reservation.pickupDate.toISOString().slice(0, 10),
+    end: reservation.returnDate.toISOString().slice(0, 10),
+    totalCents: reservation.totalAmount,
+    usageLocation: reservation.usageLocation,
+    deliveryOption: reservation.deliveryOption as DeliveryOption,
+    deliveryFeeCents: reservation.deliveryFeeCents,
+  };
 }
 
 // Flat single-string fallback for contexts that just need the gist (not used

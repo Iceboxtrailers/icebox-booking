@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { requireOwner } from "@/lib/admin-auth";
 import { CONNECTION_ID, exchangeCodeForTokens } from "@/lib/accounting/quickbooks";
 import { logAudit } from "@/lib/audit";
+import { reconcileQuickBooksCompany } from "@/lib/accounting/links";
 
 export async function GET(request: Request) {
   const guard = await requireOwner();
@@ -45,6 +46,16 @@ export async function GET(request: Request) {
               transportItemId: null,
             },
     });
+    // A different company (the real one after the test one, say): the customer and invoice numbers of the old one
+    // mean nothing here, so they are forgotten and those bookings can be sent again.
+    const company = await reconcileQuickBooksCompany(realmId, existing?.realmId ?? null);
+    if (company.changed) {
+      await logAudit({
+        action: "quickbooks_company_changed",
+        actor: { type: "admin", id: guard.admin.id },
+        details: { from: company.from, to: company.to, clients: company.clients, reservations: company.reservations },
+      });
+    }
     await logAudit({
       action: "quickbooks_connected",
       actor: { type: "admin", id: guard.admin.id },

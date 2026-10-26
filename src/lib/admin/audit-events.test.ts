@@ -113,6 +113,20 @@ describe("audit journal: sentences", () => {
     assert.equal(describe_("email_failed", { kind: "client_confirmation", resend: true, message: "Resend 422" }).problem, true);
   });
 
+  it("says when another QuickBooks company was connected, and what was reset", () => {
+    assert.deepEqual(describe_("quickbooks_company_changed", { from: "111", to: "222", clients: 1, reservations: 1 }), {
+      title: "Autre entreprise QuickBooks connectée",
+      detail: "1 réservation et 1 client liés à l'ancienne entreprise remis à zéro : à renvoyer au besoin",
+      problem: false,
+    });
+    assert.equal(
+      describe_("quickbooks_company_changed", { from: "111", to: "222", clients: 4, reservations: 3 }).detail,
+      "3 réservations et 4 clients liés à l'ancienne entreprise remis à zéro : à renvoyer au besoin",
+    );
+    assert.equal(describe_("quickbooks_company_changed", { from: "111", to: "222", clients: 0, reservations: 0 }).detail, "aucune facture liée à l'ancienne entreprise");
+    assert.ok(actionsInCategory("compta").includes("quickbooks_company_changed"));
+  });
+
   it("flags what went wrong, with the reason", () => {
     for (const [action, details] of [
       ["email_failed", { kind: "client_confirmation", message: "Resend 422: bad address" }],

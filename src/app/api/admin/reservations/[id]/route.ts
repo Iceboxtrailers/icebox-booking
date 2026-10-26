@@ -8,6 +8,10 @@ import { syncReservationToQuickBooks } from "@/lib/accounting/sync";
 import { getClientDocuments } from "@/lib/admin/documents";
 import { getConfirmationEmailProblem } from "@/lib/reservations/confirmation-email";
 import { adminReservationUpdateSchema } from "@/lib/validation";
+import { refreshContractAfterTermsChange } from "@/lib/reservations/contract-refresh";
+import { resolveDeliveryTerms } from "@/lib/reservations/delivery-terms";
+import type { DeliveryTerms } from "@/lib/reservations/delivery-terms";
+import type { DeliveryOption } from "@/lib/constants";
 
 const RESERVATION_CLIENT_SELECT = {
   id: true,
@@ -65,6 +69,9 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     returnTime,
     acknowledgeDepositExpiry,
     waiveDeposit,
+    deliveryOption,
+    usageLocation,
+    deliveryFeeCents,
     ...rest
   } = parsed.data;
 
@@ -75,6 +82,9 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       pickupDate !== undefined ||
       returnDate !== undefined ||
       trailerId !== undefined ||
+      deliveryOption !== undefined ||
+      usageLocation !== undefined ||
+      deliveryFeeCents !== undefined ||
       rest.totalAmount !== undefined ||
       rest.isTest !== undefined ||
       (rest.status !== undefined && rest.status !== "in_progress" && rest.status !== existing.status);
@@ -124,6 +134,23 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     }
   }
 
+  // Transport. A fee that no longer fits in the total (or an address missing for a delivery) is refused here. An
+  // edit that touches neither the transport nor the price (cancelling, say) is not held up by it.
+  const touchesDelivery = deliveryOption !== undefined || usageLocation !== undefined || deliveryFeeCents !== undefined;
+  let deliveryTerms: DeliveryTerms | null = null;
+  let deliveryChanged = false;
+  if (touchesDelivery || rest.totalAmount !== undefined) {
+    const resolved = resolveDeliveryTerms(
+      { ...existing, deliveryOption: existing.deliveryOption as DeliveryOption },
+      { deliveryOption, usageLocation, deliveryFeeCents, totalAmount: rest.totalAmount },
+    );
+    if (!resolved.ok) return NextResponse.json({ error: resolved.error }, { status: 400 });
+    if (touchesDelivery) {
+      deliveryTerms = resolved.terms;
+      deliveryChanged = resolved.changed;
+    }
+  }
+
   const nextTrailerId = trailerId ?? existing.trailerId;
   const nextPickup = pickupDate ? new Date(`${pickupDate}T00:00:00Z`) : existing.pickupDate;
   const nextReturn = returnDate ? new Date(`${returnDate}T00:00:00Z`) : existing.returnDate;
@@ -142,6 +169,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       where: { id },
       data: {
         ...rest,
+        ...(deliveryTerms ?? {}),
         ...(trailerId ? { trailerId } : {}),
         ...(pickupDate ? { pickupDate: nextPickup } : {}),
         ...(returnDate ? { returnDate: nextReturn } : {}),
@@ -177,5 +205,15 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     await syncReservationToQuickBooks(id, { actorAdminId: admin.id });
   }
 
-  return NextResponse.json(updated);
+  // The contract follows the terms: made again when they changed and it is not signed yet.
+  const sameDay = (a: Date | null, b: Date | null) => a?.getTime() === b?.getTime();
+  const termsChanged =
+    (trailerId !== undefined && trailerId !== existing.trailerId) ||
+    !sameDay(nextPickup, existing.pickupDate) ||
+    !sameDay(nextReturn, existing.returnDate) ||
+    (rest.totalAmount !== undefined && rest.totalAmount !== existing.totalAmount) ||
+    deliveryChanged;
+  const contractRefresh = termsChanged ? await refreshContractAfterTermsChange(id) : "none";
+
+  return NextResponse.json({ ...updated, contractRefresh });
 }
