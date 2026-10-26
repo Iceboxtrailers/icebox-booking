@@ -12,9 +12,10 @@ const LOCATEUR_ADDRESS_LINE2 = "Lévis (Québec) G6Z 1C5";
 const ADDITIONAL_INSURED = "Remorques Réfrigérées ICEBOX Inc.";
 
 // The Locateur's tax registration numbers, printed under the amounts (a contract that states what is owed serves as the
-// invoice). From Revenu Québec's notice of 21 October 2026: TPS/TVH registration in force since 1 October 2026. The TVQ
-// number is not on that notice: put it here when its own notice arrives and the contract prints it too.
-export const TAX_NUMBERS: { gst: string | null; qst: string | null } = { gst: "74576 7772 RT0001", qst: null };
+// invoice). TPS: Revenu Québec's notice of 21 October 2026 (registration in force since 1 October 2026), written the way
+// the owner's Revenu Québec file shows it. TVQ: given by the owner on 26 October 2026 from the same file. A number set to
+// null is left off the contract.
+export const TAX_NUMBERS: { gst: string | null; qst: string | null } = { gst: "745767772 RT0001", qst: "1234246654 TQ0001" };
 
 // Per-size hardware specs from the real IceBox rental contract template —
 // legally significant, do not infer or alter these.

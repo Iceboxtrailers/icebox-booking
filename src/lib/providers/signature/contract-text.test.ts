@@ -212,22 +212,26 @@ describe("contract of a stored booking", () => {
 
 describe("contract tax numbers", () => {
   it("are in the right format (a typo here would end up on every contract)", () => {
-    assert.match(TAX_NUMBERS.gst ?? "", /^\d{5} \d{4} RT0001$/);
-    if (TAX_NUMBERS.qst) assert.match(TAX_NUMBERS.qst, /^\d{10} TQ\d{4}$/);
+    assert.match(TAX_NUMBERS.gst ?? "", /^\d{9} RT0001$/);
+    assert.match(TAX_NUMBERS.qst ?? "", /^\d{10} TQ0001$/);
   });
 
-  it("give the Locateur's GST number under the amounts, before the payment terms", () => {
+  it("give the Locateur's GST and QST numbers under the amounts, before the payment terms", () => {
     const text = textOf();
-    assert.match(text, /Numéro de TPS du Locateur : 74576 7772 RT0001/);
+    assert.match(text, /Numéro de TPS du Locateur : 745767772 RT0001/);
+    assert.match(text, /Numéro de TVQ du Locateur : 1234246654 TQ0001/);
     assert.ok(text.indexOf("Total : 459.90 $ CAD") < text.indexOf("Numéro de TPS du Locateur"));
-    assert.ok(text.indexOf("Numéro de TPS du Locateur") < text.indexOf("Le paiement total est exigible"));
+    assert.ok(text.indexOf("Numéro de TPS du Locateur") < text.indexOf("Numéro de TVQ du Locateur"));
+    assert.ok(text.indexOf("Numéro de TVQ du Locateur") < text.indexOf("Le paiement total est exigible"));
   });
 
-  it("print the QST number only once there is one", () => {
-    assert.ok(!textOf().includes("Numéro de TVQ"));
-    const both = textOf({ taxNumbers: { gst: "74576 7772 RT0001", qst: "1234567890 TQ0001" } });
-    assert.match(both, /Numéro de TPS du Locateur : 74576 7772 RT0001/);
-    assert.match(both, /Numéro de TVQ du Locateur : 1234567890 TQ0001/);
+  it("leave off a number that is not known", () => {
+    const withoutQst = textOf({ taxNumbers: { gst: "745767772 RT0001", qst: null } });
+    assert.match(withoutQst, /Numéro de TPS du Locateur : 745767772 RT0001/);
+    assert.ok(!withoutQst.includes("Numéro de TVQ"));
+    const withoutGst = textOf({ taxNumbers: { gst: null, qst: "1234246654 TQ0001" } });
+    assert.ok(!withoutGst.includes("Numéro de TPS"));
+    assert.match(withoutGst, /Numéro de TVQ du Locateur : 1234246654 TQ0001/);
   });
 
   it("print nothing when no number is known", () => {
