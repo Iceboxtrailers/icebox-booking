@@ -11,6 +11,11 @@ const LOCATEUR_ADDRESS_LINE1 = "1005, rue du Parc-Industriel";
 const LOCATEUR_ADDRESS_LINE2 = "Lévis (Québec) G6Z 1C5";
 const ADDITIONAL_INSURED = "Remorques Réfrigérées ICEBOX Inc.";
 
+// The Locateur's tax registration numbers, printed under the amounts (a contract that states what is owed serves as the
+// invoice). From Revenu Québec's notice of 21 October 2026: TPS/TVH registration in force since 1 October 2026. The TVQ
+// number is not on that notice: put it here when its own notice arrives and the contract prints it too.
+export const TAX_NUMBERS: { gst: string | null; qst: string | null } = { gst: "74576 7772 RT0001", qst: null };
+
 // Per-size hardware specs from the real IceBox rental contract template —
 // legally significant, do not infer or alter these.
 type TrailerContractSpec = {
@@ -82,6 +87,8 @@ export function buildContractLines(p: {
   // the wording is exactly what it was before delivery existed. `deliveryFeeCents` is part of `totalCents`.
   deliveryOption?: DeliveryOption;
   deliveryFeeCents?: number;
+  // Defaults to the Locateur's own numbers; a test can pass others.
+  taxNumbers?: { gst: string | null; qst: string | null };
 }): ContractLine[] {
   const n = nights(p.start, p.end);
   const catalogue = catalogueFor(p.trailerSize);
@@ -89,6 +96,7 @@ export function buildContractLines(p: {
   const spec = TRAILER_SPECS[p.trailerSize];
   const clientName = `${p.firstName} ${p.lastName}`;
   const lieuUtilisation = p.usageLocation?.trim() || "À préciser";
+  const taxNumbers = p.taxNumbers ?? TAX_NUMBERS;
   const delivery = p.deliveryOption ?? "pickup";
   const transportCents = delivery === "pickup" ? 0 : Math.min(Math.max(p.deliveryFeeCents ?? 0, 0), p.totalCents);
   const cityLine = [p.billingCity, p.billingProvince].filter(Boolean).join(", ");
@@ -175,6 +183,8 @@ export function buildContractLines(p: {
   bullet(`TPS (5%) : ${money(tax.gstCents)} $`);
   bullet(`TVQ (9,975%) : ${money(tax.qstCents)} $`);
   bullet(`Total : ${money(tax.totalWithTaxCents)} $ CAD`);
+  if (taxNumbers.gst) body(`Numéro de TPS du Locateur : ${taxNumbers.gst}`);
+  if (taxNumbers.qst) body(`Numéro de TVQ du Locateur : ${taxNumbers.qst}`);
   body("Le paiement total est exigible sur réception de la remorque.");
   spacer();
   rule();

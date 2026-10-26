@@ -2,7 +2,7 @@ import { afterEach, describe, it, mock } from "node:test";
 import assert from "node:assert/strict";
 import { DEPOSIT_AMOUNT_CENTS } from "@/lib/constants";
 import { computeTaxBreakdown } from "@/lib/pricing";
-import { buildContractLines, buildContractText, contractParamsFor } from "@/lib/providers/signature/contract-text";
+import { TAX_NUMBERS, buildContractLines, buildContractText, contractParamsFor } from "@/lib/providers/signature/contract-text";
 
 type Input = Parameters<typeof buildContractLines>[0];
 
@@ -207,5 +207,32 @@ describe("contract of a stored booking", () => {
       .join("\n");
     assert.match(text, /Location : 1460\.00 \$ CAD/);
     assert.match(text, /Transport \(livraison et récupération\) : 490\.00 \$ CAD/);
+  });
+});
+
+describe("contract tax numbers", () => {
+  it("are in the right format (a typo here would end up on every contract)", () => {
+    assert.match(TAX_NUMBERS.gst ?? "", /^\d{5} \d{4} RT0001$/);
+    if (TAX_NUMBERS.qst) assert.match(TAX_NUMBERS.qst, /^\d{10} TQ\d{4}$/);
+  });
+
+  it("give the Locateur's GST number under the amounts, before the payment terms", () => {
+    const text = textOf();
+    assert.match(text, /Numéro de TPS du Locateur : 74576 7772 RT0001/);
+    assert.ok(text.indexOf("Total : 459.90 $ CAD") < text.indexOf("Numéro de TPS du Locateur"));
+    assert.ok(text.indexOf("Numéro de TPS du Locateur") < text.indexOf("Le paiement total est exigible"));
+  });
+
+  it("print the QST number only once there is one", () => {
+    assert.ok(!textOf().includes("Numéro de TVQ"));
+    const both = textOf({ taxNumbers: { gst: "74576 7772 RT0001", qst: "1234567890 TQ0001" } });
+    assert.match(both, /Numéro de TPS du Locateur : 74576 7772 RT0001/);
+    assert.match(both, /Numéro de TVQ du Locateur : 1234567890 TQ0001/);
+  });
+
+  it("print nothing when no number is known", () => {
+    const text = textOf({ taxNumbers: { gst: null, qst: null } });
+    assert.ok(!text.includes("Numéro de TPS"));
+    assert.ok(!text.includes("Numéro de TVQ"));
   });
 });
