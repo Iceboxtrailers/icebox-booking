@@ -1,7 +1,6 @@
 import { ReactNode } from "react";
 import { BrandMark } from "@/components/BrandMark";
 import { Card } from "@/components/ui/Card";
-import { Pill } from "@/components/ui/Pill";
 import { StepIndicator } from "@/components/wizard/StepIndicator";
 import { WIZARD_STEPS } from "@/lib/wizard";
 
@@ -11,9 +10,6 @@ export function WizardShell({ step, children }: { step: number; children: ReactN
       <div className="mb-1.5 flex items-center gap-2.5">
         <BrandMark size={32} />
         <div className="font-heading text-lg uppercase tracking-wide">Réservation en ligne</div>
-        <div className="ml-auto">
-          <Pill>Prototype — aucune donnée réelle traitée</Pill>
-        </div>
       </div>
 
       <StepIndicator currentStep={step} />
