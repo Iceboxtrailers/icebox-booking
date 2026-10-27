@@ -164,7 +164,8 @@ describe("contract", () => {
 
   it("puts the client and the period in the footer of every page", () => {
     const footer = (overrides: Partial<Input> = {}) => buildContractLines({ ...base, ...overrides }).find((line) => line.type === "footer");
-    assert.deepEqual(footer(), { type: "footer", text: "Marie Tremblay • 5 mars au 8 mars 2029" });
+    assert.deepEqual(footer(), { type: "footer", text: "Marie Tremblay • 5 au 8 mars 2029" });
+    assert.deepEqual(footer({ start: "2029-03-28", end: "2029-04-02" }), { type: "footer", text: "Marie Tremblay • 28 mars au 2 avril 2029" });
     assert.deepEqual(footer({ company: "Acme inc.", start: "2026-11-11", end: "2026-12-26" }), { type: "footer", text: "Acme inc. • 11 novembre au 26 décembre 2026" });
     assert.deepEqual(footer({ start: "2026-12-28", end: "2027-01-04" }), { type: "footer", text: "Marie Tremblay • 28 décembre 2026 au 4 janvier 2027" });
   });

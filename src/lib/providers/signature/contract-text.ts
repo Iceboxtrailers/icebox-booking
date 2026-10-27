@@ -86,9 +86,11 @@ const withPeriod = (text: string) => (/[.!?]$/.test(text) ? text : `${text}.`);
 // "-18°C à +15°C" -> "−18 °C à +15 °C": a true minus sign and a space before the unit.
 const temperatureRange = (label: string) => label.replace(/-/g, "−").replace(/°C/g, " °C");
 
-// "11 novembre au 26 décembre 2026", or with both years when the rental spans two.
+// "11 novembre au 26 décembre 2026"; "5 au 8 novembre 2026" within one month; with both years when the rental
+// spans two.
 function periodLabel(start: string, end: string): string {
   const from = fmt(start);
+  if (start.slice(0, 7) === end.slice(0, 7)) return `${from.split(" ")[0]} au ${fmt(end)}`;
   return start.slice(0, 4) === end.slice(0, 4) ? `${from.replace(/ \d{4}$/, "")} au ${fmt(end)}` : `${from} au ${fmt(end)}`;
 }
 

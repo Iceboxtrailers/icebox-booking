@@ -69,6 +69,6 @@ describe("the contract the client reads before signing", () => {
   });
 
   it("does not show the footer line of the PDF", () => {
-    assert.ok(!text.includes("Acme inc. • 5 mars au 8 mars 2029"));
+    assert.ok(!text.includes("Acme inc. • 5 au 8 mars 2029"));
   });
 });

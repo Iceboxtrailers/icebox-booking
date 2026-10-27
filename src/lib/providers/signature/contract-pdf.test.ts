@@ -56,7 +56,7 @@ describe("contract PDF", () => {
       pages.forEach((text, i) => {
         assert.ok(text.includes("CONTRAT DE LOCATION"), `page ${i + 1} header`);
         assert.ok(text.includes("Remorques Réfrigérées ICEBOX Inc."), `page ${i + 1} header`);
-        assert.ok(text.includes("Marie Tremblay • 5 mars au 8 mars 2029"), `page ${i + 1} footer`);
+        assert.ok(text.includes("Marie Tremblay • 5 au 8 mars 2029"), `page ${i + 1} footer`);
         assert.ok(text.endsWith(`${i + 1} / 5`), `page ${i + 1} number`);
       });
       assert.ok(pages[0].includes("CONTRAT DE LOCATION • VERSION RÉVISÉE DU 27 OCTOBRE 2026 Remorque réfrigérée"));
