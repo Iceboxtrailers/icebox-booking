@@ -15,6 +15,11 @@ const LOGO_MAX_HEIGHT = 140;
 const LOGO_MIN_HEIGHT = 60;
 const LOGO_COLUMN_WIDTH = 150; // reserved on the right so header text wraps around it
 
+// Room the "Signatures" section needs (date, both parties), and the client's signature block on top once signed.
+// They stay together on one page: a name must never be alone on a page of its own.
+const SIGNATURES_SECTION_HEIGHT = 130;
+const SIGNATURE_STAMP_HEIGHT = 130;
+
 const INK = rgb(0.15, 0.17, 0.2);
 const RULE = rgb(0.8, 0.8, 0.8);
 
@@ -125,7 +130,11 @@ export async function renderContractPdf(lines: ContractLine[], options: { signat
   y = Math.min(headerBottomY, headerTopY - logoHeight) - 8;
   drawRule();
 
-  for (const line of bodyLines) renderLine(line);
+  const signaturesAt = bodyLines.findLastIndex((line) => line.type === "heading" && line.text === "Signatures");
+  bodyLines.forEach((line, index) => {
+    if (index === signaturesAt) ensureRoom(SIGNATURES_SECTION_HEIGHT + (options.signature ? SIGNATURE_STAMP_HEIGHT : 0));
+    renderLine(line);
+  });
 
   if (options.signature) {
     const { imageBuffer, signerName, signedAt, method } = options.signature;

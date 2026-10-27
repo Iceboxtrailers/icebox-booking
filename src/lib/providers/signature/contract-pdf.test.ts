@@ -1,6 +1,7 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { PDFDict, PDFDocument, PDFName, PDFRawStream, decodePDFRawStream } from "pdf-lib";
+import { PDFArray, PDFDict, PDFDocument, PDFName, PDFRawStream, decodePDFRawStream } from "pdf-lib";
+import type { PDFRef } from "pdf-lib";
 import { buildContractLines } from "@/lib/providers/signature/contract-text";
 import { quebecTimeOfDay, renderContractPdf } from "@/lib/providers/signature/contract-pdf";
 import { buildRentalReportPdf } from "@/lib/reports/rental-report-pdf";
@@ -40,23 +41,25 @@ async function imageCount(bytes: Uint8Array): Promise<number> {
   return count;
 }
 
-// Every line of text drawn on the pages, in the order the file holds them. pdf-lib writes each line as a hex string
-// shown with Tj in a (deflated) content stream.
-async function drawnText(bytes: Uint8Array): Promise<string[]> {
+// The lines of text drawn on each page. pdf-lib writes each line as a hex string shown with Tj in a (deflated)
+// content stream.
+async function pageTexts(bytes: Uint8Array): Promise<string[][]> {
   const pdf = await PDFDocument.load(bytes);
-  const found: string[] = [];
-  for (const [, object] of pdf.context.enumerateIndirectObjects()) {
-    if (!(object instanceof PDFRawStream)) continue;
-    let content: string;
-    try {
-      content = Buffer.from(decodePDFRawStream(object).decode()).toString("latin1");
-    } catch {
-      continue; // an image, not a page
-    }
-    for (const match of content.matchAll(/<([0-9A-Fa-f]+)>\s*Tj/g)) found.push(Buffer.from(match[1], "hex").toString("latin1"));
-  }
-  return found;
+  return pdf.getPages().map((page) => {
+    const contents = page.node.Contents();
+    const refs = contents instanceof PDFArray ? Array.from({ length: contents.size() }, (_, i) => contents.get(i)) : [];
+    const streams = (contents instanceof PDFArray ? refs.map((ref) => pdf.context.lookup(ref as PDFRef)) : [contents]).filter(
+      (stream): stream is PDFRawStream => stream instanceof PDFRawStream,
+    );
+    return streams.flatMap((stream) => {
+      const content = Buffer.from(decodePDFRawStream(stream).decode()).toString("latin1");
+      return [...content.matchAll(/<([0-9A-Fa-f]+)>\s*Tj/g)].map((match) => Buffer.from(match[1], "hex").toString("latin1"));
+    });
+  });
 }
+
+// Every line of text of the document, page after page.
+const drawnText = async (bytes: Uint8Array): Promise<string[]> => (await pageTexts(bytes)).flat();
 
 describe("contract PDF", () => {
   it("is a real contract: it starts with its title and carries no prototype label, signed or not", async () => {
@@ -66,6 +69,35 @@ describe("contract PDF", () => {
       assert.match(text[0], /^CONTRAT DE LOCATION/);
       assert.ok(text.some((line) => line.startsWith("Signatures")));
       assert.ok(!/prototype|contrai?gnant/i.test(text.join("\n")), "no prototype wording anywhere in the contract");
+    }
+  });
+
+  it("prints the late-payment clause under the financial conditions", async () => {
+    const text = (await drawnText(await renderContractPdf(buildContractLines(contract)))).join("\n");
+    assert.ok(text.indexOf("Retards de paiement") > text.indexOf("Conditions Financi"));
+    assert.ok(text.indexOf("Retards de paiement") < text.indexOf("D\xe9p\xf4t de garantie"));
+    assert.match(text, /26,82/);
+  });
+
+  it("keeps the signatures together on one page, whatever the length of the contract", async () => {
+    // The longer variants (with transport, a long company name) are the ones that used to push a name onto a page of its own.
+    const long = buildContractLines({
+      ...contract,
+      company: "Les Entreprises de Réfrigération et de Distribution Alimentaire du Grand Montréal inc.",
+      usageLocation: "777 rue Villeray, Montréal",
+      deliveryOption: "delivery",
+      deliveryFeeCents: 9000,
+    });
+    for (const lines of [long, buildContractLines(contract)]) {
+      for (const signature of [undefined, stamp()]) {
+        const pages = await pageTexts(await renderContractPdf(lines, signature ? { signature } : {}));
+        const withHeading = pages.findIndex((page) => page.some((line) => line.startsWith("Signatures")));
+        assert.ok(withHeading >= 0);
+        assert.ok(pages[withHeading].some((line) => line.startsWith("Pour le Locataire")), "both parties on the page of the heading");
+        assert.ok(pages[withHeading].length >= 6, "the whole section, not a lone line");
+        assert.equal(withHeading, pages.length - 1, "the signatures are on the last page");
+        if (signature) assert.ok(pages[withHeading].includes("Sign\xe9 \xe9lectroniquement"), "the signature block is with them");
+      }
     }
   });
 

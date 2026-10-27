@@ -240,3 +240,43 @@ describe("contract tax numbers", () => {
     assert.ok(!text.includes("Numéro de TVQ"));
   });
 });
+
+describe("contract late-payment clause", () => {
+  const lines = (overrides: Partial<Input> = {}) => buildContractLines({ ...base, ...overrides });
+  const index = (all: ReturnType<typeof lines>, start: string) => all.findIndex((line) => "text" in line && line.text.startsWith(start));
+
+  it("sits in article 4, after the payment term and before the deposit article", () => {
+    const all = lines();
+    const article4 = index(all, "4. Conditions Financières");
+    const payment = index(all, "Le paiement total est exigible");
+    const clause = index(all, "Retards de paiement");
+    const article5 = index(all, "5. Dépôt de garantie");
+    assert.ok(article4 < payment && payment < clause && clause < article5);
+    assert.equal(all[clause].type, "subheading");
+  });
+
+  it("states the rate, how it compounds, the absence of fixed fees and the consumer-law reservation", () => {
+    const text = textOf();
+    assert.match(text, /porte intérêt au taux de 2 % par mois, capitalisé mensuellement/);
+    assert.match(text, /taux nominal annuel de 24 % et un taux annuel effectif d’environ 26,82 %/);
+    assert.match(text, /à compter du lendemain de l’échéance et jusqu’au paiement intégral/);
+    assert.match(text, /prorata du nombre de jours de la période mensuelle concernée/);
+    assert.match(text, /Aucuns frais fixes ni pénalités forfaitaires/);
+    assert.match(text, /sous réserve des dispositions impératives des lois applicables, notamment celles de la Loi sur la protection du consommateur/);
+  });
+
+  it("quotes an effective annual rate that is what 2 % a month compounded monthly comes to", () => {
+    const effective = (1.02 ** 12 - 1) * 100;
+    assert.equal(effective.toFixed(2).replace(".", ","), "26,82");
+  });
+
+  it("is the same whatever the transport, and does not move the numbering of the articles", () => {
+    const clauseOf = (all: ReturnType<typeof lines>) =>
+      all.slice(index(all, "Retards de paiement"), index(all, "5. Dépôt de garantie")).map((line) => JSON.stringify(line));
+    assert.deepEqual(clauseOf(lines({ deliveryOption: "delivery", deliveryFeeCents: 9000 })), clauseOf(lines()));
+    const headings = lines()
+      .flatMap((line) => (line.type === "heading" ? [line.text] : []))
+      .map((text) => text.split(".")[0]);
+    assert.deepEqual(headings.slice(0, 9), ["1", "2", "3", "4", "5", "6", "7", "8", "9"]);
+  });
+});

@@ -188,6 +188,24 @@ export function buildContractLines(p: {
   if (taxNumbers.qst) body(`Numéro de TVQ du Locateur : ${taxNumbers.qst}`);
   body("Le paiement total est exigible sur réception de la remorque.");
   spacer();
+  // Wording supplied by the owner, word for word.
+  subheading("Retards de paiement");
+  body(
+    "Toute somme due à Remorques Réfrigérées ICEBOX Inc. et demeurant impayée après l’échéance convenue porte intérêt au taux de 2 % par mois, capitalisé mensuellement, soit un taux nominal annuel de 24 % et un taux annuel effectif d’environ 26,82 %, à compter du lendemain de l’échéance et jusqu’au paiement intégral."
+  );
+  spacer();
+  body(
+    "Les intérêts sont calculés sur le solde impayé selon la durée réelle du retard. À la fin de chaque période mensuelle suivant l’échéance, les intérêts échus et impayés sont ajoutés au solde et portent ensuite intérêt au même taux. Toute période inférieure à un mois est calculée au prorata du nombre de jours de la période mensuelle concernée."
+  );
+  spacer();
+  body(
+    "Aucuns frais fixes ni pénalités forfaitaires ne sont exigés en raison d’un retard de paiement ou d’un chèque retourné pour insuffisance de fonds. Remorques Réfrigérées ICEBOX Inc. se réserve toutefois le droit d’exercer les recours prévus par la loi et de réclamer les frais de justice ou autres sommes légalement recouvrables, dans les limites autorisées par la loi ou accordées par un tribunal compétent."
+  );
+  spacer();
+  body(
+    "La présente clause s’applique sous réserve des dispositions impératives des lois applicables, notamment celles de la Loi sur la protection du consommateur. Elle ne limite aucun droit ou recours dont le client bénéficie en vertu de ces lois."
+  );
+  spacer();
   rule();
 
   heading("5. Dépôt de garantie");
