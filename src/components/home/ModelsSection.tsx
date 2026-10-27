@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/Card";
 import { buttonClassName } from "@/components/ui/Button";
 import { CATALOGUE, INCLUDED_WITH_RENTAL } from "@/lib/catalogue";
 import type { TrailerSize } from "@/lib/constants";
-import { RATE_TABLE, TRANSPORT_FEE_PER_TRIP_CENTS, TRANSPORT_FEE_PER_KM_BEYOND_CENTS } from "@/lib/pricing";
+import { RATE_TABLE, TRANSPORT_FEE_PER_TRIP_CENTS, TRANSPORT_FEE_PER_KM_BEYOND_CENTS, longStayCents } from "@/lib/pricing";
 
 // One real photo per model (one axle = 5x10, two axles = 6x12).
 const MODEL_PHOTOS: Record<TrailerSize, { src: string; alt: string }> = {
@@ -21,6 +21,15 @@ const MODEL_PHOTOS: Record<TrailerSize, { src: string; alt: string }> = {
 function money(cents: number) {
   return (cents / 100).toFixed(2);
 }
+
+// The rows of the rate grid: the offer sheet's flat rates, then the days after the first full month of a long stay.
+const RATE_ROWS: [label: string, cents: (size: TrailerSize) => number][] = [
+  ["Jour (24 heures)", (size) => RATE_TABLE[size].dayCents],
+  ["Semaine (7 jours)", (size) => RATE_TABLE[size].weekCents],
+  ["Mois (30 jours)", (size) => RATE_TABLE[size].monthCents],
+  ["Jour après un mois complet*", (size) => longStayCents(size, 1)],
+  ["Semaine après un mois complet*", (size) => longStayCents(size, 7)],
+];
 
 // "150" or "1 300" (French thousands separator) for the prices shown in the cards.
 const dollarFormat = new Intl.NumberFormat("fr-CA", { maximumFractionDigits: 2 });
@@ -112,7 +121,7 @@ export function ModelsSection() {
           Voir la grille tarifaire complète
         </summary>
         <div id="tarification" className="mt-4 scroll-mt-6">
-          <div className="mb-6 overflow-x-auto rounded-lg border border-border-light">
+          <div className="mb-2 overflow-x-auto rounded-lg border border-border-light">
             <table className="w-full text-left text-[13px]">
               <thead className="bg-subtle text-muted">
                 <tr>
@@ -125,18 +134,12 @@ export function ModelsSection() {
                 </tr>
               </thead>
               <tbody>
-                {(
-                  [
-                    ["Jour (24 heures)", "dayCents"],
-                    ["Semaine (7 jours)", "weekCents"],
-                    ["Mois (30 jours)", "monthCents"],
-                  ] as const
-                ).map(([label, key]) => (
-                  <tr key={key} className="border-t border-border-light">
+                {RATE_ROWS.map(([label, cents]) => (
+                  <tr key={label} className="border-t border-border-light">
                     <td className="px-4 py-2.5 text-muted">{label}</td>
                     {CATALOGUE.map((item) => (
                       <td key={item.size} className="px-4 py-2.5 tabular-nums">
-                        {money(RATE_TABLE[item.size][key])} $
+                        {money(cents(item.size))} $
                       </td>
                     ))}
                   </tr>
@@ -144,6 +147,11 @@ export function ModelsSection() {
               </tbody>
             </table>
           </div>
+          <p className="mb-6 text-[11px] text-muted">
+            * Pour une location continue d&apos;un mois ou plus : les mois complets de 30 jours sont au tarif mensuel, puis
+            chaque jour qui suit est à 1/28 du tarif mensuel, sans jamais dépasser le prix d&apos;un mois de plus. Deux
+            locations distinctes ne sont pas additionnées.
+          </p>
 
           <Card className="p-4 text-[13px]">
             <div className="mb-1 font-medium">Transport (livraison et récupération)</div>

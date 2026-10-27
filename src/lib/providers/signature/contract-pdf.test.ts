@@ -72,6 +72,14 @@ describe("contract PDF", () => {
     }
   });
 
+  it("prints the long-stay rate with the other rates", async () => {
+    const text = (await drawnText(await renderContractPdf(buildContractLines(contract)))).join("\n");
+    assert.ok(text.indexOf("Location continue") > text.indexOf("par mois"));
+    assert.ok(text.indexOf("Location continue") < text.indexOf("transport dans un rayon"));
+    assert.match(text, /1\/28/);
+    assert.match(text, /32\.14/);
+  });
+
   it("prints the late-payment clause under the financial conditions", async () => {
     const text = (await drawnText(await renderContractPdf(buildContractLines(contract)))).join("\n");
     assert.ok(text.indexOf("Retards de paiement") > text.indexOf("Conditions Financi"));

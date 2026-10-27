@@ -1,7 +1,8 @@
 import { afterEach, describe, it, mock } from "node:test";
 import assert from "node:assert/strict";
-import { DEPOSIT_AMOUNT_CENTS } from "@/lib/constants";
-import { computeTaxBreakdown } from "@/lib/pricing";
+import { DEPOSIT_AMOUNT_CENTS, TRAILER_SIZE } from "@/lib/constants";
+import { addDays } from "@/lib/dates";
+import { computeTaxBreakdown, computeTotalCents } from "@/lib/pricing";
 import { TAX_NUMBERS, buildContractLines, buildContractText, contractParamsFor } from "@/lib/providers/signature/contract-text";
 
 type Input = Parameters<typeof buildContractLines>[0];
@@ -278,5 +279,53 @@ describe("contract late-payment clause", () => {
       .flatMap((line) => (line.type === "heading" ? [line.text] : []))
       .map((text) => text.split(".")[0]);
     assert.deepEqual(headings.slice(0, 9), ["1", "2", "3", "4", "5", "6", "7", "8", "9"]);
+  });
+});
+
+describe("contract long-stay rate", () => {
+  const lines = (overrides: Partial<Input> = {}) => buildContractLines({ ...base, ...overrides });
+  const index = (all: ReturnType<typeof lines>, start: string) => all.findIndex((line) => "text" in line && line.text.startsWith(start));
+
+  it("gives the week and the day after the first month, for each size", () => {
+    const small = textOf({ trailerSize: "5x10" });
+    assert.match(small, /Location continue d'un mois ou plus : les mois complets de 30 jours sont facturés au tarif mensuel/);
+    assert.match(small, /à 1\/28 du tarif mensuel par jour, soit 225\.00 \$ \+Tx CAD par semaine ou environ 32\.14 \$ \+Tx CAD par jour/);
+    assert.match(textOf({ trailerSize: "6x12" }), /soit 325\.00 \$ \+Tx CAD par semaine ou environ 46\.43 \$ \+Tx CAD par jour/);
+  });
+
+  it("says it never goes beyond one more month, and that it is for one continuous rental", () => {
+    const text = textOf();
+    assert.match(text, /sans jamais dépasser le tarif d'un mois de plus/);
+    assert.match(text, /Ce tarif s'applique à une seule location continue : des locations distinctes ne sont pas additionnées\./);
+  });
+
+  it("sits with the rates: after the monthly rate, before the transport rate and the amount of the booking", () => {
+    const all = lines();
+    const month = index(all, "900.00 $ +Tx CAD par mois");
+    const longStay = index(all, "Location continue d'un mois ou plus");
+    const continuous = index(all, "Ce tarif s'applique à une seule location continue");
+    const transport = index(all, "60.00 $ / transport");
+    const amount = index(all, "Montant pour cette réservation");
+    assert.ok(month >= 0 && month < longStay && longStay < continuous && continuous < transport && transport < amount);
+    assert.equal(all[longStay].type, "bullet");
+    assert.equal(all[continuous].type, "bullet");
+  });
+
+  it("is the same whatever the transport", () => {
+    const wording = (all: ReturnType<typeof lines>) =>
+      all.slice(index(all, "Location continue d'un mois ou plus"), index(all, "Montant pour cette réservation")).map((line) => JSON.stringify(line));
+    assert.deepEqual(wording(lines({ deliveryOption: "delivery", deliveryFeeCents: 9000 })), wording(lines()));
+  });
+
+  it("quotes what a booking is priced with: a week and a day after the first month", () => {
+    for (const size of TRAILER_SIZE) {
+      const price = (nightCount: number) => computeTotalCents(size, "2029-01-01", addDays("2029-01-01", nightCount));
+      const text = textOf({ trailerSize: size });
+      const week = /soit (\d+\.\d{2}) \$ \+Tx CAD par semaine/.exec(text)?.[1];
+      const day = /environ (\d+\.\d{2}) \$ \+Tx CAD par jour/.exec(text)?.[1];
+      assert.ok(week && day, size);
+      assert.equal(Math.round(Number(week) * 100), price(37) - price(30), `${size}: a week`);
+      assert.equal(Math.round(Number(day) * 100), price(31) - price(30), `${size}: a day`);
+    }
   });
 });

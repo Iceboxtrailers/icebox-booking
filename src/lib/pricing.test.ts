@@ -5,11 +5,13 @@ import { TRAILER_SIZE } from "@/lib/constants";
 import type { TrailerSize } from "@/lib/constants";
 import {
   GST_RATE,
+  LONG_STAY_SPREAD_DAYS,
   QST_RATE,
   RATE_TABLE,
   computeDeliveryFeeCents,
   computeTaxBreakdown,
   computeTotalCents,
+  longStayCents,
   priceBreakdown,
 } from "@/lib/pricing";
 
@@ -48,8 +50,6 @@ describe("rental price", () => {
     assert.equal(priceFor("5x10", 8), 55000); // a week and a day
     assert.equal(priceFor("5x10", 14), 80000);
     assert.deepEqual([15, 22, 29].map((n) => priceFor("5x10", n)), [90000, 90000, 90000]);
-    assert.equal(priceFor("5x10", 31), 105000); // a month and a day
-    assert.equal(priceFor("5x10", 37), 130000); // a month and a week
     // 6x12: a day is 180 $, so 4 days (720 $) already cost the week (600 $), 15 nights the month.
     assert.deepEqual([3, 4].map((n) => priceFor("6x12", n)), [54000, 60000]);
     assert.equal(priceFor("6x12", 14), 120000);
@@ -60,9 +60,9 @@ describe("rental price", () => {
     assert.equal(computeTotalCents("5x10", START, START), 15000);
   });
 
-  it("is always the cheapest way to cover the nights, for every length up to 400 nights", () => {
+  it("under a month, is always the cheapest way to cover the nights", () => {
     for (const size of TRAILER_SIZE) {
-      for (let n = 1; n <= 400; n++) {
+      for (let n = 1; n < 30; n++) {
         assert.equal(priceFor(size, n), cheapestCover(size, n), `${size}, ${n} nights`);
       }
     }
@@ -84,10 +84,118 @@ describe("rental price", () => {
     for (const size of TRAILER_SIZE) {
       const rate = RATE_TABLE[size];
       for (let n = 1; n <= 120; n++) {
-        const { months, weeks, days, totalCents } = priceBreakdown(size, START, addDays(START, n));
-        assert.equal(months * rate.monthCents + weeks * rate.weekCents + days * rate.dayCents, totalCents);
+        const { months, weeks, days, longStayDays, totalCents } = priceBreakdown(size, START, addDays(START, n));
+        assert.equal(
+          months * rate.monthCents + weeks * rate.weekCents + days * rate.dayCents + longStayCents(size, longStayDays),
+          totalCents,
+          `${size}, ${n} nights`,
+        );
+        // Short rentals are weeks and days, long stays are months and long-stay days, never a mix.
+        assert.ok(longStayDays === 0 || (weeks === 0 && days === 0), `${size}, ${n} nights`);
+        assert.ok(longStayDays < LONG_STAY_SPREAD_DAYS, `${size}, ${n} nights`);
       }
     }
+  });
+});
+
+describe("long stay price", () => {
+  // The prices the owner agreed to, before tax. A 6x12 is 1 300 $ a month, then 46,43 $ a day or 325 $ a week; a 5x10 is
+  // 900 $ a month, then 32,14 $ a day or 225 $ a week.
+  it("charges the full months at the monthly rate, then the monthly rate spread over 28 days", () => {
+    assert.deepEqual(
+      [30, 35, 42, 45, 56, 60, 65, 90].map((n) => priceFor("6x12", n)),
+      [130000, 153214, 185714, 199643, 250714, 260000, 283214, 390000],
+    );
+    assert.deepEqual([30, 35, 45, 60, 90].map((n) => priceFor("5x10", n)), [90000, 106071, 138214, 180000, 270000]);
+  });
+
+  it("makes a week after the first month a quarter of the month", () => {
+    assert.equal(longStayCents("6x12", 7), 32500);
+    assert.equal(longStayCents("5x10", 7), 22500);
+    assert.equal(priceFor("6x12", 37) - priceFor("6x12", 30), 32500);
+    assert.equal(priceFor("5x10", 37) - priceFor("5x10", 30), 22500);
+  });
+
+  it("rounds the days after the months once, on the whole block", () => {
+    // 5 x 46,43 $ would be 232,15 $ and 15 x 46,43 $ 696,45 $.
+    assert.equal(longStayCents("6x12", 5), 23214);
+    assert.equal(longStayCents("6x12", 15), 69643);
+    assert.equal(longStayCents("5x10", 5), 16071);
+  });
+
+  it("never charges the days after the full months more than one more month", () => {
+    for (const size of TRAILER_SIZE) {
+      const month = RATE_TABLE[size].monthCents;
+      assert.ok(longStayCents(size, 27) < month, `${size}, 27 days`);
+      for (const days of [28, 29, 100]) assert.equal(longStayCents(size, days), month, `${size}, ${days} days`);
+      // 28 and 29 days after the first month are the second month.
+      for (const n of [58, 59, 60]) assert.equal(priceFor(size, n), 2 * month, `${size}, ${n} nights`);
+    }
+  });
+
+  it("costs between the full months and one more month, for every length", () => {
+    for (const size of TRAILER_SIZE) {
+      const month = RATE_TABLE[size].monthCents;
+      for (let n = 30; n <= 400; n++) {
+        const fullMonths = Math.floor(n / 30);
+        const price = priceFor(size, n);
+        assert.ok(price >= fullMonths * month && price <= (fullMonths + 1) * month, `${size}, ${n} nights`);
+      }
+    }
+  });
+
+  it("never costs more than the day, week and month rates alone would", () => {
+    for (const size of TRAILER_SIZE) {
+      for (let n = 30; n <= 400; n++) {
+        assert.ok(priceFor(size, n) <= cheapestCover(size, n), `${size}, ${n} nights`);
+      }
+    }
+  });
+
+  it("adds a 28th of the month for each night after the first month, never more", () => {
+    for (const size of TRAILER_SIZE) {
+      const oneNight = Math.ceil(RATE_TABLE[size].monthCents / LONG_STAY_SPREAD_DAYS);
+      for (let n = 30; n < 400; n++) {
+        const gap = priceFor(size, n + 1) - priceFor(size, n);
+        assert.ok(gap >= 0 && gap <= oneNight, `${size}: ${n} to ${n + 1} nights`);
+      }
+    }
+  });
+
+  it("is for one continuous rental: separate reservations are each priced on their own nights", () => {
+    // Two weeks, the trailer comes back, three more weeks later: two ordinary rentals, no long-stay rate on their sum.
+    for (const size of TRAILER_SIZE) {
+      assert.equal(priceFor(size, 14), cheapestCover(size, 14));
+      assert.equal(priceFor(size, 21), cheapestCover(size, 21));
+      assert.ok(priceFor(size, 14) + priceFor(size, 21) > priceFor(size, 35), size);
+    }
+    assert.equal(priceFor("6x12", 14) + priceFor("6x12", 21), 120000 + 130000);
+    assert.equal(priceFor("6x12", 35), 153214);
+  });
+
+  it("shows the days after the months apart from the weeks and days of a short rental", () => {
+    assert.deepEqual(priceBreakdown("6x12", START, addDays(START, 35)), {
+      months: 1,
+      weeks: 0,
+      days: 0,
+      longStayDays: 5,
+      totalCents: 153214,
+    });
+    assert.deepEqual(priceBreakdown("6x12", START, addDays(START, 10)), {
+      months: 0,
+      weeks: 1,
+      days: 3,
+      longStayDays: 0,
+      totalCents: 114000,
+    });
+    // 28 days after the first month are the second month.
+    assert.deepEqual(priceBreakdown("6x12", START, addDays(START, 58)), {
+      months: 2,
+      weeks: 0,
+      days: 0,
+      longStayDays: 0,
+      totalCents: 260000,
+    });
   });
 });
 

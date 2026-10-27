@@ -88,6 +88,11 @@ export default async function ReservationDetailPage({ params }: { params: Promis
                   <span className="text-muted">{breakdown.days} jour(s)</span>
                 </div>
               )}
+              {breakdown.longStayDays > 0 && (
+                <div className="flex justify-between">
+                  <span className="text-muted">{breakdown.longStayDays} jour(s) au tarif de longue durée</span>
+                </div>
+              )}
               <div className="mt-2 flex justify-between border-t border-border-light pt-2">
                 <span className="text-muted">Sous-total (avant taxes)</span>
                 <span className="tabular-nums">{(tax.subtotalCents / 100).toFixed(2)} $</span>

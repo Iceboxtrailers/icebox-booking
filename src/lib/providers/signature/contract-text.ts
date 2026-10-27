@@ -1,6 +1,6 @@
 import { fmt, nights, quebecDay } from "@/lib/dates";
 import { catalogueFor } from "@/lib/catalogue";
-import { RATE_TABLE, TRANSPORT_FEE_PER_TRIP_CENTS, computeTaxBreakdown } from "@/lib/pricing";
+import { RATE_TABLE, TRANSPORT_FEE_PER_TRIP_CENTS, computeTaxBreakdown, longStayCents } from "@/lib/pricing";
 import { DELIVERY_OPTION_LABEL_FR, DEPOSIT_AMOUNT_CENTS } from "@/lib/constants";
 import type { DeliveryOption, TrailerSize } from "@/lib/constants";
 
@@ -174,6 +174,10 @@ export function buildContractLines(p: {
   bullet(`${money(rate.dayCents)} $ +Tx CAD par jour;`);
   bullet(`${money(rate.weekCents)} $ +Tx CAD par semaine;`);
   bullet(`${money(rate.monthCents)} $ +Tx CAD par mois.`);
+  bullet(
+    `Location continue d'un mois ou plus : les mois complets de 30 jours sont facturés au tarif mensuel et les jours qui suivent, à 1/28 du tarif mensuel par jour, soit ${money(longStayCents(p.trailerSize, 7))} $ +Tx CAD par semaine ou environ ${money(longStayCents(p.trailerSize, 1))} $ +Tx CAD par jour, sans jamais dépasser le tarif d'un mois de plus.`
+  );
+  bullet("Ce tarif s'applique à une seule location continue : des locations distinctes ne sont pas additionnées.");
   bullet(`${money(TRANSPORT_FEE_PER_TRIP_CENTS)} $ / transport dans un rayon de 50 km du Locateur.`);
   body(`Montant pour cette réservation (${n} jour${n > 1 ? "s" : ""}) :`);
   if (delivery !== "pickup") {
