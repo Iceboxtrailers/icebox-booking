@@ -1,6 +1,6 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { PDFDict, PDFDocument, PDFName } from "pdf-lib";
+import { PDFDict, PDFDocument, PDFName, PDFRawStream, decodePDFRawStream } from "pdf-lib";
 import { buildContractLines } from "@/lib/providers/signature/contract-text";
 import { quebecTimeOfDay, renderContractPdf } from "@/lib/providers/signature/contract-pdf";
 import { buildRentalReportPdf } from "@/lib/reports/rental-report-pdf";
@@ -40,7 +40,35 @@ async function imageCount(bytes: Uint8Array): Promise<number> {
   return count;
 }
 
+// Every line of text drawn on the pages, in the order the file holds them. pdf-lib writes each line as a hex string
+// shown with Tj in a (deflated) content stream.
+async function drawnText(bytes: Uint8Array): Promise<string[]> {
+  const pdf = await PDFDocument.load(bytes);
+  const found: string[] = [];
+  for (const [, object] of pdf.context.enumerateIndirectObjects()) {
+    if (!(object instanceof PDFRawStream)) continue;
+    let content: string;
+    try {
+      content = Buffer.from(decodePDFRawStream(object).decode()).toString("latin1");
+    } catch {
+      continue; // an image, not a page
+    }
+    for (const match of content.matchAll(/<([0-9A-Fa-f]+)>\s*Tj/g)) found.push(Buffer.from(match[1], "hex").toString("latin1"));
+  }
+  return found;
+}
+
 describe("contract PDF", () => {
+  it("is a real contract: it starts with its title and carries no prototype label, signed or not", async () => {
+    const lines = buildContractLines(contract);
+    for (const bytes of [await renderContractPdf(lines), await renderContractPdf(lines, { signature: stamp() })]) {
+      const text = await drawnText(bytes);
+      assert.match(text[0], /^CONTRAT DE LOCATION/);
+      assert.ok(text.some((line) => line.startsWith("Signatures")));
+      assert.ok(!/prototype|contrai?gnant/i.test(text.join("\n")), "no prototype wording anywhere in the contract");
+    }
+  });
+
   it("is made from the contract lines, with the logo and no signature while unsigned", async () => {
     const bytes = await renderContractPdf(buildContractLines(contract));
     const pdf = await PDFDocument.load(bytes);

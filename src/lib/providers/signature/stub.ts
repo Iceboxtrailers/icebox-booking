@@ -24,9 +24,9 @@ export async function loadContractLines(reservationId: string) {
 }
 
 // Renders a PDF contract from reservation data (contract-pdf.ts) and keeps the client's signature: drawn on
-// the page canvas, or the typed name set in handwriting, both as a PNG. Clearly stamped as a non-binding
-// prototype. Swap for src/lib/providers/signature/dropboxsign.ts or docusign.ts once a real e-signature
-// account exists — same interface, no call-site changes.
+// the page canvas, or the typed name set in handwriting, both as a PNG, with who/when/how printed under the
+// contract. Swap for src/lib/providers/signature/dropboxsign.ts or docusign.ts if a third-party e-signature
+// service is ever wanted — same interface, no call-site changes.
 export class StubSignatureProvider implements SignatureProvider {
   async generateContract({ reservationId }: { reservationId: string }) {
     const lines = await loadContractLines(reservationId);

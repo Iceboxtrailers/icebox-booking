@@ -197,9 +197,6 @@ export function SignaturePad({
   return (
     <div>
       <div className="mb-4 max-h-96 overflow-y-auto rounded-lg border border-border-light bg-subtle p-4">
-        <div className="mb-2 text-[11px] font-medium text-warn-text">
-          PROTOTYPE — non légalement contraignant
-        </div>
         <div className="space-y-1 text-[12px] leading-relaxed text-body">
           {contractLines.map((line, i) => {
             if (line.type === "spacer") return <div key={i} className="h-2" />;

@@ -52,15 +52,6 @@ export async function renderContractPdf(lines: ContractLine[], options: { signat
   let page = pdfDoc.addPage(PAGE_SIZE);
   let y = page.getHeight() - MARGIN;
 
-  page.drawText("PROTOTYPE — NON LÉGALEMENT CONTRAIGNANT", {
-    x: MARGIN,
-    y,
-    size: 9,
-    font: boldFont,
-    color: rgb(0.75, 0.25, 0.05),
-  });
-  y -= 22;
-
   const newPage = () => {
     page = pdfDoc.addPage(PAGE_SIZE);
     y = page.getHeight() - MARGIN;
