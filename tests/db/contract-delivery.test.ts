@@ -5,6 +5,7 @@ import { join } from "node:path";
 import { makeBooking, makeTrailer, prisma, setupDatabase } from "./harness";
 import { loadContractLines } from "@/lib/providers/signature/stub";
 import { renderContractPdf } from "@/lib/providers/signature/contract-pdf";
+import { contractPlainLines } from "@/lib/providers/signature/contract-text";
 import { getSignatureProvider } from "@/lib/providers/signature";
 import { getStorage } from "@/lib/providers/storage";
 import { UPLOADS_ROOT } from "@/lib/providers/storage/local";
@@ -19,7 +20,7 @@ afterEach(async () => {
   for (const path of stored.splice(0)) await rm(join(UPLOADS_ROOT, path), { force: true });
 });
 
-const textOf = (lines: Awaited<ReturnType<typeof loadContractLines>>) => lines.flatMap((line) => ("text" in line ? [line.text] : [])).join("\n");
+const textOf = (lines: Awaited<ReturnType<typeof loadContractLines>>) => contractPlainLines(lines).join("\n").replace(/\u00a0/g, " ");
 const contractFile = (reservationId: string) => `contracts/${reservationId}.pdf`;
 
 // The customer of the booking that prompted this: entered from the console, delivered to Montréal, 245 $ each way.
@@ -37,12 +38,11 @@ describe("the contract of a stored booking", () => {
 
     const text = textOf(await loadContractLines(booking.id));
 
-    assert.match(text, /777 rue Villeray, Montréal/);
-    assert.match(text, /Livraison : le Locateur livre la remorque à cette adresse le 11 novembre 2099\./);
-    assert.match(text, /Récupération : le Locateur reprend la remorque à cette adresse le 26 décembre 2099\./);
-    assert.match(text, /Location : 1460\.00 \$ CAD/);
-    assert.match(text, /Transport \(livraison et récupération\) : 490\.00 \$ CAD/);
-    assert.match(text, /Sous-total : 1950\.00 \$ CAD/);
+    assert.match(text, /Lieu d’utilisation \| 777 rue Villeray, Montréal\./);
+    assert.match(text, /Transport convenu \| Livraison par ICEBOX le 11 novembre 2099\.\n \| Récupération par ICEBOX le 26 décembre 2099\./);
+    assert.match(text, /Location • forfait de 45 jours \| 1 460,00 \$/);
+    assert.match(text, /Transport • livraison et récupération \| 490,00 \$/);
+    assert.match(text, /Sous-total \| 1 950,00 \$/);
   });
 
   it("is the plain contract when the trailer is picked up at the depot", async () => {
@@ -51,9 +51,10 @@ describe("the contract of a stored booking", () => {
     const text = textOf(await loadContractLines(booking.id));
 
     assert.match(text, /À préciser/);
-    assert.ok(!text.includes("Livraison :"));
-    assert.ok(!text.includes("Transport ("));
-    assert.match(text, /Le Locataire s'engage à retourner la remorque à l'adresse du Locateur\./);
+    assert.ok(!text.includes("Livraison par ICEBOX"));
+    assert.ok(!text.includes("Transport •"));
+    assert.match(text, /Transport convenu \| Prise en charge aux bureaux du Locateur le 11 novembre 2099\./);
+    assert.match(text, /le Locataire rapporte la remorque aux bureaux du Locateur à la date convenue à l’article 2\./);
   });
 
   it("cannot be made before the booking has a trailer and dates", async () => {

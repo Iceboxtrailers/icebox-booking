@@ -12,6 +12,7 @@ import { apiErrorMessage } from "@/lib/api-client";
 import { isTypedSignatureValid, typedSignatureText } from "@/lib/signature";
 import type { SignatureMethod } from "@/lib/signature";
 import type { ContractLine } from "@/lib/providers/signature/contract-text";
+import { ContractView } from "./ContractView";
 
 // A real signature is at least this long, in canvas pixels (the canvas is 520 wide).
 const MIN_SIGNATURE_LENGTH = 40;
@@ -197,43 +198,7 @@ export function SignaturePad({
   return (
     <div>
       <div className="mb-4 max-h-96 overflow-y-auto rounded-lg border border-border-light bg-subtle p-4">
-        <div className="space-y-1 text-[12px] leading-relaxed text-body">
-          {contractLines.map((line, i) => {
-            if (line.type === "spacer") return <div key={i} className="h-2" />;
-            if (line.type === "title") {
-              return (
-                <div key={i} className="mb-1 text-[14px] font-semibold text-foreground">
-                  {line.text}
-                </div>
-              );
-            }
-            if (line.type === "heading") {
-              return (
-                <div key={i} className="mt-2 text-[12.5px] font-semibold text-foreground">
-                  {line.text}
-                </div>
-              );
-            }
-            if (line.type === "subheading") {
-              return (
-                <div key={i} className="font-medium text-foreground">
-                  {line.text}
-                </div>
-              );
-            }
-            if (line.type === "rule") {
-              return <hr key={i} className="my-2 border-border-light" />;
-            }
-            if (line.type === "bullet") {
-              return (
-                <div key={i} className="pl-3">
-                  • {line.text}
-                </div>
-              );
-            }
-            return <div key={i}>{line.text}</div>;
-          })}
-        </div>
+        <ContractView lines={contractLines} />
         {pdfUrl && (
           <a href={pdfUrl} target="_blank" rel="noreferrer" className="mt-1 inline-block py-2 text-[12px] text-navy underline">
             Voir le contrat en PDF
