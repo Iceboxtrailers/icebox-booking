@@ -224,6 +224,16 @@ export async function listTaxCodes(): Promise<QbOption[]> {
   return rows.filter((r) => r.Taxable !== false).map((r) => ({ id: r.Id, name: r.Name }));
 }
 
+// A light read that proves the connection works (it refreshes the access token if it is due). Null when QuickBooks
+// is not connected; throws when Intuit refuses. Also says how long the authorization still has to run.
+export async function pingQuickBooks(): Promise<{ refreshDaysLeft: number } | null> {
+  if (!(await prisma.accountingConnection.findUnique({ where: { id: CONNECTION_ID }, select: { id: true } }))) return null;
+  await query("select Id from CompanyInfo", "CompanyInfo");
+  const latest = await prisma.accountingConnection.findUnique({ where: { id: CONNECTION_ID } });
+  if (!latest) return null;
+  return { refreshDaysLeft: Math.floor((latest.refreshTokenExpiresAt.getTime() - Date.now()) / 86_400_000) };
+}
+
 async function ensureServiceItem(name: string, incomeAccountId: string): Promise<string> {
   const existing = await query<{ Id: string }>(
     `select Id from Item where Name = '${escapeQueryValue(name)}'`,
