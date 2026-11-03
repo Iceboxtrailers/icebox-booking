@@ -14,23 +14,23 @@ export default async function DashboardLayout({ children }: { children: ReactNod
   const admin = await getCurrentAdmin();
   if (!admin) redirect("/admin/login?callbackUrl=/dashboard");
 
-  // What went wrong lately (shown on the Journal tab). A failed lookup must never keep the console from opening.
+  // What went wrong lately (shown next to the Journal entry). A failed lookup must never keep the console from opening.
   const problemCount = admin.role === "owner" ? await countRecentProblems().catch(() => 0) : 0;
 
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b border-border-light bg-white">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-2.5 px-4 pt-3 md:flex-nowrap md:pb-3">
+        <div className="mx-auto flex max-w-7xl items-center gap-x-2.5 px-4 py-3">
           <BrandMark size={28} />
           <span className="font-heading text-base uppercase tracking-wide">Console Admin</span>
-          {/* Phones: the tabs sit on their own line and scroll sideways; from "md" up they join the header row. */}
-          <div className="order-last -mx-4 mt-2 w-[calc(100%+2rem)] overflow-x-auto border-t border-border-light px-4 py-1.5 md:order-none md:mx-0 md:ml-6 md:mt-0 md:w-auto md:overflow-visible md:border-0 md:p-0">
-            <DashboardNav role={admin.role} problemCount={problemCount} />
-          </div>
           <SignOutButton />
         </div>
       </header>
-      <main className="mx-auto max-w-6xl px-4 py-8">{children}</main>
+      {/* From "md" up the menu is a column on the left; on phones it is a button above the page. */}
+      <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-6 md:flex-row md:gap-8">
+        <DashboardNav role={admin.role} problemCount={problemCount} />
+        <main className="min-w-0 flex-1 md:py-1">{children}</main>
+      </div>
     </div>
   );
 }
